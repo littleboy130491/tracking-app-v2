@@ -12,7 +12,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // The customer portal owns the public login route; there is no "login"
+        // route name, so guests must be sent to the portal sign-in screen.
+        $middleware->redirectGuestsTo(fn (Request $request) => route('customer.login'));
+
+        // Signed-in users who open the login screen go back to the landing
+        // route, which sends staff to the admin panel and customers to the
+        // portal. Pointing this at the login page itself would loop.
+        $middleware->redirectUsersTo(fn (Request $request) => route('home'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

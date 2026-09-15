@@ -1,5 +1,17 @@
 <?php
 
+/**
+ * File: database/migrations/0001_01_01_000000_create_users_table.php
+ * Responsibility: Creates the `users` table plus Laravel auth support tables.
+ * What it does:
+ * - Users serve both internal staff (password login) and portal customers
+ *   (OTP login, no password needed in practice).
+ * - `phone` is optional contact data; `is_active` gates panel/portal access.
+ * How to use: Run with `php artisan migrate`; model is App\Models\User.
+ * How to extend: Add user-level attributes as nullable columns here; keep
+ *   role logic in the spatie roles tables, not on users.
+ */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,8 +27,9 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('phone', 50)->nullable();
             $table->string('password');
+            $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });

@@ -9,8 +9,9 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                // Brand font per style.md. Available in Blade via @fonts.
+                bunny('Roboto', {
+                    weights: [400, 500, 600, 700],
                 }),
             ],
         }),

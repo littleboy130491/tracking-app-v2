@@ -331,6 +331,31 @@ Good Agent (You):
 
 This is how you must work.
 
+## 12. USER ACCEPTANCE TESTING (UAT) — MANDATORY
+
+Automated tests prove the code works; they do not prove the feature works for the user. The user verifies every user-visible feature **manually**, so you must tell them exactly what to click and what to expect.
+
+### 12A. UAT file
+
+**Location:** `docs/UAT.md`. Create it if it does not exist. One section per feature; newest feature at the top.
+
+### 12B. What to write per feature
+
+Write for a user who does NOT read code:
+
+- **Prerequisites:** which account/role to log in with, required seed data, env flags (e.g. `OTPZ_EXPOSE_IN_DEV`).
+- **Steps:** numbered click-paths ("Admin panel → CRM → Customers → pick a row → Edit").
+- **Expected result:** one line per step — what the user should see.
+- **Edge cases:** empty states, validation errors, permission boundaries, inactive accounts.
+
+Use `- [ ]` checkboxes so the user can tick items off. Keep each feature's list under ~15 items; split into sub-sections if longer.
+
+### 12C. When to write or update
+
+- After EACH step that produces something the user can click through — at the same time you update the activity log.
+- Mention it in the step summary: "UAT items added to `docs/UAT.md` — section X."
+- When a later change alters existing behavior, update the affected items and reset them to `- [ ]` so they get re-tested.
+
 ---
 
 END OF AGENTS.md

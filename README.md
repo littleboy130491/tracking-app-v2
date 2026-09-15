@@ -1,58 +1,183 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+    <img src="assets/logo.png" alt="SAM Group Logistics Tracking System" width="320">
 </p>
 
-## About Laravel
+# SAM Group Logistics Tracking System
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+A shipment tracking system built around **one bill of lading (B/L) → many containers**, with an admin
+dashboard for staff and a passwordless customer portal.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Shipment tracking is hardcoded: each B/L type (export/import) walks a fixed milestone sequence
+(`ShipmentMilestone` enum; the SPJM import branch runs only when `billing_response` is SPJM). The
+Progress tab shows the current step with advance/regress buttons, and each milestone's fields sit in
+their own collapsible section — on the B/L and per container — locked until that step is reached.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## What it is
 
-## Learning Laravel
+- **Admin dashboard** (`/admin`) — CRUD for users, companies, bills of lading, containers and HS codes
+  (containers inline on the B/L form; HS codes are shared master data that the B/L form multi-selects
+  and can create inline), plus a **read-only** activity log recording every change, who made it and when.
+- **Customer portal** (`/portal`) — passwordless sign-in with an emailed one-time code, greeting, filters
+  (company / number / status / year / month) plus a company column on the list, the B/Ls of the companies the
+  user manages, B/L detail with containers opening in a new tab, and draft-PIB confirmation for imports —
+  once a draft is confirmed the confirm and revision actions are no longer offered.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech stack
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Concern | Choice |
+| --- | --- |
+| Framework | Laravel 13 (PHP 8.3+) |
+| Admin UI | Filament 5 + Filament Shield (`spatie/laravel-permission`) |
+| Customer portal | Livewire 4 + Tailwind CSS 4 (Roboto, brand `#499bff`) |
+| Passwordless login | `benbjurstrom/otpz` (session-locked, rate-limited OTP) |
+| Attachments / media | Filament Curator (`awcodes/filament-curator`) |
+| Database | SQLite for development (migrations kept portable) |
+| Mail | Mailgun in production, `log` driver in development |
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Requirements
 
-## Agentic Development
+- PHP **8.3+** with the usual Laravel extensions
+- Composer 2
+- Node.js 20+ and npm
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Installation
 
-```bash
-composer require laravel/boost --dev
+```sh
+composer install
+cp .env.example .env
+php artisan key:generate
 
-php artisan boost:install
+# SQLite is the default connection; create the file if it is missing.
+touch database/database.sqlite
+
+php artisan migrate:fresh --seed
+
+npm install
+npm run build
+
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The app is then available at <http://localhost:8000> (whatever `APP_URL` is set to).
 
-## Contributing
+`composer setup` performs the install, migrate and build steps in one command, but it does not seed — run
+`php artisan db:seed` afterwards if you use it. It also installs npm packages without dev dependencies.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+After adding a new Filament resource, generate its policy and register the new permissions:
 
-## Code of Conduct
+```sh
+php artisan shield:generate --all --panel=admin
+php artisan db:seed --class=PermissionSeeder
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Configuration
 
-## Security Vulnerabilities
+Everything lives in `.env`. The settings that matter day to day:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Variable | Purpose |
+| --- | --- |
+| `APP_NAME` | Shown in both dashboards and in emails. |
+| `APP_URL` | Base URL used by `asset()` and signed links; must match how you serve the app. |
+| `DB_CONNECTION` / `DB_DATABASE` | `sqlite` + `database/database.sqlite` by default. |
+| `MAIL_MAILER` | `log` in development; set to `mailgun` in production. |
+| `MAILGUN_DOMAIN`, `MAILGUN_SECRET`, `MAILGUN_ENDPOINT` | Mailgun credentials; also set `MAIL_FROM_ADDRESS`. |
+| `OTPZ_EXPOSE_IN_DEV` | When `true` (and not in production) the one-time code is **shown on the verify screen** as well as emailed. Convenient locally; keep `false` in production. |
+| `OTPZ_MAX_ATTEMPTS` | How many incorrect codes are allowed before the code is invalidated, and how many may be guessed per IP before that IP is locked out. Default `8`. |
+| `OTPZ_ATTEMPT_DECAY_MINUTES` | How long the per-IP lockout lasts after too many incorrect codes. Default `10`. |
+| `OTPZ_EXPIRATION` | How long a one-time code stays valid, in minutes. Default `5`. |
+| `CURATOR_DEFAULT_DISK` | Disk Curator stores and serves attachments from. `public` by default; run `php artisan storage:link` once. |
+| `APP_ENV`, `APP_DEBUG` | Standard Laravel flags. |
 
-## License
+Portal mail uses whatever `MAIL_MAILER` you configure. In development the code also lands in
+`storage/logs/laravel.log`, so you never need `OTPZ_EXPOSE_IN_DEV` — it is just faster.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Demo accounts
+
+Created by the seeders. **Change or remove these before going live.**
+
+Staff — sign in at `/admin` with the password `password`:
+
+| Email | Role | Access |
+| --- | --- | --- |
+| `superadmin@example.com` | super admin | Everything, bypasses every gate, and is the only role that can create or edit admins. |
+| `admin@example.com` | admin | Everything except managing admin accounts. |
+| `operator@example.com` | operator | Shipments only: no company/user/role management, no deleting (incl. restore/force-delete). |
+
+New users created in the panel default to the **customer** role, and only a super admin is offered the admin
+and super admin roles — the rule lives in `App\Support\Authorization\AssignableRoles`, and Filament rejects a
+submitted role that was not on offer, so it is enforced server-side rather than by hiding an option.
+
+Customer portal — sign in at `/login` with a one-time code (no password):
+
+| Email | Name | Companies they manage |
+| --- | --- | --- |
+| `customer@example.com` | Dewi Customer | NUS, SIN, BJM |
+| `buyer@sinar.test` | Budi Buyer | SIN |
+| `rina@nusantara.test` | Rina Hartono | NUS, JRD |
+| `agus@borneo.test` | Agus Pratama | BJM, SNI, JRD |
+| `sari@java-retail.test` | Sari Wijaya | JRD |
+
+The companies and portal users are deliberately **many-to-many** (spec.md): a user can manage several
+companies and a company can be managed by several users. **PT Java Retail Distribution** is handled by three
+users (Rina, Agus, Sari), while **Dewi** handles three companies. Whatever their setup, a user only ever
+sees the shipments of the companies they manage.
+
+Portal users have no password: enter the email address on `/login`, then use the code from the email. Only
+addresses belonging to an active customer account are accepted — there is no self-registration. Codes are
+rate limited: `OTPZ_MAX_ATTEMPTS` (default 8) wrong codes invalidate the code and lock that IP out for
+`OTPZ_ATTEMPT_DECAY_MINUTES` (default 10); the form explains the wait instead of throwing an error page.
+
+## Demo data
+
+Five companies — **PT Nusantara Ekspor** (`NUS`), **PT Sinar Impor** (`SIN`),
+**CV Borneo Jaya Mandiri** (`BJM`), **PT Sulawesi Nickel Industri** (`SNI`) and
+**PT Java Retail Distribution** (`JRD`).
+
+| Reference | Company | Type | State |
+| --- | --- | --- | --- |
+| `REF-EXP-0001` | NUS | export | In progress, 2 containers |
+| `REF-EXP-0002` | BJM | export | In progress, 1 container |
+| `REF-IMP-0001` | SIN | import | In progress. `billing_response = SPJM`, on the behandle branch |
+| `REF-EXP-0003` | SNI | export | **Completed** |
+| `REF-IMP-0002` | JRD | import | **Completed** — it ran the whole SPJM → SPPB path |
+
+The two completed shipments are seeded with their progress fields filled, so there are finished
+export and import examples to open in the admin panel and the portal.
+
+## Key routes
+
+| Route | Who | What |
+| --- | --- | --- |
+| `/` | anyone | Redirects to `/portal` for customers, otherwise to `/login`. |
+| `/admin` | admin, operator | Filament admin panel. |
+| `/login` | guests | Portal sign-in (email step). |
+| `/portal` | customers | Shipment dashboard with filters. |
+| `/portal/bill-of-ladings/{id}` | customers | Shipment detail; import draft-PIB confirmation (hidden once confirmed). |
+| `/portal/containers/{id}` | customers | Container detail (facts + location history). |
+
+## How shipment tracking works
+
+- The B/L form has three tabs: **Document** (AJU, B/L number, type, customer), **Event** (one collapsible
+  section per tracking step) and **Containers** (a repeater — one collapsible item per container).
+- Which sections appear is driven by `shipment_type`: booking/closing fields for exports; draft PIB,
+  billing, THC, DO release and behandle for imports. The same split applies inside each container item.
+- `status` / `completed_at` are managed manually for now.
+
+## Testing and code style
+
+```sh
+php artisan test     # feature tests covering the panel, the seeders and the portal
+./vendor/bin/pint    # Laravel code style
+```
+
+## Notes and gotchas
+
+- **UUID generation:** `Str::orderedUuid()` crashes the PHP process (SIGILL) on this environment — ramsey's
+  `CombGenerator`. Filament calls it for every notification id, so the admin panel could not save anything.
+  `AppServiceProvider` installs a v7-shaped generator built from `random_bytes` instead.
+- **npm dev dependencies:** if your shell exports `NODE_ENV=production`, `npm install` skips dev
+  dependencies and `npm run build` fails with `vite: not found`. Use `npm install --include=dev`.
+- **Branding:** `style.md` holds the tone (`#499bff`) and font (Roboto) — defined for the portal in
+  `resources/css/app.css` and for the admin panel in `AdminPanelProvider`. The mark lives at
+  `assets/logo.png` and is published to `public/images/logo.png` for web serving.
+- **Activity logs are append-only:** the admin resource deliberately offers no create, edit or delete action.

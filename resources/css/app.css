@@ -1,9 +1,38 @@
+/* File: resources/css/app.css
+   Responsibility: Tailwind entry point and the shared brand tokens.
+   What it does:
+   - Loads Tailwind and the app's source files.
+   - Defines the brand palette from style.md (#499bff) plus the logo's green
+     accent, and sets Roboto as the sans font.
+   How to use: `@vite(['resources/css/app.css'])` in a Blade layout; utilities
+     such as `bg-brand-500` / `text-brand-600` come from the tokens below.
+   How to extend: add tokens here (Tailwind v4 generates the utilities). */
+
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../../app/Livewire/**/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Primary brand tone from style.md: #499bff */
+    --color-brand-50: #eff7ff;
+    --color-brand-100: #dceeff;
+    --color-brand-200: #b9dcff;
+    --color-brand-300: #8cc6ff;
+    --color-brand-400: #66a9ff;
+    --color-brand-500: #499bff;
+    --color-brand-600: #2b7fff;
+    --color-brand-700: #1f66db;
+    --color-brand-800: #1e52ad;
+    --color-brand-900: #1d4788;
+
+    /* Green accent sampled from the logo mark. */
+    --color-accent-100: #d6f7e2;
+    --color-accent-500: #22c55e;
+    --color-accent-600: #16a34a;
 }
