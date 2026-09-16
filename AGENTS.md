@@ -156,15 +156,16 @@ Create this file if it does not exist.
 
 **Log Format:** Use a markdown table. Keep description short (max 15 words).
 
-| Date             | Action | File                          | Description                        |
-| :--------------- | :----- | :---------------------------- | :--------------------------------- |
-| 2026-05-13 14:20 | CREATE | src/core/auth/auth.types.ts   | Define IAuthService and User types |
-| 2026-05-13 14:25 | UPDATE | src/core/auth/auth.service.ts | Implemented JWT login logic        |
-| 2026-05-13 14:30 | DELETE | src/utils/helpers.ts          | Removed unused helper file         |
+| Date             | Agent             | Action | File                          | Description                        |
+| :--------------- | :---------------- | :----- | :---------------------------- | :--------------------------------- |
+| 2026-05-13 14:20 | Devin (SWE-2 Max) | CREATE | src/core/auth/auth.types.ts   | Define IAuthService and User types |
+| 2026-05-13 14:25 | Devin (SWE-2 Max) | UPDATE | src/core/auth/auth.service.ts | Implemented JWT login logic        |
+| 2026-05-13 14:30 | human             | DELETE | src/utils/helpers.ts          | Removed unused helper file         |
 
 **Rules:**
 
 - Date format: `YYYY-MM-DD HH:mm`
+- Agent: who made the change — the AI agent's product name + model, e.g. `Devin (SWE-2 Max)`, `Claude Code (Sonnet 4.5)`, `Cursor (GPT-5)`. The product name alone is enough if the model version is unknown. Use `human` for edits the user made by hand and `unknown` when the author cannot be determined.
 - Action: `CREATE`, `UPDATE`, or `DELETE` only.
 - File: Full path from project root.
 - Description: Short, clear, what changed.

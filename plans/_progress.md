@@ -57,3 +57,30 @@ Status: COMPLETE
   across containers: stored as plain fields, business rules intentionally not assumed.
 - AP and SPJK responses show "flow not configured" and do not auto-progress, per §12.
 - Laravel Boost was NOT installed (it can rewrite AGENTS.md).
+
+---
+
+# Progress - Portal parity with reference cargo tracker
+
+Goal: Customer portal answers "where is my box and what's next" like the reference, without cloning its UI.
+Started: 2026-09-16 15:21
+
+## Plan Checklist
+
+- [x] Step 1: Timeline entry contract - DONE - 15:21
+- [x] Step 2: Timeline builder service - DONE - 15:36
+- [x] Step 3: Sailing + progress header on B/L and container pages - DONE - 15:42
+- [x] Step 4: Dashboard latest columns + container search - DONE - 15:50
+- [x] Step 5: UAT + activity log - DONE - 15:50
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Notes
+
+- Chose activity_logs reuse (Option A) over a new events table: no schema change, auditable.
+- ETA renders as the only estimate entry; everything else is actual.
+- Dashboard latest columns are shipment-level (voyage + B/L-wide logs), not per-container max.

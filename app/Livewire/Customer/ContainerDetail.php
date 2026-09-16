@@ -2,20 +2,23 @@
 
 /**
  * File: app/Livewire/Customer/ContainerDetail.php
- * Responsibility: Customer view of one container.
+ * Responsibility: Customer view of one container plus its journey timeline.
  * What it does:
- * - Shows the container's details and its latest tracking position text.
+ * - Shows the container's details and its chronological journey from the
+ *   timeline service (container dates, voyage dates, visible logs).
  * - Scoping goes through the parent shipment, so a customer cannot open another
  *   company's container.
  * How to use: route customer.containers.show (opened in a new tab from the
  *   shipment page).
- * How to extend: publish progress entries via customer-visible activity logs.
+ * How to extend: add timeline entry fields via ShipmentTimelineEntry.
  */
 
 namespace App\Livewire\Customer;
 
 use App\Models\Container;
+use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -39,6 +42,7 @@ class ContainerDetail extends Component
 
         return view('livewire.customer.container-detail', [
             'container' => $container,
+            'timeline' => app(ShipmentTimeline::class)->forContainer($container),
         ]);
     }
 
@@ -47,7 +51,7 @@ class ContainerDetail extends Component
         $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
 
         return Container::query()
-            ->whereHas('billOfLading', fn ($query) => $query->whereIn('company_id', $companyIds))
+            ->whereHas('billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with('billOfLading')
             ->findOrFail($this->containerId);
     }

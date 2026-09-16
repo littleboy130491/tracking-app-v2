@@ -11,7 +11,30 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
-## 1. B/L Progress milestones & audit (2026-09-16)
+## 1. Portal journey timeline like the reference tracker (2026-09-16)
+
+**Prerequisites**
+
+- Run `php artisan migrate:fresh --seed` first.
+- Customer portal: `http://localhost:8000/login` — use a seeded customer email (e.g. `customer@example.com`); OTP codes appear on the verify screen when `OTPZ_EXPOSE_IN_DEV=true`.
+
+**Container page**
+
+- [ ] Portal → open a shipment → open a container in a new tab. Expected: a **Sailing information** block shows vessel, line, POL/departure and POD/arrival (actual) or ETA (estimate).
+- [ ] Same page → **Journey** section. Expected: oldest-first rows with time + place; the last row carries a `latest` badge; an ETA-only arrival carries an `estimate` badge.
+- [ ] Open the completed export container `EGHU6677881`. Expected: journey reads pickup → stuffing → gate-in → final check → departure → arrival.
+- [ ] Open a container with no dates yet. Expected: journey shows "No journey events have been recorded for this shipment yet."
+
+**Shipment page**
+
+- [ ] Portal → open a shipment. Expected: a **Journey** section sits above the containers table with the shipment-level voyage dates plus visible log entries (e.g. milestone moves, PIB confirmation).
+
+**Dashboard list**
+
+- [ ] Portal home → shipment table. Expected: **Latest place** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
+- [ ] Search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `REF-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
+
+## 2. B/L Progress milestones & audit (2026-09-16)
 
 **Prerequisites**
 

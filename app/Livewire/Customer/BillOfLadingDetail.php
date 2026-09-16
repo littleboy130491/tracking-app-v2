@@ -2,10 +2,10 @@
 
 /**
  * File: app/Livewire/Customer/BillOfLadingDetail.php
- * Responsibility: Customer view of one shipment and its containers.
+ * Responsibility: Customer view of one shipment, its containers and journey.
  * What it does:
- * - Shows the customer-visible shipment facts and the list of containers
- *   (each opens the container page in a new tab).
+ * - Shows the customer-visible shipment facts, the shipment-level journey
+ *   timeline and the list of containers (each opens the container page).
  * - For import shipments the customer can confirm the draft PIB or request a
  *   revision, which writes back to the B/L and the activity log. Once the draft
  *   is confirmed those actions are neither offered nor accepted: the guard is
@@ -19,6 +19,7 @@ namespace App\Livewire\Customer;
 use App\Enums\DraftPibConfirmationStatus;
 use App\Models\BillOfLading;
 use App\Services\ActivityLogger;
+use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
@@ -118,6 +119,7 @@ class BillOfLadingDetail extends Component
             'billOfLading' => $billOfLading,
             'containers' => $billOfLading->containers()->orderBy('container_number')->get(),
             'draftPibConfirmed' => $this->isDraftPibConfirmed($billOfLading),
+            'timeline' => app(ShipmentTimeline::class)->forBillOfLading($billOfLading),
         ]);
     }
 

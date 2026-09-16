@@ -2,7 +2,7 @@
      Responsibility: Customer portal home: greeting, filters and shipment list.
      What it does: binds the filter inputs (company, number, status, year, month)
        to the Dashboard component state and renders the paginated bills of lading
-       with their company and a link to the detail page.
+       with their company, latest journey place/event and a link to the page.
      How to use: rendered by App\Livewire\Customer\Dashboard.
      How to extend: add columns once more customer-visible fields exist. --}}
 <div>
@@ -15,7 +15,7 @@
 
     <div class="mt-6 grid gap-3 rounded-xl bg-white p-4 shadow-sm md:grid-cols-3 lg:grid-cols-6">
         <div class="md:col-span-2 lg:col-span-2">
-            <label for="number" class="block text-xs font-medium text-slate-500">B/L or reference number</label>
+            <label for="number" class="block text-xs font-medium text-slate-500">B/L, reference, container or seal</label>
             <input
                 id="number"
                 type="text"
@@ -102,6 +102,8 @@
                     <th class="px-4 py-3">Type</th>
                     <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3">Containers</th>
+                    <th class="px-4 py-3">Latest place</th>
+                    <th class="px-4 py-3">Latest event</th>
                     <th class="px-4 py-3">ETA</th>
                 </tr>
             </thead>
@@ -121,11 +123,19 @@
                         <td class="px-4 py-3">{{ $billOfLading->shipment_type->label() }}</td>
                         <td class="px-4 py-3">{{ $billOfLading->status->label() }}</td>
                         <td class="px-4 py-3">{{ $billOfLading->containers->count() }}</td>
+                        @php($entry = $latest[$billOfLading->getKey()] ?? null)
+                        <td class="px-4 py-3">{{ $entry?->location ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            {{ $entry?->title ?? '—' }}
+                            @if ($entry)
+                                <span class="block text-xs text-slate-500">{{ $entry->occurredAt }}</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">{{ $billOfLading->eta_at?->format('d M Y H:i') ?? '—' }}</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-500">
+                        <td colspan="9" class="px-4 py-8 text-center text-slate-500">
                             No shipments match your filters.
                         </td>
                     </tr>

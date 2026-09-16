@@ -5,7 +5,10 @@
  * Responsibility: Customer portal home: greeting, filters and shipment list.
  * What it does:
  * - Lists the bills of lading of the companies the signed-in user manages,
- *   filtered by company, number, status, year and month (spec.md).
+ *   filtered by company, number (B/L, reference, container, seal), status,
+ *   year and month (spec.md).
+ * - Adds each shipment's latest journey entry so the list shows Latest Place
+ *   and Latest Event like the reference tracker.
  * - Scoping is enforced in the query, so a customer can never see another
  *   company's shipments, even by guessing an id or tampering with the filter.
  * How to use: full-page Livewire component on route customer.dashboard.
@@ -16,6 +19,7 @@ namespace App\Livewire\Customer;
 
 use App\Enums\BillOfLadingStatus;
 use App\Models\BillOfLading;
+use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Layout;
@@ -61,7 +65,10 @@ class Dashboard extends Component
             ->when($this->number !== '', fn (Builder $query) => $query->where(
                 fn (Builder $inner) => $inner
                     ->where('bl_number', 'like', '%'.$this->number.'%')
-                    ->orWhere('reference_number', 'like', '%'.$this->number.'%'),
+                    ->orWhere('reference_number', 'like', '%'.$this->number.'%')
+                    ->orWhereHas('containers', fn (Builder $containers) => $containers
+                        ->where('container_number', 'like', '%'.$this->number.'%')
+                        ->orWhere('seal_number', 'like', '%'.$this->number.'%')),
             ))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
@@ -69,8 +76,14 @@ class Dashboard extends Component
             ->orderByDesc('created_at')
             ->paginate(15);
 
+        $timeline = app(ShipmentTimeline::class);
+        $latest = $billOfLadings->getCollection()->mapWithKeys(
+            fn (BillOfLading $billOfLading) => [$billOfLading->getKey() => $timeline->latestForBillOfLading($billOfLading)],
+        );
+
         return view('livewire.customer.dashboard', [
             'billOfLadings' => $billOfLadings,
+            'latest' => $latest,
             // Only the companies this user manages may appear as filter options.
             'companies' => auth()->user()->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
             'statuses' => BillOfLadingStatus::options(),

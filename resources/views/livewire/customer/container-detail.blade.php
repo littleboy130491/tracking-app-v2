@@ -1,8 +1,11 @@
 {{-- File: resources/views/livewire/customer/container-detail.blade.php
      Responsibility: Customer view of one container.
-     What it does: shows container facts plus the latest tracking position.
+     What it does: sailing header, container facts and the journey timeline.
      How to use: rendered by App\Livewire\Customer\ContainerDetail.
-     How to extend: add a progress feed from customer-visible activity logs. --}}
+     How to extend: entry display lives in the components.shipment-timeline view. --}}
+@php
+    $billOfLading = $container->billOfLading;
+@endphp
 <div>
     <a
         href="{{ route('customer.bill-of-ladings.show', ['billOfLading' => $container->bill_of_lading_id]) }}"
@@ -43,4 +46,40 @@
             <div class="font-medium">{{ $container->empty_returned_at?->format('d M Y H:i') ?? '—' }}</div>
         </div>
     </div>
+
+    <div class="mt-6 rounded-xl bg-white p-6 shadow-sm">
+        <h2 class="font-semibold text-slate-900">Sailing information</h2>
+        <div class="mt-3 grid gap-4 text-sm md:grid-cols-2">
+            <div>
+                <div class="text-xs uppercase tracking-wide text-slate-500">Vessel</div>
+                <div class="font-medium">
+                    {{ trim(($billOfLading->vessel_name ?? '').' '.($billOfLading->voyage_number ?? '')) ?: '—' }}
+                </div>
+            </div>
+            <div>
+                <div class="text-xs uppercase tracking-wide text-slate-500">Shipping line</div>
+                <div class="font-medium">{{ $billOfLading->shipping_line ?? '—' }}</div>
+            </div>
+            <div>
+                <div class="text-xs uppercase tracking-wide text-slate-500">Port of loading / departure</div>
+                <div class="font-medium">
+                    {{ $billOfLading->port_of_loading ?? '—' }}
+                    {{ $billOfLading->departure_date ? '· '.$billOfLading->departure_date->format('d M Y') : '' }}
+                </div>
+            </div>
+            <div>
+                <div class="text-xs uppercase tracking-wide text-slate-500">Port of discharge / arrival</div>
+                <div class="font-medium">
+                    {{ $billOfLading->port_of_discharge ?? '—' }}
+                    @if ($billOfLading->actual_arrival_at)
+                        · {{ $billOfLading->actual_arrival_at->format('d M Y H:i') }} (actual)
+                    @elseif ($billOfLading->eta_at)
+                        · {{ $billOfLading->eta_at->format('d M Y H:i') }} (estimate)
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @include('components.shipment-timeline', ['entries' => $timeline])
 </div>

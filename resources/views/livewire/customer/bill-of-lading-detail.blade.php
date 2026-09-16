@@ -1,7 +1,7 @@
 {{-- File: resources/views/livewire/customer/bill-of-lading-detail.blade.php
-     Responsibility: Customer view of one shipment and its containers.
-     What it does: shows shipment facts, the container list (links open a new
-       tab) and the import draft-PIB confirmation actions.
+     Responsibility: Customer view of one shipment, its journey and containers.
+     What it does: shows shipment facts, the journey timeline, the container
+       list (links open a new tab) and the import draft-PIB confirmation.
      How to use: rendered by App\Livewire\Customer\BillOfLadingDetail.
      How to extend: add customer-visible fields as they are published. --}}
 <div>
@@ -110,6 +110,8 @@
             @endif
         </div>
     @endif
+
+    @include('components.shipment-timeline', ['entries' => $timeline])
 
     <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
         <div class="border-b border-slate-200 px-4 py-3">

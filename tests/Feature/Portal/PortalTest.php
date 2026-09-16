@@ -6,7 +6,8 @@
  * What it does:
  * - Covers login routing, the no-registration OTP rule, the signed verify step
  *   (including posting through the rendered form), the attempt rate limiter,
- *   per-customer scoping, container tabs and the import PIB confirmation.
+ *   per-customer scoping, shipment/container search, latest journey columns,
+ *   container tabs and the import PIB confirmation.
  * - Also asserts the seeded many-to-many between companies and portal users.
  * How to use: `php artisan test --filter=PortalTest`.
  * How to extend: add a test per new portal screen or rule.
@@ -247,6 +248,21 @@ class PortalTest extends TestCase
             ->assertSee('REF-IMP-0001')
             ->assertDontSee('REF-EXP-0001')
             ->assertDontSee('REF-EXP-0002');
+    }
+
+    public function test_the_number_search_matches_containers_and_shows_the_latest_journey(): void
+    {
+        // Agus manages SNI, which owns the completed export REF-EXP-0003.
+        $agus = User::query()->where('email', 'agus@borneo.test')->firstOrFail();
+
+        $this->actingAs($agus);
+
+        Livewire::test(Dashboard::class)
+            ->set('number', 'EGHU6677881')
+            ->assertSee('REF-EXP-0003')
+            ->assertDontSee('REF-EXP-0001')
+            ->assertSee('Latest place')
+            ->assertSee('Vessel arrival at port of discharge');
     }
 
     public function test_the_company_filter_cannot_reveal_another_companys_shipments(): void
