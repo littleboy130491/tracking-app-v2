@@ -302,3 +302,4 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-16 15:50 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Show latest place and event columns |
 | 2026-09-16 15:50 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Cover container search and latest journey columns |
 | 2026-09-16 15:50 | Muse Spark | UPDATE | docs/UAT.md | Add dashboard latest-columns checklist |
+| 2026-09-16 15:50 | Devin | UPDATE | app/Models/Company.php | Added customers()/operators() role-filtered relations |

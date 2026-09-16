@@ -5,8 +5,9 @@
  * Responsibility: A customer company that owns shipments.
  * What it does:
  * - Holds company identity/contact data and its shipments (bills of lading).
- * - Links to the portal users who may handle it.
- * How to use: `$company->billOfLadings`, `$company->users`.
+ * - Links to the users who handle it: `customers()` for portal access,
+ *   `operators()` for assigned staff (same company_user pivot, split by role).
+ * How to use: `$company->billOfLadings`, `$company->customers`, `$company->operators`.
  * How to extend: Add company-level fields as columns on the companies table.
  */
 
@@ -49,5 +50,25 @@ class Company extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();
+    }
+
+    /**
+     * Linked users carrying the customer role (portal access).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function customers(): BelongsToMany
+    {
+        return $this->users()->role(Role::CUSTOMER);
+    }
+
+    /**
+     * Linked users carrying the operator role (assigned staff).
+     *
+     * @return BelongsToMany<User, $this>
+     */
+    public function operators(): BelongsToMany
+    {
+        return $this->users()->role(Role::OPERATOR);
     }
 }
