@@ -20,6 +20,7 @@ use App\Enums\BillOfLadingStatus;
 use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ShipmentMilestone;
 use App\Enums\ShipmentType;
+use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -132,7 +133,7 @@ class BillOfLading extends Model
      */
     public function activityLogs(): HasMany
     {
-        return $this->hasMany(ActivityLog::class);
+        return $this->hasMany(ActivityLog::class)->latest('occurred_at');
     }
 
     /**
@@ -196,17 +197,35 @@ class BillOfLading extends Model
 
     public function advanceMilestone(): void
     {
-        $next = $this->nextMilestone();
+        if ($next = $this->nextMilestone()) {
+            $this->moveToMilestone($next);
+        }
+    }
 
-        if (! $next) {
+    public function regressMilestone(): void
+    {
+        if ($previous = $this->previousMilestone()) {
+            $this->moveToMilestone($previous);
+        }
+    }
+
+    /**
+     * Sets the milestone directly — used by the stepper's click-to-jump and
+     * by advance/regress. Reaching the last milestone completes the shipment;
+     * moving off it reopens it. Every change is written to the activity log.
+     */
+    public function moveToMilestone(ShipmentMilestone $target): void
+    {
+        $sequence = $this->milestoneSequence();
+
+        if (! in_array($target, $sequence, true) || $target === $this->current_milestone) {
             return;
         }
 
-        $this->current_milestone = $next;
+        $from = $this->current_milestone;
+        $this->current_milestone = $target;
 
-        // Reaching the last milestone completes the shipment; stepping back
-        // from it reopens it.
-        if ($this->nextMilestone() === null) {
+        if ($target === end($sequence)) {
             $this->status = BillOfLadingStatus::Completed;
             $this->completed_at ??= now();
         } elseif ($this->status === BillOfLadingStatus::Completed) {
@@ -215,23 +234,16 @@ class BillOfLading extends Model
         }
 
         $this->save();
-    }
 
-    public function regressMilestone(): void
-    {
-        $previous = $this->previousMilestone();
-
-        if (! $previous) {
-            return;
-        }
-
-        $this->current_milestone = $previous;
-
-        if ($this->status === BillOfLadingStatus::Completed) {
-            $this->status = BillOfLadingStatus::InProgress;
-            $this->completed_at = null;
-        }
-
-        $this->save();
+        app(ActivityLogger::class)->record(
+            $this,
+            'milestone_changed',
+            self::class,
+            $this->getKey(),
+            oldValues: ['milestone' => $from?->value],
+            newValues: ['milestone' => $target->value],
+            customerSummary: 'Progress moved to '.$target->getLabel(),
+            customerVisible: true,
+        );
     }
 }

@@ -5,8 +5,8 @@
  * Responsibility: A container belonging to one bill of lading.
  * What it does:
  * - Tracks stuffing, inspection, factory loading, weights and depot returns.
- * - Owns its location history and attachments.
- * How to use: `$container->billOfLading`, `$container->locationUpdates`.
+ * - Owns its attachments; the driver position is a simple text column.
+ * How to use: `$container->billOfLading`, `$container->attachments`.
  * How to extend: Add container fields as columns and expose them in
  *   ContainerForm or the B/L form's containers repeater.
  */
@@ -28,10 +28,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'bill_of_lading_id', 'container_number', 'size', 'type', 'seal_number',
     'pickup_depot_name', 'empty_picked_up_at', 'stuffing_date', 'stuffing_destination',
     'stuffing_status', 'stuffing_started_at', 'stuffing_finished_at', 'driver_name',
-    'license_number', 'gross_weight', 'gross_weight_unit', 'cbm', 'vgm_value', 'vgm_unit',
-    'gate_in_cy_at', 'gate_out_cy_at', 'inspection_status', 'inspected_at', 'inspection_notes',
+    'license_number', 'tracking_position', 'gross_weight', 'gross_weight_unit', 'cbm', 'vgm_value',
+    'gate_in_port_name', 'gate_in_cy_at', 'gate_out_cy_at', 'inspection_status', 'inspected_at', 'inspection_notes',
     'factory_arrived_at', 'factory_loading_status', 'factory_loading_started_at',
-    'factory_loading_finished_at', 'final_checked_at', 'final_checked_by', 'return_depot_name',
+    'factory_loading_finished_at', 'final_checked', 'final_checked_at', 'return_depot_name',
     'empty_returned_at', 'status', 'completed_at', 'created_by', 'updated_by',
 ])]
 class Container extends Model
@@ -61,6 +61,7 @@ class Container extends Model
             'factory_arrived_at' => 'datetime',
             'factory_loading_started_at' => 'datetime',
             'factory_loading_finished_at' => 'datetime',
+            'final_checked' => 'boolean',
             'final_checked_at' => 'datetime',
             'empty_returned_at' => 'datetime',
             'completed_at' => 'datetime',
@@ -76,14 +77,6 @@ class Container extends Model
     }
 
     /**
-     * @return HasMany<ContainerLocationUpdate, $this>
-     */
-    public function locationUpdates(): HasMany
-    {
-        return $this->hasMany(ContainerLocationUpdate::class);
-    }
-
-    /**
      * @return HasMany<Attachment, $this>
      */
     public function attachments(): HasMany
@@ -92,10 +85,31 @@ class Container extends Model
     }
 
     /**
-     * @return BelongsTo<User, $this>
+     * Point the given media rows at this container and detach the rest.
+     * Curator's picker cannot write the container_id column itself, so the
+     * Filament pages call this after the form saves.
+     *
+     * @param  list<int>  $mediaIds
      */
-    public function finalCheckedBy(): BelongsTo
+    public function syncAttachments(array $mediaIds): void
     {
-        return $this->belongsTo(User::class, 'final_checked_by');
+        Attachment::query()
+            ->where('container_id', $this->getKey())
+            ->when($mediaIds !== [], fn ($query) => $query->whereNotIn('id', $mediaIds))
+            ->update(['container_id' => null]);
+
+        if ($mediaIds === []) {
+            return;
+        }
+
+        Attachment::query()->whereIn('id', $mediaIds)->update([
+            'container_id' => $this->getKey(),
+            'bill_of_lading_id' => $this->bill_of_lading_id,
+        ]);
+
+        Attachment::query()
+            ->whereIn('id', $mediaIds)
+            ->whereNull('uploaded_by')
+            ->update(['uploaded_by' => auth()->id()]);
     }
 }

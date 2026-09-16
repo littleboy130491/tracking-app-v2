@@ -237,3 +237,52 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-15 15:56 | UPDATE | BillOfLadingForm, AdminPanelSmokeTest | Gated remaining sections (cargo, status, container identity/add) |
 | 2026-09-15 16:05 | UPDATE | BillOfLadingForm | Progress header visible on create too; actions edit-only via record check |
 | 2026-09-15 16:10 | UPDATE | BillOfLadingForm | Shipment type defaults to export |
+| 2026-09-15 16:20 | UPDATE | BillOfLadingForm, AdminPanelSmokeTest | Simplified progress header to heading + step line |
+| 2026-09-15 16:35 | UPDATE | BillOfLadingForm | Booking-order fields grouped per export spec; schedule section split |
+| 2026-09-15 16:45 | UPDATE | BillOfLadingForm | Progress sections auto-collapse unless at their milestone |
+| 2026-09-15 17:05 | UPDATE | BillOfLadingForm, BillOfLading | Containers repeater moved into Progress pickup step; Activity log tab added |
+| 2026-09-15 17:20 | CREATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Interactive horizontal milestone stepper |
+| 2026-09-15 17:20 | UPDATE | BillOfLading, EditBillOfLading, BillOfLadingForm, AdminPanelSmokeTest | moveToMilestone jump + activity logging; stepper in progress header |
+| 2026-09-15 17:35 | UPDATE | milestone-stepper.blade.php | Scoped CSS in-file (panel ships precompiled CSS); progress-line styling |
+| 2026-09-15 17:50 | UPDATE | milestone-stepper.blade.php, BillOfLadingForm, EditBillOfLading | Green #03eb62; section wrapper + step text removed; Regress/Advance to page header |
+| 2026-09-15 18:05 | UPDATE | EditBillOfLading, milestone-stepper.blade.php, AdminPanelSmokeTest | Stepper clicks mount Filament modal; forward jumps capped at 1 step |
+| 2026-09-16 10:58 | UPDATE | BillOfLadingForm, AdminPanelSmokeTest | Progress tab restricted to edit; create shows Document only |
+| 2026-09-16 11:09 | UPDATE | BillOfLadingForm | Locked sections now identify their required milestone |
+| 2026-09-16 11:12 | UPDATE | app/Services/ActivityLogger.php | Added shipment snapshots and changed-field diff recording |
+| 2026-09-16 11:59 | UPDATE | app/Filament/Resources/BillOfLadings/Pages/EditBillOfLading.php | Audit B/L, nested container, and HS assignment saves |
+| 2026-09-16 11:59 | UPDATE | app/Filament/Resources/Containers/Pages/EditContainer.php | Audit standalone container field changes |
+| 2026-09-16 11:59 | UPDATE | app/Filament/Resources/Containers/Pages/CreateContainer.php | Audit standalone container creation values |
+| 2026-09-16 12:24 | CREATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Cover milestone guidance and all shipment audit paths |
+| 2026-09-16 12:43 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Added persistent milestone state metadata for soft dividers |
+| 2026-09-16 12:43 | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Added scoped current, available, and locked divider styles |
+| 2026-09-16 12:47 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Flattened top-level Progress groups into soft dividers |
+| 2026-09-16 12:58 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Flattened nested container groups and kept repeater items open |
+| 2026-09-16 12:43 | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Updated locked-message assertions for persistent milestone context |
+| 2026-09-16 13:05 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Locked groups keep message; current/available show none |
+| 2026-09-16 13:05 | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Assert no current/available milestone text renders |
+| 2026-09-16 13:05 | UPDATE | docs/UAT.md | Added B/L progress and audit manual checklist |
+| 2026-09-16 13:28 | UPDATE | database/migrations/2026_09_15_040008_create_containers_table.php | Added gate_in_port_name and final_checked; dropped vgm_unit and final_checked_by |
+| 2026-09-16 13:28 | UPDATE | app/Models/Container.php | Fillable/casts for new columns; removed finalCheckedBy relation |
+| 2026-09-16 13:28 | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Added tracking-position repeater, gate-in port, VGM (kg), final-checked checkbox |
+| 2026-09-16 13:44 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Flat gated fields; added tracking repeater, gate-in port, VGM (kg), final-checked |
+| 2026-09-16 13:44 | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Removed obsolete soft-divider CSS |
+| 2026-09-16 13:44 | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Locked messages now assert "Locked until Step X: name" |
+| 2026-09-16 14:02 | UPDATE | database/migrations/2026_09_15_040008_create_containers_table.php | Added tracking_position free-text column |
+| 2026-09-16 14:02 | DELETE | database/migrations/2026_09_15_040015_create_container_location_updates_table.php | Dropped unused location-history table |
+| 2026-09-16 14:02 | DELETE | app/Models/ContainerLocationUpdate.php | Removed with the table |
+| 2026-09-16 14:02 | UPDATE | app/Models/Container.php | Added tracking_position; removed locationUpdates relation |
+| 2026-09-16 14:02 | UPDATE | app/Livewire/Customer/ContainerDetail.php | Portal no longer queries location history |
+| 2026-09-16 14:02 | UPDATE | resources/views/livewire/customer/container-detail.blade.php | History table replaced by tracking position row |
+| 2026-09-16 14:15 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Tracking position text + Curator attachments picker in container items |
+| 2026-09-16 14:15 | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Same fields on the standalone container form |
+| 2026-09-16 14:15 | UPDATE | app/Models/Container.php | Added syncAttachments() for picker state |
+| 2026-09-16 14:15 | UPDATE | app/Services/ActivityLogger.php | Container snapshots now include attachment ids |
+| 2026-09-16 14:15 | UPDATE | app/Filament/Resources/BillOfLadings/Pages/EditBillOfLading.php | Syncs picked attachments before the audit diff |
+| 2026-09-16 14:15 | UPDATE | app/Filament/Resources/Containers/Pages/EditContainer.php | Same sync on standalone save |
+| 2026-09-16 14:15 | UPDATE | app/Filament/Resources/Containers/Pages/CreateContainer.php | Same sync on standalone create |
+| 2026-09-16 14:40 | UPDATE | database/seeders/DemoShipmentSeeder.php | Completed export container carries full milestone field data |
+| 2026-09-16 15:03 | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Picker seeded via mutateRelationshipDataBeforeFillUsing; clobbering hook removed |
+| 2026-09-16 15:03 | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Removed loadStateFromRelationshipsUsing that reset picker state on save |
+| 2026-09-16 15:03 | UPDATE | app/Filament/Resources/Containers/Pages/EditContainer.php | Seeds attachment picker via mutateFormDataBeforeFill |
+| 2026-09-16 15:03 | UPDATE | app/Filament/Resources/BillOfLadings/Pages/EditBillOfLading.php | Captures picks in beforeSave; syncs by container_number; refreshes repeater |
+| 2026-09-16 15:03 | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Attachment sync test uses real uuid-keyed picker state; passes |

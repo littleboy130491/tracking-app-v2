@@ -41,13 +41,16 @@ return new class extends Migration
             $table->string('driver_name')->nullable();
             // "No. License": meaning is unconfirmed (migration_plan §14), stored as text.
             $table->string('license_number', 100)->nullable();
+            // Free-text driver position reported while on the way to the factory.
+            $table->string('tracking_position')->nullable();
 
             $table->decimal('gross_weight', 15, 3)->nullable();
             $table->string('gross_weight_unit', 20)->nullable();
             $table->decimal('cbm', 15, 3)->nullable();
+            // VGM is recorded in kilograms per the export spec; no unit column.
             $table->decimal('vgm_value', 15, 3)->nullable();
-            $table->string('vgm_unit', 20)->nullable();
 
+            $table->string('gate_in_port_name')->nullable();
             $table->timestamp('gate_in_cy_at')->nullable();
             $table->timestamp('gate_out_cy_at')->nullable();
 
@@ -59,8 +62,8 @@ return new class extends Migration
             $table->string('factory_loading_status', 30)->default('not_started');
             $table->timestamp('factory_loading_started_at')->nullable();
             $table->timestamp('factory_loading_finished_at')->nullable();
+            $table->boolean('final_checked')->default(false);
             $table->timestamp('final_checked_at')->nullable();
-            $table->foreignId('final_checked_by')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('return_depot_name')->nullable();
             $table->timestamp('empty_returned_at')->nullable();

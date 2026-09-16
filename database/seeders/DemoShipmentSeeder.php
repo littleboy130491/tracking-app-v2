@@ -25,6 +25,7 @@ use App\Enums\BillOfLadingStatus;
 use App\Enums\ContainerStatus;
 use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ShipmentType;
+use App\Enums\StuffingStatus;
 use App\Models\BillOfLading;
 use App\Models\Company;
 use App\Models\Container;
@@ -144,9 +145,21 @@ class DemoShipmentSeeder extends Seeder
         $this->hsCodes($exported, '2604.00');
 
         $this->container($exported, 'EGHU6677881', '40', 'GP', 'SL-0006', [
+            'pickup_depot_name' => 'Depot Makassar Utama',
             'empty_picked_up_at' => now()->subDays(25),
             'stuffing_date' => now()->subDays(24)->toDateString(),
+            'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',
+            'driver_name' => 'Andi Pratama',
+            'license_number' => 'DD 8123 KK',
+            'tracking_position' => 'Passed Maros checkpoint',
+            'stuffing_status' => StuffingStatus::Finished,
+            'stuffing_started_at' => now()->subDays(24),
+            'stuffing_finished_at' => now()->subDays(23)->subHours(8),
+            'gate_in_port_name' => 'Makassar New Port',
             'gate_in_cy_at' => now()->subDays(23),
+            'vgm_value' => 30250,
+            'final_checked' => true,
+            'final_checked_at' => now()->subDays(22),
             'status' => ContainerStatus::Completed,
             'completed_at' => now()->subDays(23),
         ]);

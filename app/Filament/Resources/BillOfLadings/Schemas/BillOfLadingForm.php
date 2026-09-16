@@ -6,16 +6,21 @@
  * What it does:
  * - Tab 1 "Document": AJU number, B/L number, shipment type, customer
  *   (company) relationship.
- * - Tab 2 "Progress": the current milestone with advance/regress actions on
- *   top, then every remaining field in one collapsible, type-conditional
- *   section per milestone. A section is disabled until its milestone is
- *   reached; disabled fields keep their values but cannot be edited.
+ * - Tab 2 "Progress" (edit page only): the interactive milestone stepper on
+ *   top (Regress / Advance live in the edit page header), then every
+ *   remaining field in a flat, type-conditional list — including the
+ *   containers repeater, which only exists to distinguish multiple
+ *   container records and whose items stay open. Each field is disabled
+ *   until its milestone is reached; locked fields show "Locked until
+ *   Step X: name" naming the step that unlocks them.
+ * - Tab 3 "Activity log": read-only table of the shipment's audit entries
+ *   (edit page only).
  * - reference_number is generated via a hidden field; company_name_snapshot
  *   is set by the model on create and editable on edit by admin/super-admin
  *   only.
  * How to use: Rendered by the B/L create and edit pages.
- * How to extend: Add a tab per process step, or a collapsible section inside
- *   the Event tab.
+ * How to extend: Add a field inside the Progress tab grid and wrap it in
+ *   self::gate() with the milestone that unlocks it.
  */
 
 namespace App\Filament\Resources\BillOfLadings\Schemas;
@@ -31,25 +36,31 @@ use App\Enums\InspectionStatus;
 use App\Enums\ShipmentMilestone;
 use App\Enums\ShipmentType;
 use App\Enums\StuffingStatus;
+use App\Models\Attachment;
 use App\Models\BillOfLading;
 use App\Models\Role;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Closure;
-use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\RepeatableEntry\TableColumn;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class BillOfLadingForm
@@ -88,161 +99,110 @@ class BillOfLadingForm
                                     ]),
                             ]),
                         Tab::make('Progress')
+                            ->visibleOn('edit')
                             ->schema([
-                                Section::make('Current progress')
-                                    ->description('Progress sections unlock as the shipment reaches each milestone.')
-                                    ->headerActions([
-                                        Action::make('regressMilestone')
-                                            ->label('Regress')
-                                            ->icon(Heroicon::ArrowLeft)
-                                            ->color('gray')
-                                            ->requiresConfirmation()
-                                            ->visible(fn (Get $get, ?BillOfLading $record): bool => (bool) $record?->exists
-                                                && self::neighborMilestone($get, 'previous') !== null)
-                                            ->action(function (Set $set, ?BillOfLading $record): void {
-                                                $record?->regressMilestone();
-                                                $record?->refresh();
-                                                $set('current_milestone', $record?->current_milestone?->value);
-                                            }),
-                                        Action::make('advanceMilestone')
-                                            ->label(fn (Get $get): string => ($next = self::neighborMilestone($get, 'next'))
-                                                ? 'Advance to '.$next->getLabel()
-                                                : 'Advance')
-                                            ->icon(Heroicon::ArrowRight)
-                                            ->requiresConfirmation()
-                                            ->modalHeading(fn (Get $get): string => 'Advance to "'.self::neighborMilestone($get, 'next')?->getLabel().'"?')
-                                            ->visible(fn (Get $get, ?BillOfLading $record): bool => (bool) $record?->exists
-                                                && self::neighborMilestone($get, 'next') !== null)
-                                            ->action(function (Set $set, ?BillOfLading $record): void {
-                                                $record?->advanceMilestone();
-                                                $record?->refresh();
-                                                $set('current_milestone', $record?->current_milestone?->value);
-                                            }),
-                                    ])
+                                Placeholder::make('milestone_stepper')
+                                    ->hiddenLabel()
+                                    ->content(fn (Get $get, ?BillOfLading $record): HtmlString => new HtmlString(
+                                        view('filament.bill-of-ladings.milestone-stepper', [
+                                            'sequence' => ($type = self::enumValue($get('shipment_type'), ShipmentType::class))
+                                                ? ShipmentMilestone::sequence($type, self::enumValue($get('billing_response'), BillingResponse::class))
+                                                : [],
+                                            'current' => self::enumValue($get('current_milestone'), ShipmentMilestone::class),
+                                            'editable' => (bool) $record?->exists,
+                                        ])->render()
+                                    )),
+                                Grid::make(2)
                                     ->schema([
-                                        Placeholder::make('current_progress')
-                                            ->label('Current milestone')
-                                            ->content(fn (Get $get): string => self::currentProgressLabel($get)),
-                                    ]),
-                                Section::make('Booking order')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Export)
-                                    ->disabled(self::locked(ShipmentMilestone::CheckingBookingOrder))
-                                    ->schema([
-                                        TextInput::make('do_number')
+                                        self::gate(TextInput::make('do_number')
                                             ->label('DO number')
-                                            ->maxLength(100),
-                                        DateTimePicker::make('depot_closing_at')
-                                            ->label('Depot closing'),
-                                        DateTimePicker::make('cy_closing_at')
-                                            ->label('CY closing'),
-                                    ]),
-                                Section::make('Vessel & schedule')
-                                    ->collapsible()
-                                    ->disabled(self::locked(ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib))
-                                    ->schema([
-                                        TextInput::make('shipping_line'),
-                                        TextInput::make('vessel_name'),
-                                        TextInput::make('voyage_number')
-                                            ->maxLength(100),
-                                        TextInput::make('port_of_loading'),
-                                        TextInput::make('port_of_discharge'),
-                                        DatePicker::make('departure_date'),
-                                        DateTimePicker::make('eta_at')
-                                            ->label('ETA'),
-                                        DateTimePicker::make('actual_arrival_at')
-                                            ->label('Actual arrival'),
-                                    ]),
-                                Section::make('Draft PIB')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::DraftPib))
-                                    ->schema([
-                                        Select::make('draft_pib_confirmation_status')
+                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DoRelease),
+                                        self::gate(TextInput::make('shipping_line'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                        self::gate(TextInput::make('vessel_name'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                        self::gate(TextInput::make('voyage_number')
+                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                        self::gate(TextInput::make('port_of_discharge'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                        self::gate(DateTimePicker::make('depot_closing_at')
+                                            ->label('Closing time at depot')
+                                            ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(DateTimePicker::make('cy_closing_at')
+                                            ->label('Closing time at CY')
+                                            ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(Repeater::make('containers')
+                                            ->relationship()
+                                            ->defaultItems(0)
+                                            ->itemLabel(fn (array $state): ?string => $state['container_number'] ?? null)
+                                            ->columns(3)
+                                            ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => [
+                                                ...$data,
+                                                'attachment_items' => self::attachmentPickerItems($data['id'] ?? null),
+                                            ])
+                                            ->schema(self::containerItemFields())
+                                            ->columnSpanFull(), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('port_of_loading'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
+                                        self::gate(DatePicker::make('departure_date'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
+                                        self::gate(DateTimePicker::make('eta_at')
+                                            ->label('ETA'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
+                                        self::gate(DateTimePicker::make('actual_arrival_at')
+                                            ->label('Actual arrival'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
+                                        self::gate(Select::make('draft_pib_confirmation_status')
                                             ->options(DraftPibConfirmationStatus::options())
-                                            ->default(DraftPibConfirmationStatus::Pending),
-                                        DateTimePicker::make('draft_pib_confirmed_at')
-                                            ->label('Confirmed at'),
-                                        Textarea::make('draft_pib_confirmation_notes')
+                                            ->default(DraftPibConfirmationStatus::Pending)
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::DraftPib),
+                                        self::gate(DateTimePicker::make('draft_pib_confirmed_at')
+                                            ->label('Confirmed at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::DraftPib),
+                                        self::gate(Textarea::make('draft_pib_confirmation_notes')
                                             ->label('Confirmation notes')
-                                            ->columnSpanFull(),
-                                    ]),
-                                Section::make('Billing issuance')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::BillingIssued))
-                                    ->schema([
-                                        Select::make('billing_issuance_status')
+                                            ->columnSpanFull()
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::DraftPib),
+                                        self::gate(Select::make('billing_issuance_status')
                                             ->options(BillingIssuanceStatus::options())
-                                            ->default(BillingIssuanceStatus::NotIssued),
-                                        DateTimePicker::make('billing_issued_at')
-                                            ->label('Issued at'),
-                                    ]),
-                                Section::make('THC payment')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::ThcPayment))
-                                    ->schema([
-                                        Select::make('thc_payment_status')
+                                            ->default(BillingIssuanceStatus::NotIssued)
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingIssued),
+                                        self::gate(DateTimePicker::make('billing_issued_at')
+                                            ->label('Issued at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingIssued),
+                                        self::gate(Select::make('thc_payment_status')
                                             ->options(BillingPaymentStatus::options())
-                                            ->default(BillingPaymentStatus::NotPaid),
-                                        DateTimePicker::make('thc_paid_at')
-                                            ->label('Paid at'),
-                                    ]),
-                                Section::make('DO release')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::DoRelease))
-                                    ->schema([
-                                        DateTimePicker::make('do_released_at')
-                                            ->label('DO released at'),
-                                    ]),
-                                Section::make('Billing payment')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::BillingPayment))
-                                    ->schema([
-                                        Select::make('billing_payment_status')
+                                            ->default(BillingPaymentStatus::NotPaid)
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::ThcPayment),
+                                        self::gate(DateTimePicker::make('thc_paid_at')
+                                            ->label('Paid at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::ThcPayment),
+                                        self::gate(DateTimePicker::make('do_released_at')
+                                            ->label('DO released at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::DoRelease),
+                                        self::gate(Select::make('billing_payment_status')
                                             ->options(BillingPaymentStatus::options())
-                                            ->default(BillingPaymentStatus::NotPaid),
-                                        DateTimePicker::make('billing_paid_at')
-                                            ->label('Paid at'),
-                                    ]),
-                                Section::make('Billing response')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::BillingResponseReceived))
-                                    ->schema([
-                                        Select::make('billing_response')
-                                            ->options(BillingResponse::options()),
-                                        DateTimePicker::make('billing_response_at')
-                                            ->label('Response at'),
-                                    ]),
-                                Section::make('Behandle payment')
-                                    ->collapsible()
-                                    ->visible(fn (Get $get): bool => self::enumValue($get('shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                    ->disabled(self::locked(ShipmentMilestone::BehandlePayment))
-                                    ->schema([
-                                        Select::make('behandle_payment_status')
-                                            ->options(BillingPaymentStatus::options()),
-                                        DateTimePicker::make('behandle_paid_at')
-                                            ->label('Paid at'),
-                                    ]),
-                                Section::make('Cargo & terminal')
-                                    ->collapsible()
-                                    ->disabled(self::locked(ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument))
-                                    ->schema([
-                                        Textarea::make('goods_description')
-                                            ->columnSpanFull(),
-                                        TextInput::make('package_count')
-                                            ->numeric(),
-                                        TextInput::make('package_unit')
-                                            ->maxLength(50),
-                                        TextInput::make('terminal_name'),
-                                        DatePicker::make('loading_date'),
-                                        Textarea::make('loading_destination')
-                                            ->columnSpanFull(),
-                                        Select::make('hsCodes')
+                                            ->default(BillingPaymentStatus::NotPaid)
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingPayment),
+                                        self::gate(DateTimePicker::make('billing_paid_at')
+                                            ->label('Paid at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingPayment),
+                                        self::gate(Select::make('billing_response')
+                                            ->options(BillingResponse::options())
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingResponseReceived),
+                                        self::gate(DateTimePicker::make('billing_response_at')
+                                            ->label('Response at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BillingResponseReceived),
+                                        self::gate(Select::make('behandle_payment_status')
+                                            ->options(BillingPaymentStatus::options())
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BehandlePayment),
+                                        self::gate(DateTimePicker::make('behandle_paid_at')
+                                            ->label('Paid at')
+                                            ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BehandlePayment),
+                                        self::gate(Textarea::make('goods_description')
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('package_count')
+                                            ->numeric(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('package_unit')
+                                            ->maxLength(50), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('terminal_name'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(DatePicker::make('loading_date'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(Textarea::make('loading_destination')
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(Select::make('hsCodes')
                                             ->label('HS codes')
                                             ->relationship('hsCodes', 'code')
                                             ->multiple()
@@ -258,150 +218,42 @@ class BillOfLadingForm
                                                 Textarea::make('description')
                                                     ->rows(3),
                                             ])
-                                            ->columnSpanFull(),
-                                    ]),
-                                Section::make('Status')
-                                    ->collapsible()
-                                    ->disabled(self::locked(ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned))
-                                    ->schema([
-                                        Select::make('status')
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(Select::make('status')
                                             ->options(BillOfLadingStatus::options())
-                                            ->default(BillOfLadingStatus::Draft),
-                                        DateTimePicker::make('completed_at')
-                                            ->label('Completed at'),
+                                            ->default(BillOfLadingStatus::Draft), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned),
+                                        self::gate(DateTimePicker::make('completed_at')
+                                            ->label('Completed at'), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned),
                                     ]),
                             ]),
-                        Tab::make('Containers')
+                        Tab::make('Activity log')
+                            ->visibleOn('edit')
                             ->schema([
-                                Repeater::make('containers')
-                                    ->relationship()
-                                    ->addable(self::unlockedGate(ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument))
-                                    ->defaultItems(0)
-                                    ->collapsible()
-                                    ->collapsed()
-                                    ->itemLabel(fn (array $state): ?string => $state['container_number'] ?? null)
+                                RepeatableEntry::make('activityLogs')
+                                    ->hiddenLabel()
+                                    ->table([
+                                        TableColumn::make('When'),
+                                        TableColumn::make('Event'),
+                                        TableColumn::make('By'),
+                                        TableColumn::make('Container'),
+                                        TableColumn::make('Summary'),
+                                    ])
                                     ->schema([
-                                        Section::make('Container')
-                                            ->disabled(self::locked(ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument, '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                TextInput::make('container_number')
-                                                    ->required()
-                                                    ->distinct()
-                                                    ->maxLength(30),
-                                                TextInput::make('seal_number')
-                                                    ->maxLength(100),
-                                                Select::make('size')
-                                                    ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
-                                                Select::make('type')
-                                                    ->options(['GP' => 'GP', 'HC' => 'HC', 'RF' => 'RF']),
-                                            ]),
-                                        Section::make('Transport')
-                                            ->columns(3)
-                                            ->disabled(self::locked(ShipmentMilestone::OnTheWayToFactory, ShipmentMilestone::OnTheWayToConsignee, '../../'))
-                                            ->schema([
-                                                TextInput::make('driver_name')
-                                                    ->maxLength(255),
-                                                TextInput::make('license_number')
-                                                    ->label('Truck plate number')
-                                                    ->maxLength(100),
-                                            ]),
-                                        Section::make('Pickup & stuffing — Export')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Export)
-                                            ->disabled(self::locked(ShipmentMilestone::PickupEmptyContainer, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                TextInput::make('pickup_depot_name')
-                                                    ->maxLength(255),
-                                                DateTimePicker::make('empty_picked_up_at')
-                                                    ->label('Empty picked up at'),
-                                                DatePicker::make('stuffing_date'),
-                                                Select::make('stuffing_status')
-                                                    ->options(StuffingStatus::options())
-                                                    ->default(StuffingStatus::NotStarted)
-                                                    ->required(),
-                                                DateTimePicker::make('stuffing_started_at'),
-                                                DateTimePicker::make('stuffing_finished_at'),
-                                                Textarea::make('stuffing_destination')
-                                                    ->columnSpanFull(),
-                                            ]),
-                                        Section::make('Gate in & VGM — Export')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Export)
-                                            ->disabled(self::locked(ShipmentMilestone::GateInCy, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                DateTimePicker::make('gate_in_cy_at')
-                                                    ->label('Gate in CY at'),
-                                                TextInput::make('vgm_value')
-                                                    ->label('VGM')
-                                                    ->numeric(),
-                                                TextInput::make('vgm_unit')
-                                                    ->label('VGM unit')
-                                                    ->maxLength(20),
-                                            ]),
-                                        Section::make('Final check — Export')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Export)
-                                            ->disabled(self::locked(ShipmentMilestone::FinalChecking, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                DateTimePicker::make('final_checked_at'),
-                                                Select::make('final_checked_by')
-                                                    ->label('Final checked by')
-                                                    ->relationship('finalCheckedBy', 'name')
-                                                    ->searchable()
-                                                    ->preload(),
-                                            ]),
-                                        Section::make('Gate out & weights — Import')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                            ->disabled(self::locked(ShipmentMilestone::GateOutCy, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                DateTimePicker::make('gate_out_cy_at')
-                                                    ->label('Gate out CY at'),
-                                                TextInput::make('gross_weight')->numeric(),
-                                                TextInput::make('gross_weight_unit')
-                                                    ->maxLength(20),
-                                                TextInput::make('cbm')->numeric(),
-                                            ]),
-                                        Section::make('Inspection — Import')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                            ->disabled(self::locked(ShipmentMilestone::Inspection, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                Select::make('inspection_status')
-                                                    ->options(InspectionStatus::options())
-                                                    ->default(InspectionStatus::NotStarted)
-                                                    ->required(),
-                                                DateTimePicker::make('inspected_at'),
-                                                Textarea::make('inspection_notes')
-                                                    ->columnSpanFull(),
-                                            ]),
-                                        Section::make('Factory & return — Import')
-                                            ->visible(fn (Get $get): bool => self::enumValue($get('../../shipment_type'), ShipmentType::class) === ShipmentType::Import)
-                                            ->disabled(self::locked(ShipmentMilestone::ArrivedAtFactory, prefix: '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                DateTimePicker::make('factory_arrived_at'),
-                                                Select::make('factory_loading_status')
-                                                    ->options(FactoryLoadingStatus::options())
-                                                    ->default(FactoryLoadingStatus::NotStarted)
-                                                    ->required(),
-                                                DateTimePicker::make('factory_loading_started_at'),
-                                                DateTimePicker::make('factory_loading_finished_at'),
-                                                TextInput::make('return_depot_name')
-                                                    ->maxLength(255),
-                                                DateTimePicker::make('empty_returned_at'),
-                                            ]),
-                                        Section::make('Status')
-                                            ->disabled(self::locked(ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned, '../../'))
-                                            ->columns(3)
-                                            ->schema([
-                                                Select::make('status')
-                                                    ->options(ContainerStatus::options())
-                                                    ->default(ContainerStatus::Pending)
-                                                    ->required(),
-                                                DateTimePicker::make('completed_at'),
-                                            ]),
+                                        TextEntry::make('occurred_at')
+                                            ->hiddenLabel()
+                                            ->dateTime(),
+                                        TextEntry::make('event')
+                                            ->hiddenLabel()
+                                            ->badge(),
+                                        TextEntry::make('actor.name')
+                                            ->hiddenLabel()
+                                            ->placeholder('System'),
+                                        TextEntry::make('container.container_number')
+                                            ->hiddenLabel()
+                                            ->placeholder('—'),
+                                        TextEntry::make('customer_summary')
+                                            ->hiddenLabel()
+                                            ->placeholder('—'),
                                     ]),
                             ]),
                     ]),
@@ -417,7 +269,141 @@ class BillOfLadingForm
     }
 
     /**
-     * Disabled-until-milestone gate for progress sections. `$import` overrides
+     * The flat field list inside one container repeater item. Each field reads
+     * the parent B/L's milestone via '../../' so it unlocks on its own step:
+     * export fills identity, transport and pickup at "Pick up empty container",
+     * tracks the driver position "On the way to factory", stuffs at
+     * "Stuffing / PEB & NPE", records gate-in port and date at "Checking PEB
+     * & NPE", VGM at "Gate in CY" and the final check at "Final checking".
+     * Import registers containers while checking documents and fills the
+     * gate-out, inspection, factory and return fields at their steps.
+     *
+     * @return array<int, Field>
+     */
+    private static function containerItemFields(): array
+    {
+        return [
+            self::gate(TextInput::make('container_number')
+                ->required()
+                ->distinct()
+                ->maxLength(30), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(TextInput::make('seal_number')
+                ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(Select::make('size')
+                ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(Select::make('type')
+                ->options(['GP' => 'GP', 'HC' => 'HC', 'RF' => 'RF']), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(TextInput::make('driver_name')
+                ->maxLength(255), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
+            self::gate(TextInput::make('license_number')
+                ->label('Truck plate number')
+                ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
+            self::gate(TextInput::make('pickup_depot_name')
+                ->label('Pick up depot')
+                ->maxLength(255)
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
+            self::gate(DateTimePicker::make('empty_picked_up_at')
+                ->label('Empty picked up at')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
+            self::gate(DatePicker::make('stuffing_date')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
+            self::gate(Textarea::make('stuffing_destination')
+                ->columnSpanFull()
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
+            self::gate(TextInput::make('tracking_position')
+                ->label('Tracking position')
+                ->maxLength(255)
+                ->columnSpanFull()
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::OnTheWayToFactory, prefix: '../../'),
+            self::gate(CuratorPicker::make('attachment_items')
+                ->label('Attachments')
+                ->multiple()
+                ->dehydrated(false)
+                ->columnSpanFull(), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(Select::make('stuffing_status')
+                ->options(StuffingStatus::options())
+                ->default(StuffingStatus::NotStarted)
+                ->required()
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::StuffingPebNpe, prefix: '../../'),
+            self::gate(DateTimePicker::make('stuffing_started_at')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::StuffingPebNpe, prefix: '../../'),
+            self::gate(DateTimePicker::make('stuffing_finished_at')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::StuffingPebNpe, prefix: '../../'),
+            self::gate(TextInput::make('gate_in_port_name')
+                ->label('Gate in port')
+                ->maxLength(255)
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::CheckingPebNpe, prefix: '../../'),
+            self::gate(DateTimePicker::make('gate_in_cy_at')
+                ->label('Gate in CY at')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::CheckingPebNpe, prefix: '../../'),
+            self::gate(TextInput::make('vgm_value')
+                ->label('VGM (kg)')
+                ->numeric()
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::GateInCy, prefix: '../../'),
+            self::gate(Checkbox::make('final_checked')
+                ->label('Final checked')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::FinalChecking, prefix: '../../'),
+            self::gate(DateTimePicker::make('final_checked_at')
+                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::FinalChecking, prefix: '../../'),
+            self::gate(DateTimePicker::make('gate_out_cy_at')
+                ->label('Gate out CY at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::GateOutCy, prefix: '../../'),
+            self::gate(TextInput::make('gross_weight')
+                ->numeric()
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::GateOutCy, prefix: '../../'),
+            self::gate(TextInput::make('gross_weight_unit')
+                ->maxLength(20)
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::GateOutCy, prefix: '../../'),
+            self::gate(TextInput::make('cbm')
+                ->numeric()
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::GateOutCy, prefix: '../../'),
+            self::gate(Select::make('inspection_status')
+                ->options(InspectionStatus::options())
+                ->default(InspectionStatus::NotStarted)
+                ->required()
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::Inspection, prefix: '../../'),
+            self::gate(DateTimePicker::make('inspected_at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::Inspection, prefix: '../../'),
+            self::gate(Textarea::make('inspection_notes')
+                ->columnSpanFull()
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::Inspection, prefix: '../../'),
+            self::gate(DateTimePicker::make('factory_arrived_at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(Select::make('factory_loading_status')
+                ->options(FactoryLoadingStatus::options())
+                ->default(FactoryLoadingStatus::NotStarted)
+                ->required()
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(DateTimePicker::make('factory_loading_started_at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(DateTimePicker::make('factory_loading_finished_at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(TextInput::make('return_depot_name')
+                ->maxLength(255)
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(DateTimePicker::make('empty_returned_at')
+                ->visible(self::visibleTo(ShipmentType::Import, '../../')), ShipmentMilestone::ArrivedAtFactory, prefix: '../../'),
+            self::gate(Select::make('status')
+                ->options(ContainerStatus::options())
+                ->default(ContainerStatus::Pending)
+                ->required(), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned, '../../'),
+            self::gate(DateTimePicker::make('completed_at'), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned, '../../'),
+        ];
+    }
+
+    /**
+     * Applies the milestone gate to one field: disabled until its milestone is
+     * reached, with a helper text naming the step that unlocks it.
+     */
+    private static function gate(Field $field, ShipmentMilestone $required, ?ShipmentMilestone $import = null, string $prefix = ''): Field
+    {
+        return $field
+            ->disabled(self::locked($required, $import, $prefix))
+            ->helperText(self::lockedHelperText($required, $import, $prefix));
+    }
+
+    /**
+     * Disabled-until-milestone check for progress fields. `$import` overrides
      * the required milestone when the shipment type is import; `$prefix` lets
      * container repeater items read the parent B/L state via '../../'.
      */
@@ -440,50 +426,60 @@ class BillOfLadingForm
     }
 
     /**
-     * The inverse of `locked()` — for gates like the repeater's add button.
+     * Per-field locked message, e.g. "Locked until Step 3: Pick up empty
+     * container at depot". The step number is the milestone's position in the
+     * shipment's sequence so the text matches the stepper above.
      */
-    private static function unlockedGate(ShipmentMilestone $required, ?ShipmentMilestone $import = null, string $prefix = ''): Closure
-    {
+    private static function lockedHelperText(
+        ShipmentMilestone $required,
+        ?ShipmentMilestone $import = null,
+        string $prefix = '',
+    ): Closure {
         $locked = self::locked($required, $import, $prefix);
 
-        return fn (Get $get): bool => ! $locked($get);
+        return function (Get $get) use ($locked, $required, $import, $prefix): ?string {
+            if (! $locked($get)) {
+                return null;
+            }
+
+            $type = self::enumValue($get($prefix.'shipment_type'), ShipmentType::class) ?? ShipmentType::Export;
+            $milestone = $type === ShipmentType::Import && $import ? $import : $required;
+            $sequence = ShipmentMilestone::sequence($type, self::enumValue($get($prefix.'billing_response'), BillingResponse::class));
+            $step = array_search($milestone, $sequence, true);
+
+            return 'Locked until Step '.($step === false ? '?' : $step + 1).': '.$milestone->getLabel();
+        };
     }
 
     /**
-     * The milestone after/before the current one, from form state.
+     * Visibility check for fields that belong to one shipment type only.
      */
-    private static function neighborMilestone(Get $get, string $direction): ?ShipmentMilestone
+    private static function visibleTo(ShipmentType $type, string $prefix = ''): Closure
     {
-        $type = self::enumValue($get('shipment_type'), ShipmentType::class);
-
-        if (! $type) {
-            return null;
-        }
-
-        $response = self::enumValue($get('billing_response'), BillingResponse::class);
-        $current = self::enumValue($get('current_milestone'), ShipmentMilestone::class);
-
-        return $direction === 'next'
-            ? ShipmentMilestone::next($type, $response, $current)
-            : ShipmentMilestone::previous($type, $response, $current);
+        return fn (Get $get): bool => self::enumValue($get($prefix.'shipment_type'), ShipmentType::class) === $type;
     }
 
     /**
-     * "Step 3 of 8 — Pick up empty container at depot" for the progress header.
+     * Media arrays for one container's attachment picker. The picker's own
+     * hydration hook turns this plain list into its uuid-keyed state.
+     * Seeded through mutateRelationshipDataBeforeFillUsing because a virtual
+     * (non-relationship) picker field cannot hydrate itself — Filament would
+     * re-run loadStateFromRelationships during save and clobber the user's
+     * selection.
+     *
+     * @return list<array<string, mixed>>
      */
-    private static function currentProgressLabel(Get $get): string
+    private static function attachmentPickerItems(?int $containerId): array
     {
-        $type = self::enumValue($get('shipment_type'), ShipmentType::class);
-        $milestone = self::enumValue($get('current_milestone'), ShipmentMilestone::class);
-
-        if (! $type || ! $milestone) {
-            return '—';
+        if ($containerId === null) {
+            return [];
         }
 
-        $sequence = ShipmentMilestone::sequence($type, self::enumValue($get('billing_response'), BillingResponse::class));
-        $position = array_search($milestone, $sequence, true);
-
-        return 'Step '.($position === false ? 1 : $position + 1).' of '.count($sequence).' — '.$milestone->getLabel();
+        return Attachment::query()
+            ->where('container_id', $containerId)
+            ->get()
+            ->map->toArray()
+            ->all();
     }
 
     /**

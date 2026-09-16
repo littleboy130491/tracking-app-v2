@@ -11,7 +11,32 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
-## 1. Users & Companies CRUD (2026-09-15)
+## 1. B/L Progress milestones & audit (2026-09-16)
+
+**Prerequisites**
+
+- Run `php artisan migrate:fresh --seed` first (schema was rebuilt).
+- Admin panel: `http://localhost:8000/admin` — log in as `admin@example.com` / `password`.
+
+**Progress layout**
+
+- [ ] Bill of ladings → New: the form shows only the **Document** tab; **Progress** and **Activity log** are absent.
+- [ ] Create a shipment, then open its Edit → **Progress**. Expected: fields are laid out continuously; no card boxes or collapse controls.
+- [ ] The horizontal milestone stepper appears at the top; completed steps are green, the current step is highlighted, later steps are grey.
+- [ ] A not-yet-reached field group shows a thin divider and `Locked until "X". Advance progress to continue.` — and nothing else; groups from the current or already-reached steps show **no** "Current step:" or "Available since" text.
+- [ ] Click a future step more than one ahead. Expected: it is not clickable. Click the next step and confirm the Filament modal. Expected: progress advances one step and the newly unlocked fields become editable.
+- [ ] Click an earlier step and confirm. Expected: progress moves back and its fields remain editable.
+
+**Containers**
+
+- [ ] At the pickup step, add a container. Expected: the item stays open; its fields are grouped under thin milestone dividers, not inner cards.
+
+**Activity log**
+
+- [ ] Edit → Activity log. Expected: milestone changes and any saved field edits appear as rows (when, event, actor, summary); click an entry to inspect old/new values.
+- [ ] Press Save without changing anything. Expected: no new activity row appears.
+
+## 2. Users & Companies CRUD (2026-09-15)
 
 **Prerequisites**
 

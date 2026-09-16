@@ -5,8 +5,9 @@
  * Responsibility: Admin form for a shipment container.
  * What it does:
  * - Hardcoded interpretation of the export/import spec at container level:
- *   pickup/stuffing, gate-in, VGM and final checking are export steps; gate-out,
- *   weights, inspection, factory loading and depot return are import steps.
+ *   pickup/stuffing, driver position tracking, gate-in, VGM and final checking
+ *   are export steps; gate-out, weights, inspection, factory loading and depot
+ *   return are import steps.
  *   Sections hide themselves based on the parent B/L's shipment_type.
  * - created_by/updated_by are set by the application and never typed by hand.
  * How to use: Rendered by the container create/edit pages.
@@ -22,6 +23,8 @@ use App\Enums\ShipmentType;
 use App\Enums\StuffingStatus;
 use App\Models\BillOfLading;
 use App\Models\Container;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -66,6 +69,18 @@ class ContainerForm
                         TextInput::make('license_number')
                             ->label('Truck plate number')
                             ->maxLength(100),
+                        TextInput::make('tracking_position')
+                            ->label('Tracking position')
+                            ->maxLength(255)
+                            ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export),
+                    ]),
+                Section::make('Attachments')
+                    ->description('Photos and documents linked to this container.')
+                    ->schema([
+                        CuratorPicker::make('attachment_items')
+                            ->hiddenLabel()
+                            ->multiple()
+                            ->dehydrated(false),
                     ]),
                 Section::make('Pickup & stuffing — Export')
                     ->description('Process 2/3: pick up the empty container and stuff at the factory.')
@@ -89,25 +104,22 @@ class ContainerForm
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export)
                     ->columns(3)
                     ->schema([
+                        TextInput::make('gate_in_port_name')
+                            ->label('Gate in port')
+                            ->maxLength(255),
                         DateTimePicker::make('gate_in_cy_at')
                             ->label('Gate in CY at'),
                         TextInput::make('vgm_value')
-                            ->label('VGM')
+                            ->label('VGM (kg)')
                             ->numeric(),
-                        TextInput::make('vgm_unit')
-                            ->label('VGM unit')
-                            ->maxLength(20),
                     ]),
                 Section::make('Final check — Export')
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export)
                     ->columns(3)
                     ->schema([
+                        Checkbox::make('final_checked')
+                            ->label('Final checked'),
                         DateTimePicker::make('final_checked_at'),
-                        Select::make('final_checked_by')
-                            ->label('Final checked by')
-                            ->relationship('finalCheckedBy', 'name')
-                            ->searchable()
-                            ->preload(),
                     ]),
                 Section::make('Gate out & weights — Import')
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Import)

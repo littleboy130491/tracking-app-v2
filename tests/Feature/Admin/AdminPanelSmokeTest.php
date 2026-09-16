@@ -77,8 +77,9 @@ class AdminPanelSmokeTest extends TestCase
         $this->actingAs($admin)
             ->get(BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]))
             ->assertOk()
-            ->assertSee('Current milestone')
-            ->assertSee('Advance');
+            ->assertSee('Progress')
+            ->assertSee('Advance')
+            ->assertSee('jumpToMilestone');
     }
 
     public function test_admin_can_create_a_bill_of_lading_with_just_the_document_fields(): void
@@ -91,6 +92,7 @@ class AdminPanelSmokeTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(CreateBillOfLading::class)
+            ->assertDontSee('Progress')
             ->fillForm([
                 'aju_number' => 'AJU-TEST-001',
                 'bl_number' => 'BL-TEST-001',
@@ -170,6 +172,57 @@ class AdminPanelSmokeTest extends TestCase
         $export->regressMilestone();
         $this->assertSame(BillOfLadingStatus::InProgress, $export->status);
         $this->assertNull($export->completed_at);
+    }
+
+    public function test_milestone_stepper_jumps_and_logs_each_change(): void
+    {
+        $export = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+
+        // Jumping forward skips the steps in between.
+        $export->moveToMilestone(ShipmentMilestone::GateInCy);
+        $this->assertSame(ShipmentMilestone::GateInCy, $export->current_milestone);
+
+        // A milestone outside this type's sequence is ignored.
+        $export->moveToMilestone(ShipmentMilestone::EmptyReturned);
+        $this->assertSame(ShipmentMilestone::GateInCy, $export->current_milestone);
+
+        // Jumping to the last milestone completes; jumping off it reopens.
+        $export->moveToMilestone(ShipmentMilestone::FinalChecking);
+        $this->assertSame(BillOfLadingStatus::Completed, $export->status);
+
+        $export->moveToMilestone(ShipmentMilestone::DocumentReceived);
+        $this->assertSame(BillOfLadingStatus::InProgress, $export->status);
+        $this->assertNull($export->completed_at);
+
+        // Each real change lands in the activity log (the ignored jump did not).
+        $this->assertSame(3, $export->activityLogs()->where('event', 'milestone_changed')->count());
+    }
+
+    public function test_stepper_moves_at_most_one_step_forward(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->current_milestone);
+
+        $this->actingAs($admin);
+
+        // Two steps ahead is rejected — only the next step may be jumped to.
+        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+            ->mountAction('jumpToMilestone', ['milestone' => 'pickup_empty_container'])
+            ->callMountedAction();
+
+        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->refresh()->current_milestone);
+
+        // One step forward works, and jumping back is unrestricted.
+        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+            ->mountAction('jumpToMilestone', ['milestone' => 'checking_booking_order'])
+            ->callMountedAction()
+            ->mountAction('jumpToMilestone', ['milestone' => 'document_received'])
+            ->callMountedAction();
+
+        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->refresh()->current_milestone);
     }
 
     public function test_import_milestones_skip_the_spjm_branch_unless_the_response_is_spjm(): void

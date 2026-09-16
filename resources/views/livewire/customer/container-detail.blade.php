@@ -1,7 +1,6 @@
 {{-- File: resources/views/livewire/customer/container-detail.blade.php
      Responsibility: Customer view of one container.
-     What it does: shows container facts plus only the customer-visible
-       location updates.
+     What it does: shows container facts plus the latest tracking position.
      How to use: rendered by App\Livewire\Customer\ContainerDetail.
      How to extend: add a progress feed from customer-visible activity logs. --}}
 <div>
@@ -28,6 +27,10 @@
             <div class="font-medium">{{ $container->status->label() }}</div>
         </div>
         <div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Tracking position</div>
+            <div class="font-medium">{{ $container->tracking_position ?: '—' }}</div>
+        </div>
+        <div>
             <div class="text-xs uppercase tracking-wide text-slate-500">Gate in CY</div>
             <div class="font-medium">{{ $container->gate_in_cy_at?->format('d M Y H:i') ?? '—' }}</div>
         </div>
@@ -39,35 +42,5 @@
             <div class="text-xs uppercase tracking-wide text-slate-500">Empty returned</div>
             <div class="font-medium">{{ $container->empty_returned_at?->format('d M Y H:i') ?? '—' }}</div>
         </div>
-    </div>
-
-    <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-        <div class="border-b border-slate-200 px-4 py-3">
-            <h2 class="font-semibold text-slate-900">Location history</h2>
-        </div>
-        <table class="min-w-full divide-y divide-slate-200 text-sm">
-            <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                    <th class="px-4 py-3">Location</th>
-                    <th class="px-4 py-3">Reported</th>
-                    <th class="px-4 py-3">Notes</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                @forelse ($locations as $location)
-                    <tr>
-                        <td class="px-4 py-3">{{ $location->location_name }}</td>
-                        <td class="px-4 py-3">{{ $location->reported_at?->format('d M Y H:i') }}</td>
-                        <td class="px-4 py-3">{{ $location->notes ?: '—' }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="3" class="px-4 py-8 text-center text-slate-500">
-                            No location updates shared yet.
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
     </div>
 </div>

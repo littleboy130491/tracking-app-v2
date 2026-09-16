@@ -4,8 +4,7 @@
  * File: app/Livewire/Customer/ContainerDetail.php
  * Responsibility: Customer view of one container.
  * What it does:
- * - Shows the container's details and customer-visible location history
- *   (is_customer_visible), never internal notes.
+ * - Shows the container's details and its latest tracking position text.
  * - Scoping goes through the parent shipment, so a customer cannot open another
  *   company's container.
  * How to use: route customer.containers.show (opened in a new tab from the
@@ -40,10 +39,6 @@ class ContainerDetail extends Component
 
         return view('livewire.customer.container-detail', [
             'container' => $container,
-            'locations' => $container->locationUpdates()
-                ->where('is_customer_visible', true)
-                ->orderByDesc('reported_at')
-                ->get(),
         ]);
     }
 
