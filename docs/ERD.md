@@ -26,7 +26,6 @@ erDiagram
     BILL_OF_LADINGS ||--o{ BILL_OF_LADING_HS_CODE : declares
     HS_CODES ||--o{ BILL_OF_LADING_HS_CODE : "attached via"
     BILL_OF_LADINGS ||--o{ CONTAINERS : contains
-    CONTAINERS ||--o{ CONTAINER_LOCATION_UPDATES : reports
 
     BILL_OF_LADINGS ||--o{ ACTIVITY_LOGS : logs
     CONTAINERS |o--o{ ACTIVITY_LOGS : "logs (optional)"
@@ -148,22 +147,14 @@ erDiagram
         string inspection_status
         string factory_loading_status
         decimal gross_weight
-        decimal vgm_value
+        decimal vgm_value "always kg"
         decimal cbm
-        int final_checked_by FK
+        string tracking_position "latest position text"
+        string gate_in_port_name
+        bool final_checked
+        timestamp final_checked_at
         int created_by FK
         timestamp deleted_at "soft delete"
-    }
-
-    CONTAINER_LOCATION_UPDATES {
-        int id PK
-        int container_id FK
-        string location_name
-        decimal latitude
-        decimal longitude
-        timestamp reported_at
-        bool is_customer_visible
-        int created_by FK
     }
 
     ACTIVITY_LOGS {
@@ -197,7 +188,7 @@ erDiagram
 
 - **Excluded (Laravel internals):** `cache`, `jobs`, `sessions`, `password_reset_tokens` — framework plumbing, not domain data.
 - **`CURATOR` is the attachments table.** `App\Models\Attachment` extends Curator's media model; the shipment columns (`bill_of_lading_id`, `container_id`, `category`, `is_customer_visible`, `uploaded_by`) were added to it and the old `attachments` table was dropped.
-- **Audit FKs:** every `created_by` / `updated_by` / `final_checked_by` / `actor_id` / `uploaded_by` column references `users.id`. Only `ACTIVITY_LOGS` and `CURATOR` draw their user edges; the rest are omitted to keep the diagram readable.
+- **Audit FKs:** every `created_by` / `updated_by` / `actor_id` / `uploaded_by` column references `users.id`. Only `ACTIVITY_LOGS` and `CURATOR` draw their user edges; the rest are omitted to keep the diagram readable.
 - **Polymorphic pivots:** `model_has_roles` / `model_has_permissions` have no real FK to `users` (`model_type` + `model_id`); dotted lines mark that. In practice only `users` rows appear there.
 - **Cardinality:** `|o` on the left means the child's FK is nullable (e.g. an `activity_log` may have no `container_id` when the entry is B/L-scoped).
 - **Composite unique keys:** `company_user (company_id, user_id)`, `bill_of_lading_hs_code (bl_id, hs_code_id)`, `containers (bl_id, container_number)`.

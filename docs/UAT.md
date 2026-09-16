@@ -23,18 +23,28 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Bill of ladings → New: the form shows only the **Document** tab; **Progress** and **Activity log** are absent.
 - [ ] Create a shipment, then open its Edit → **Progress**. Expected: fields are laid out continuously; no card boxes or collapse controls.
 - [ ] The horizontal milestone stepper appears at the top; completed steps are green, the current step is highlighted, later steps are grey.
-- [ ] A not-yet-reached field group shows a thin divider and `Locked until "X". Advance progress to continue.` — and nothing else; groups from the current or already-reached steps show **no** "Current step:" or "Available since" text.
+- [ ] A field belonging to a not-yet-reached step is disabled and shows `Locked until Step X: {step name}` underneath; fields at or before the current step are editable and show no milestone text.
 - [ ] Click a future step more than one ahead. Expected: it is not clickable. Click the next step and confirm the Filament modal. Expected: progress advances one step and the newly unlocked fields become editable.
 - [ ] Click an earlier step and confirm. Expected: progress moves back and its fields remain editable.
 
 **Containers**
 
-- [ ] At the pickup step, add a container. Expected: the item stays open; its fields are grouped under thin milestone dividers, not inner cards.
+- [ ] At the pickup step (Step 2), add a container. Expected: the item stays open; fields show as a flat list, each disabled field naming the step that unlocks it.
+- [ ] Each container item shows an **Attachments** picker at the pickup step. Expected: click it → the Curator media library opens; pick existing files or upload new ones → Save → files stay attached to that container.
+- [ ] Reopen the B/L after saving. Expected: the picked attachments are still shown on the container; remove one and save → it detaches (the file itself remains in the media library).
+- [ ] **Tracking position** is a single text field per container, unlocked at "Container on the way to factory" (Step 3) — not a repeatable list.
+- [ ] At "Checking PEB & NPE" the container unlocks **Gate in port** + **Gate in CY** date; at "Gate in CY" it unlocks **VGM (kg)** (weight only, no unit selector); at "Final checking" it unlocks **Final checked** + **Final checked at**.
+- [ ] CRM → Containers → edit a container directly: the same fields appear, including the Attachments section.
 
 **Activity log**
 
 - [ ] Edit → Activity log. Expected: milestone changes and any saved field edits appear as rows (when, event, actor, summary); click an entry to inspect old/new values.
+- [ ] Attach or remove a container attachment, then Save. Expected: an activity row records the attachment change (old vs new media ids).
 - [ ] Press Save without changing anything. Expected: no new activity row appears.
+
+**Customer portal**
+
+- [ ] Log in to the portal as a customer user and open a tracked container. Expected: the details grid shows the **Tracking position** text when it is filled in; there is no location-history table.
 
 ## 2. Users & Companies CRUD (2026-09-15)
 

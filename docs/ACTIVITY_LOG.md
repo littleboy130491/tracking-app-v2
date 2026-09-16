@@ -286,3 +286,6 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-16 15:03 | UPDATE | app/Filament/Resources/Containers/Pages/EditContainer.php | Seeds attachment picker via mutateFormDataBeforeFill |
 | 2026-09-16 15:03 | UPDATE | app/Filament/Resources/BillOfLadings/Pages/EditBillOfLading.php | Captures picks in beforeSave; syncs by container_number; refreshes repeater |
 | 2026-09-16 15:03 | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Attachment sync test uses real uuid-keyed picker state; passes |
+| 2026-09-16 15:10 | UPDATE | docs/UAT.md | Checklist now covers field-level locking, tracking text, and attachments |
+| 2026-09-16 15:15 | UPDATE | docs/ERD.md | Containers entity matches new schema; location-updates entity removed |
+| 2026-09-16 15:15 | UPDATE | migration_plan.md | Container columns updated; location-updates section removed; renumbered |

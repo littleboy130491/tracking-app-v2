@@ -154,8 +154,9 @@ Setiap baris adalah **kontainer dalam shipment tertentu**, bukan master aset kon
 | `gross_weight`                | DECIMAL(15,3)        | Nullable, ≥ 0                                      |
 | `gross_weight_unit`           | VARCHAR(20)          | Nullable                                           |
 | `cbm`                         | DECIMAL(15,3)        | Nullable, ≥ 0                                      |
-| `vgm_value`                   | DECIMAL(15,3)        | Nullable, ≥ 0                                      |
-| `vgm_unit`                    | VARCHAR(20)          | Nullable                                           |
+| `vgm_value`                   | DECIMAL(15,3)        | Nullable, ≥ 0; selalu dalam kg                     |
+| `tracking_position`           | VARCHAR(255)         | Nullable; posisi terakhir sebagai teks             |
+| `gate_in_port_name`           | VARCHAR(255)         | Nullable                                           |
 | `gate_in_cy_at`               | TIMESTAMP            | Nullable                                           |
 | `gate_out_cy_at`              | TIMESTAMP            | Nullable                                           |
 | `inspection_status`           | VARCHAR(30)          | `not_started`, `in_progress`, `completed`          |
@@ -165,8 +166,8 @@ Setiap baris adalah **kontainer dalam shipment tertentu**, bukan master aset kon
 | `factory_loading_status`      | VARCHAR(30)          | `not_started`, `on_process`, `final_process`       |
 | `factory_loading_started_at`  | TIMESTAMP            | Nullable                                           |
 | `factory_loading_finished_at` | TIMESTAMP            | Nullable                                           |
+| `final_checked`               | BOOLEAN              | Default false                                      |
 | `final_checked_at`            | TIMESTAMP            | Nullable                                           |
-| `final_checked_by`            | FK → users           | Nullable                                           |
 | `return_depot_name`           | VARCHAR(255)         | Nullable                                           |
 | `empty_returned_at`           | TIMESTAMP            | Nullable                                           |
 | `status`                      | VARCHAR(30)          | `pending`, `in_progress`, `completed`, `cancelled` |
@@ -179,23 +180,7 @@ Unique gabungan: `bill_of_lading_id + container_number`.
 
 Nomor kontainer tidak dibuat unik global karena kontainer yang sama dapat digunakan lagi pada shipment lain.
 
-### 6. `container_location_updates`
-
-Riwayat posisi manual; jangan hanya menimpa satu kolom lokasi terakhir.
-
-| Field                 | Tipe               | Ketentuan                     |
-| --------------------- | ------------------ | ----------------------------- |
-| `container_id`        | FK → containers    | Wajib                         |
-| `stage_record_id`     | FK → stage_records | Nullable                      |
-| `location_name`       | VARCHAR(255)       | Wajib                         |
-| `latitude`            | DECIMAL(10,7)      | Nullable                      |
-| `longitude`           | DECIMAL(10,7)      | Nullable                      |
-| `reported_at`         | TIMESTAMP          | Waktu posisi tersebut berlaku |
-| `notes`               | TEXT               | Nullable                      |
-| `is_customer_visible` | BOOLEAN            | Default false                 |
-| `created_by`          | FK → users         | Nullable                      |
-
-### 7. Definisi workflow
+### 6. Definisi workflow
 
 **`workflow_templates`**
 
@@ -255,7 +240,7 @@ Unique gabungan: `stage_id + depends_on_stage_id + target_match`.
 
 Dependency bersyarat sudah cukup untuk kebutuhan SPJM ini; tidak perlu tabel transition terpisah jika alurnya ditentukan oleh dependency dan kondisi aktivasi.
 
-### 8. Field dan permission workflow
+### 7. Field dan permission workflow
 
 **`workflow_stage_fields`**
 
@@ -294,7 +279,7 @@ Unique gabungan: `workflow_stage_id + key`.
 
 Unique gabungan: `workflow_stage_id + role_id`.
 
-### 9. Pelaksanaan workflow
+### 8. Pelaksanaan workflow
 
 **`stage_records`**
 
@@ -341,7 +326,7 @@ Hanya untuk field dinamis; field inti tetap dibaca dari B/L atau Container.
 
 Terapkan uniqueness satu nilai per kombinasi record, definisi field, dan target kontainer, termasuk aturan khusus untuk target B/L yang bernilai `NULL`.
 
-### 10. Dokumen dan audit
+### 9. Dokumen dan audit
 
 **`attachments`**
 
@@ -380,7 +365,7 @@ Terapkan uniqueness satu nilai per kombinasi record, definisi field, dan target 
 
 Log bersifat append-only. Customer melihat ringkasan yang dipublikasikan, bukan seluruh payload internal.
 
-### 11. Conditional logic admin panel
+### 10. Conditional logic admin panel
 
 | Kondisi                      | Perilaku admin panel                                                      |
 | ---------------------------- | ------------------------------------------------------------------------- |
@@ -401,7 +386,7 @@ Log bersifat append-only. Customer melihat ringkasan yang dipublikasikan, bukan 
 
 Semua aturan permission dan dependency dijalankan di backend, bukan hanya melalui tombol yang disembunyikan.
 
-### 12. Conditional logic SPJM
+### 11. Conditional logic SPJM
 
 **Pemicu:**
 
@@ -443,7 +428,7 @@ Saat respons berubah menjadi SPPB:
 
 **SPPB langsung:** jalur menuju Container Shipping Schedule masih merupakan usulan yang perlu dijadikan aturan workflow setelah disepakati.
 
-### 13. Field umum tidak boleh bergantung pada SPJM
+### 12. Field umum tidak boleh bergantung pada SPJM
 
 Pada sumber Import, beberapa field umum sejajar dengan tahapan tambahan SPJM. Field tersebut tetap dibutuhkan meskipun responsnya bukan SPJM:
 
@@ -458,7 +443,7 @@ Pada sumber Import, beberapa field umum sejajar dengan tahapan tambahan SPJM. Fi
 
 Tahapan dapat menampilkan field ini untuk diperiksa atau diperbarui, tetapi **jangan menjadikan blok SPJM sebagai satu-satunya tempat pengisiannya**.
 
-### 14. Penyelesaian shipment
+### 13. Penyelesaian shipment
 
 Untuk Import, usulan aturannya:
 
