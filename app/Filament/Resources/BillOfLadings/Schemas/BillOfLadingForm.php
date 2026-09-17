@@ -39,6 +39,7 @@ use App\Enums\StuffingStatus;
 use App\Models\Attachment;
 use App\Models\BillOfLading;
 use App\Models\Role;
+use App\Models\User;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Closure;
 use Filament\Forms\Components\Checkbox;
@@ -60,6 +61,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
@@ -90,7 +92,7 @@ class BillOfLadingForm
                                             ->live(),
                                         Select::make('company_id')
                                             ->label('Customer')
-                                            ->relationship('company', 'name')
+                                            ->relationship('company', 'name', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query))
                                             ->required(),
                                         TextInput::make('company_name_snapshot')
                                             ->label('Customer name (snapshot)')

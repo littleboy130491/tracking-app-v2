@@ -9,6 +9,16 @@ class CreateCompany extends CreateRecord
 {
     protected static string $resource = CompanyResource::class;
 
+    /**
+     * Link the virtual customer/operator selects after the company exists
+     * (see CompanyForm and Company::syncLinkedUsers).
+     */
+    protected function afterCreate(): void
+    {
+        $this->record->syncLinkedUsers('customers', $this->data['customers'] ?? []);
+        $this->record->syncLinkedUsers('operators', $this->data['operators'] ?? []);
+    }
+
     protected function getHeaderActions(): array
     {
         return [

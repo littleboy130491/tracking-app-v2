@@ -11,7 +11,45 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
-## 1. Portal journey timeline like the reference tracker (2026-09-16)
+## 1. Operator row-level scope (2026-09-17)
+
+**Prerequisites**
+
+- Run `php artisan migrate:fresh --seed` first — the seeder assigns `operator@example.com` to NUS and SNI.
+- Admin panel: `http://localhost:8000/admin` — log in as `operator@example.com` / `password` (then compare with `admin@example.com` / `password`).
+
+**Shipments**
+
+- [ ] As operator, open **Shipments → Bills of lading**. Expected: only **REF-EXP-0001** (NUS) and **REF-EXP-0003** (SNI) are listed — not the SIN/BJM/JRD shipments.
+- [ ] Open one of the hidden shipments by pasting its edit URL. Expected: **404** page.
+- [ ] Open REF-EXP-0001 → Edit → Progress. Expected: the page works normally (containers, attachments, activity log tab all scoped to this shipment).
+- [ ] Create a new B/L → **Customer** dropdown. Expected: only **PT Nusantara Ekspor** and **PT Sulawesi Nickel Industri** are offered.
+- [ ] **Containers** list → B/L filter dropdown. Expected: only the operator's two B/Ls appear; container rows match them.
+- [ ] **Activity logs** list. Expected: only entries for the operator's shipments/containers; no rows for other companies.
+- [ ] Log out, log in as `admin@example.com` → same lists. Expected: every shipment, container and log is visible.
+
+**Portal (customers)**
+
+- [ ] Customer portal → log in as `customer@example.com`. Expected: only NUS/SIN/BJM shipments appear (unchanged behaviour; portal scoping matches the admin rule).
+- [ ] Paste another company's shipment URL. Expected: **404**.
+
+## 2. Staff impersonation (2026-09-17)
+
+**Prerequisites**
+
+- Run `php artisan migrate:fresh --seed` first.
+- Admin panel: `http://localhost:8000/admin` — log in as `admin@example.com` / `password` (or `superadmin@example.com` / `password`).
+
+**Impersonate from the users list**
+
+- [ ] CRM → Users. Expected: each row shows an impersonate icon; your own row does not.
+- [ ] Click the impersonate icon on a customer row. Expected: you land on `/` as that user (portal for customers) and a dark banner reads "Impersonating {name}" with a leave link.
+- [ ] Click the leave link. Expected: you return to the admin users list as yourself.
+- [ ] Log in as `operator@example.com` / `password` → CRM → Users. Expected: 403 (operators never see the list, so no impersonate icon).
+- [ ] As `admin@example.com`, open the edit page of `superadmin@example.com`. Expected: no impersonate button (admins cannot impersonate super admins).
+- [ ] As `superadmin@example.com`, open any user edit page. Expected: impersonate button present in the header.
+
+## 3. Portal journey timeline like the reference tracker (2026-09-16)
 
 **Prerequisites**
 
@@ -34,7 +72,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Portal home → shipment table. Expected: **Latest place** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
 - [ ] Search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `REF-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
 
-## 2. B/L Progress milestones & audit (2026-09-16)
+## 4. B/L Progress milestones & audit (2026-09-16)
 
 **Prerequisites**
 
@@ -69,7 +107,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Log in to the portal as a customer user and open a tracked container. Expected: the details grid shows the **Tracking position** text when it is filled in; there is no location-history table.
 
-## 2. Users & Companies CRUD (2026-09-15)
+## 5. Users & Companies CRUD (2026-09-15)
 
 **Prerequisites**
 
@@ -82,6 +120,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] CRM → Users → New user: fill name, email, optional phone, password. Expected: user appears in the list with the `customer` role assigned by default.
 - [ ] Edit that user: change phone, toggle Active off → Save. Expected: changes persist; phone is visible via the column picker (hidden by default).
 - [ ] Create a user with an email that already exists. Expected: validation error, no duplicate created.
+- [ ] CRM → Users: the **Companies** column lists each linked company by name. Expected: clicking a name opens that company's edit page; users with no company show `—`.
+- [ ] Same list → open the filter panel → filter by a company. Expected: only users linked to that company are shown.
 
 **Companies**
 

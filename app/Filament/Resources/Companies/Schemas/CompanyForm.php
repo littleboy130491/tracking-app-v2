@@ -5,9 +5,11 @@
  * Responsibility: Admin form for companies.
  * What it does:
  * - Captures company identity/contact data and toggles access.
- * - The portal-users multi-select attaches/detaches existing users and offers
- *   an inline create form; created users get a random password and the
- *   customer role automatically (they sign in by one-time code only).
+ * - Links users through two virtual selects (same company_user pivot, split
+ *   by role). Customers may be created inline — they get a random password
+ *   and the customer role (they sign in by one-time code only). The selects
+ *   are synced by the pages, not by relationship(), so saving one never
+ *   detaches the other role's links.
  * How to use: Rendered by CompanyResource create/edit pages.
  * How to extend: Add company fields here after adding the column + model fillable.
  */
@@ -51,14 +53,15 @@ class CompanyForm
                             ->default(true)
                             ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED)),
                     ]),
-                Section::make('Portal users')
+                Section::make('Linked users')
+                    ->description('Customers sign in to the portal; operators are assigned staff.')
                     ->schema([
-                        Select::make('users')
-                            ->label('Portal users')
-                            ->relationship('users', 'name')
+                        Select::make('customers')
+                            ->label('Customers')
                             ->multiple()
-                            ->preload()
                             ->searchable()
+                            ->dehydrated(false)
+                            ->options(fn (): array => User::query()->role(Role::CUSTOMER)->orderBy('name')->pluck('name', 'id')->all())
                             ->helperText('Users who may see this company\'s shipments in the portal.')
                             ->createOptionForm([
                                 TextInput::make('name')
@@ -84,6 +87,13 @@ class CompanyForm
 
                                 return $user->getKey();
                             }),
+                        Select::make('operators')
+                            ->label('Operators')
+                            ->multiple()
+                            ->searchable()
+                            ->dehydrated(false)
+                            ->options(fn (): array => User::query()->role(Role::OPERATOR)->orderBy('name')->pluck('name', 'id')->all())
+                            ->helperText('Internal staff assigned to handle this company.'),
                     ]),
             ]);
     }

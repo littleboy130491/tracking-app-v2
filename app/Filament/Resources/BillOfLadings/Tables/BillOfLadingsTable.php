@@ -15,6 +15,7 @@ namespace App\Filament\Resources\BillOfLadings\Tables;
 use App\Enums\BillingResponse;
 use App\Enums\BillOfLadingStatus;
 use App\Enums\ShipmentType;
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -24,6 +25,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class BillOfLadingsTable
 {
@@ -86,7 +88,7 @@ class BillOfLadingsTable
                 SelectFilter::make('billing_response')
                     ->options(BillingResponse::options()),
                 SelectFilter::make('company')
-                    ->relationship('company', 'name')
+                    ->relationship('company', 'name', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query))
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),

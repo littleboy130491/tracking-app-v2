@@ -23,6 +23,7 @@ use App\Enums\ShipmentType;
 use App\Enums\StuffingStatus;
 use App\Models\BillOfLading;
 use App\Models\Container;
+use App\Models\User;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
@@ -34,6 +35,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component as LivewireComponent;
 
 class ContainerForm
@@ -47,7 +49,7 @@ class ContainerForm
                     ->schema([
                         Select::make('bill_of_lading_id')
                             ->label('Bill of lading')
-                            ->relationship('billOfLading', 'reference_number')
+                            ->relationship('billOfLading', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                             ->searchable()
                             ->preload()
                             ->live()

@@ -19,6 +19,8 @@ use App\Filament\Resources\BillOfLadings\Pages\ListBillOfLadings;
 use App\Filament\Resources\BillOfLadings\Schemas\BillOfLadingForm;
 use App\Filament\Resources\BillOfLadings\Tables\BillOfLadingsTable;
 use App\Models\BillOfLading;
+use App\Models\Role;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -70,5 +72,22 @@ class BillOfLadingResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    /**
+     * Row-level scope: privileged staff see every shipment; everyone else
+     * (operators) only the companies they are assigned to — the same rule
+     * the customer portal applies through the company_user pivot.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (! $user instanceof User || $user->hasAnyRole(Role::PRIVILEGED)) {
+            return $query;
+        }
+
+        return $query->whereIn('company_id', $user->companyIds());
     }
 }

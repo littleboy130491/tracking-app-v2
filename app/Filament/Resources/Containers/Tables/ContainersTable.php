@@ -15,6 +15,7 @@ namespace App\Filament\Resources\Containers\Tables;
 use App\Enums\ContainerStatus;
 use App\Enums\InspectionStatus;
 use App\Enums\StuffingStatus;
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -24,6 +25,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContainersTable
 {
@@ -82,7 +84,7 @@ class ContainersTable
                 SelectFilter::make('inspection_status')->options(InspectionStatus::options()),
                 SelectFilter::make('bill_of_lading_id')
                     ->label('Bill of lading')
-                    ->relationship('billOfLading', 'reference_number')
+                    ->relationship('billOfLading', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),

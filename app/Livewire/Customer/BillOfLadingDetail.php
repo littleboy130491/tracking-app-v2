@@ -130,11 +130,14 @@ class BillOfLadingDetail extends Component
 
     private function billOfLading(): BillOfLading
     {
-        $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
+        $query = BillOfLading::query()->with('company');
 
-        return BillOfLading::query()
-            ->whereIn('company_id', $companyIds)
-            ->with('company')
-            ->findOrFail($this->billOfLadingId);
+        // Admins open any shipment; customers stay scoped to their companies.
+        if (! auth()->user()->canViewAllShipments()) {
+            $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
+            $query->whereIn('company_id', $companyIds);
+        }
+
+        return $query->findOrFail($this->billOfLadingId);
     }
 }

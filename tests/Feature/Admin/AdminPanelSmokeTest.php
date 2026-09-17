@@ -19,6 +19,7 @@ use App\Filament\Resources\BillOfLadings\BillOfLadingResource;
 use App\Filament\Resources\BillOfLadings\Pages\CreateBillOfLading;
 use App\Filament\Resources\BillOfLadings\Pages\EditBillOfLading;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\RelationManagers\BillOfLadingsRelationManager;
 use App\Filament\Resources\Containers\ContainerResource;
@@ -238,18 +239,103 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertSame(ShipmentMilestone::GateOutCy, $sppb->current_milestone);
     }
 
-    public function test_company_list_links_portal_users_to_their_edit_page(): void
+    public function test_company_list_links_customers_and_operators_to_their_edit_page(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole(Role::ADMIN);
 
         $company = Company::query()->whereHas('users')->firstOrFail();
-        $user = $company->users()->firstOrFail();
+        $customer = $company->customers()->firstOrFail();
+
+        $operator = User::factory()->create();
+        $operator->assignRole(Role::OPERATOR);
+        $company->users()->syncWithoutDetaching([$operator->getKey()]);
 
         $this->actingAs($admin)
             ->get(CompanyResource::getUrl('index'))
             ->assertOk()
-            ->assertSee(UserResource::getUrl('edit', ['record' => $user]), false);
+            ->assertSee('Customers')
+            ->assertSee('Operators')
+            ->assertSee(UserResource::getUrl('edit', ['record' => $customer]), false)
+            ->assertSee(UserResource::getUrl('edit', ['record' => $operator]), false);
+    }
+
+    public function test_company_form_keeps_operator_links_when_customers_change(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $company = Company::query()->whereHas('customers')->firstOrFail();
+
+        $operator = User::factory()->create();
+        $operator->assignRole(Role::OPERATOR);
+        $company->users()->syncWithoutDetaching([$operator->getKey()]);
+
+        $newCustomer = User::factory()->create();
+        $newCustomer->assignRole(Role::CUSTOMER);
+
+        $expectedOperators = array_map('intval', $company->operators()->pluck('users.id')->all());
+
+        $this->actingAs($admin);
+
+        $component = Livewire::test(EditCompany::class, ['record' => $company->getRouteKey()]);
+
+        $this->assertEqualsCanonicalizing(
+            $company->customers()->pluck('users.id')->all(),
+            $component->get('data.customers'),
+        );
+        $this->assertEqualsCanonicalizing(
+            $expectedOperators,
+            array_map('intval', $component->get('data.operators')),
+        );
+
+        $component
+            ->set('data.customers', [$newCustomer->getKey()])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame(
+            [$newCustomer->getKey()],
+            array_map('intval', $company->customers()->pluck('users.id')->all()),
+        );
+        $this->assertSame(
+            $expectedOperators,
+            array_map('intval', $company->operators()->pluck('users.id')->all()),
+        );
+    }
+
+    public function test_company_create_links_customers_and_operators(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $customer = User::factory()->create();
+        $customer->assignRole(Role::CUSTOMER);
+
+        $operator = User::factory()->create();
+        $operator->assignRole(Role::OPERATOR);
+
+        $this->actingAs($admin);
+
+        Livewire::test(CreateCompany::class)
+            ->fillForm([
+                'name' => 'PT Link Test',
+                'customers' => [$customer->getKey()],
+                'operators' => [$operator->getKey()],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $company = Company::query()->where('name', 'PT Link Test')->firstOrFail();
+
+        $this->assertSame(
+            [$customer->getKey()],
+            array_map('intval', $company->customers()->pluck('users.id')->all()),
+        );
+        $this->assertSame(
+            [$operator->getKey()],
+            array_map('intval', $company->operators()->pluck('users.id')->all()),
+        );
     }
 
     public function test_company_edit_page_lists_only_the_companys_bill_of_ladings(): void
@@ -269,6 +355,22 @@ class AdminPanelSmokeTest extends TestCase
         ])
             ->assertCanSeeTableRecords([$own])
             ->assertCanNotSeeTableRecords([$other]);
+    }
+
+    public function test_user_list_links_company_names_to_their_edit_page(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $user = User::query()->whereHas('companies')->firstOrFail();
+        $company = $user->companies()->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(UserResource::getUrl('index'))
+            ->assertOk()
+            ->assertSee('Companies')
+            ->assertSee($company->name)
+            ->assertSee(CompanyResource::getUrl('edit', ['record' => $company]), false);
     }
 
     public function test_customer_role_cannot_access_the_admin_panel(): void

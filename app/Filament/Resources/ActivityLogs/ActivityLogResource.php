@@ -17,11 +17,14 @@ use App\Filament\Resources\ActivityLogs\Pages\ViewActivityLog;
 use App\Filament\Resources\ActivityLogs\Schemas\ActivityLogForm;
 use App\Filament\Resources\ActivityLogs\Tables\ActivityLogsTable;
 use App\Models\ActivityLog;
+use App\Models\Role;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class ActivityLogResource extends Resource
@@ -62,5 +65,27 @@ class ActivityLogResource extends Resource
             'index' => ListActivityLogs::route('/'),
             'view' => ViewActivityLog::route('/{record}'),
         ];
+    }
+
+    /**
+     * Row-level scope: privileged staff see every entry; operators only
+     * entries about a visible bill of lading or container. Entries with
+     * neither (global logs) stay hidden from them.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (! $user instanceof User || $user->hasAnyRole(Role::PRIVILEGED)) {
+            return $query;
+        }
+
+        $companyIds = $user->companyIds();
+
+        return $query->where(function (Builder $query) use ($companyIds): void {
+            $query->whereHas('billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds))
+                ->orWhereHas('container.billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds));
+        });
     }
 }

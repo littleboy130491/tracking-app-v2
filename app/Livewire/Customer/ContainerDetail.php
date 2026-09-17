@@ -48,11 +48,14 @@ class ContainerDetail extends Component
 
     private function container(): Container
     {
-        $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
+        $query = Container::query()->with('billOfLading');
 
-        return Container::query()
-            ->whereHas('billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds))
-            ->with('billOfLading')
-            ->findOrFail($this->containerId);
+        // Admins open any container; customers stay scoped to their companies.
+        if (! auth()->user()->canViewAllShipments()) {
+            $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
+            $query->whereHas('billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds));
+        }
+
+        return $query->findOrFail($this->containerId);
     }
 }

@@ -4,7 +4,8 @@
  * File: app/Filament/Resources/Companies/Tables/CompaniesTable.php
  * Responsibility: Admin list of companies.
  * What it does:
- * - Shows contact data plus the portal users linked to the company.
+ * - Shows contact data plus the linked users, split by role: customer
+ *   (portal access) and operator (assigned staff).
  * How to use: Rendered by ListCompanies.
  * How to extend: Add columns/filters as the company data grows.
  */
@@ -40,11 +41,21 @@ class CompaniesTable
                 TextColumn::make('phone')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('users.email')
-                    ->label('Portal users')
+                TextColumn::make('customers.email')
+                    ->label('Customers')
                     ->listWithLineBreaks()
+                    ->placeholder('—')
                     ->url(function (string $state, Company $record): ?string {
-                        $user = $record->users->firstWhere('email', $state);
+                        $user = $record->customers->firstWhere('email', $state);
+
+                        return $user === null ? null : UserResource::getUrl('edit', ['record' => $user]);
+                    }),
+                TextColumn::make('operators.email')
+                    ->label('Operators')
+                    ->listWithLineBreaks()
+                    ->placeholder('—')
+                    ->url(function (string $state, Company $record): ?string {
+                        $user = $record->operators->firstWhere('email', $state);
 
                         return $user === null ? null : UserResource::getUrl('edit', ['record' => $user]);
                     }),

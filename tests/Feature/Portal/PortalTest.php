@@ -187,10 +187,15 @@ class PortalTest extends TestCase
         $this->assertSame(3, $dewi->companies()->count(), 'A user should be able to manage several companies.');
 
         $javaRetail = Company::query()->where('code', 'JRD')->firstOrFail();
-        $this->assertSame(3, $javaRetail->users()->count(), 'A company should be able to have several users.');
+        $this->assertSame(3, $javaRetail->customers()->count(), 'A company should be able to have several customers.');
 
         $nusantara = Company::query()->where('code', 'NUS')->firstOrFail();
-        $this->assertSame(2, $nusantara->users()->count());
+        $this->assertSame(2, $nusantara->customers()->count());
+
+        // The seeded operator covers NUS and SNI for the admin panel scope.
+        $operator = User::query()->where('email', 'operator@example.com')->firstOrFail();
+        $this->assertSame(2, $operator->companies()->count());
+        $this->assertSame(0, $nusantara->operators()->whereKeyNot($operator->getKey())->count());
 
         $this->assertSame(5, Company::query()->count());
         $this->assertSame(5, User::query()->role(Role::CUSTOMER)->count());

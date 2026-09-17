@@ -5,6 +5,8 @@
  * Responsibility: Verifies the role hierarchy on the admin user screens.
  * What it does:
  * - Covers the customer default for new users.
+ * - Covers the impersonation rules: only admin/super_admin may impersonate,
+ *   and a super_admin target needs a super_admin actor.
  * - Covers the rule that only a super admin may hand out (or take away) the
  *   admin / super admin roles. The roles field only offers assignable roles, and
  *   Filament rejects a submitted value that was not on offer, so a tampered
@@ -211,6 +213,27 @@ class UserRoleAssignmentTest extends TestCase
             ->get(CompanyResource::getUrl('edit', ['record' => $company]))->assertForbidden();
         $this->actingAs($operator)
             ->get(UserResource::getUrl('index'))->assertForbidden();
+    }
+
+    public function test_only_admin_and_super_admin_may_impersonate(): void
+    {
+        $operator = User::query()->where('email', 'operator@example.com')->firstOrFail();
+
+        $this->assertTrue($this->superAdmin->canImpersonate());
+        $this->assertTrue($this->admin->canImpersonate());
+        $this->assertFalse($operator->canImpersonate());
+        $this->assertFalse($this->customer->canImpersonate());
+    }
+
+    public function test_super_admin_can_only_be_impersonated_by_a_super_admin(): void
+    {
+        $this->actingAs($this->admin);
+        $this->assertFalse($this->superAdmin->canBeImpersonated());
+        $this->assertTrue($this->admin->canBeImpersonated());
+        $this->assertTrue($this->customer->canBeImpersonated());
+
+        $this->actingAs($this->superAdmin);
+        $this->assertTrue($this->superAdmin->canBeImpersonated());
     }
 
     public function test_admins_can_toggle_a_companys_active_state(): void

@@ -21,8 +21,12 @@
  *   agus@borneo.test           Agus Pratama       BJM, SNI, JRD
  *   sari@java-retail.test      Sari Wijaya        JRD
  *
- * Read it by company: NUS<-Dewi,Rina · SIN<-Dewi,Budi · BJM<-Dewi,Agus
- *                     SNI<-Agus · JRD<-Rina,Agus,Sari
+ * Operators (admin panel row scope — see User::companyIds):
+ *
+ *   operator@example.com       Operator           NUS, SNI
+ *
+ * Read it by company: NUS<-Dewi,Rina,Operator · SIN<-Dewi,Budi · BJM<-Dewi,Agus
+ *                     SNI<-Agus,Operator · JRD<-Rina,Agus,Sari
  */
 
 namespace Database\Seeders;
@@ -52,6 +56,17 @@ class DemoCompanySeeder extends Seeder
 
             // sync() (not attach) keeps re-running the seeder idempotent.
             $user->companies()->sync(
+                collect($companyCodes)->map(fn (string $code): int => $companies[$code]->getKey())->all(),
+            );
+        }
+
+        // Operators are created by SuperAdminSeeder; only their company links
+        // are set here. The links drive the admin panel row-level scope, so
+        // operator@example.com deliberately sees a subset of the shipments.
+        foreach ($this->operators() as $email => $companyCodes) {
+            $user = User::query()->where('email', $email)->first();
+
+            $user?->companies()->sync(
                 collect($companyCodes)->map(fn (string $code): int => $companies[$code]->getKey())->all(),
             );
         }
@@ -98,6 +113,16 @@ class DemoCompanySeeder extends Seeder
                 'address' => 'Jl. Rungkut Industri No. 12, Surabaya',
                 'is_active' => true,
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    private function operators(): array
+    {
+        return [
+            'operator@example.com' => ['NUS', 'SNI'],
         ];
     }
 

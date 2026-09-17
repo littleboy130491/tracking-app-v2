@@ -9,8 +9,8 @@
  *   year and month (spec.md).
  * - Adds each shipment's latest journey entry so the list shows Latest Place
  *   and Latest Event like the reference tracker.
- * - Scoping is enforced in the query, so a customer can never see another
- *   company's shipments, even by guessing an id or tampering with the filter.
+ * - Privileged staff (admin/super_admin) see every shipment; customers stay
+ *   scoped to their assigned companies.
  * How to use: full-page Livewire component on route customer.dashboard.
  * How to extend: add more filters as public properties with matching ->when().
  */
@@ -19,6 +19,7 @@ namespace App\Livewire\Customer;
 
 use App\Enums\BillOfLadingStatus;
 use App\Models\BillOfLading;
+use App\Models\Company;
 use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -56,10 +57,12 @@ class Dashboard extends Component
 
     public function render(): View
     {
-        $companyIds = auth()->user()->companies()->pluck('companies.id')->all();
+        $user = auth()->user();
+        $viewAll = $user->canViewAllShipments();
+        $companyIds = $viewAll ? [] : $user->companies()->pluck('companies.id')->all();
 
         $billOfLadings = BillOfLading::query()
-            ->whereIn('company_id', $companyIds)
+            ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with(['company', 'containers'])
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))
             ->when($this->number !== '', fn (Builder $query) => $query->where(
@@ -84,11 +87,13 @@ class Dashboard extends Component
         return view('livewire.customer.dashboard', [
             'billOfLadings' => $billOfLadings,
             'latest' => $latest,
-            // Only the companies this user manages may appear as filter options.
-            'companies' => auth()->user()->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
+            // Admins choose from every company; customers from their own.
+            'companies' => $viewAll
+                ? Company::query()->orderBy('name')->pluck('name', 'id')->all()
+                : $user->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
             'statuses' => BillOfLadingStatus::options(),
             'years' => BillOfLading::query()
-                ->whereIn('company_id', $companyIds)
+                ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
                 ->selectRaw('distinct strftime("%Y", created_at) as year')
                 ->orderByDesc('year')
                 ->pluck('year', 'year')

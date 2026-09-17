@@ -2,6 +2,7 @@
      Responsibility: Shell layout for the customer portal pages.
      What it does: renders the brand header (logo, app name, user, logout) and
        the page slot using the compiled Tailwind stylesheet and brand font.
+       Shows the impersonation banner (with leave link) while staff impersonate.
      How to use: applied via the #[Layout('components.layouts.portal')] attribute
        on the portal Livewire components.
      How to extend: add navigation links as more portal pages appear. --}}
@@ -15,6 +16,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased">
+        <x-impersonate::banner />
         <header class="border-b border-slate-200 bg-white">
             <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
                 <a href="{{ route('customer.dashboard') }}" class="flex items-center gap-3">

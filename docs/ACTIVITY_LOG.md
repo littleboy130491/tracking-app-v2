@@ -303,3 +303,40 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-16 15:50 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Cover container search and latest journey columns |
 | 2026-09-16 15:50 | Muse Spark | UPDATE | docs/UAT.md | Add dashboard latest-columns checklist |
 | 2026-09-16 15:50 | Devin | UPDATE | app/Models/Company.php | Added customers()/operators() role-filtered relations |
+| 2026-09-16 16:00 | Devin | UPDATE | app/Filament/Resources/Companies/Tables/CompaniesTable.php | Customers + Operators columns replace Portal users |
+| 2026-09-16 16:00 | Devin | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Assert both role columns render and link |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | composer.json | Added stechstudio/filament-impersonate plugin |
+| 2026-09-16 16:10 | Devin | UPDATE | app/Filament/Resources/Companies/Schemas/CompanyForm.php | Customers + Operators selects replace portal-users select |
+| 2026-09-16 16:10 | Devin | UPDATE | app/Models/Company.php | Added syncLinkedUsers() role-scoped pivot sync |
+| 2026-09-16 16:10 | Devin | UPDATE | app/Filament/Resources/Companies/Pages/EditCompany.php | Seed + sync the two role selects |
+| 2026-09-16 16:10 | Devin | UPDATE | app/Filament/Resources/Companies/Pages/CreateCompany.php | Link role selects after create |
+| 2026-09-16 16:10 | Devin | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Role-select hydration, cross-detach safety, create links |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | app/Models/User.php | Impersonation rules: admin+ may act, super_admin targets restricted |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | Added Impersonate row action |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | app/Filament/Resources/Users/Pages/EditUser.php | Added Impersonate header action |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | resources/views/components/layouts/portal.blade.php | Show impersonation banner with leave link |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | tests/Feature/Admin/UserRoleAssignmentTest.php | Impersonation rule tests |
+| 2026-09-17 13:52 | Muse Spark | UPDATE | docs/UAT.md | Impersonation manual checklist |
+| 2026-09-17 14:10 | Devin | UPDATE | app/Models/User.php | Added companyIds() row-scope helper |
+| 2026-09-17 14:20 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/BillOfLadingResource.php | Operators scoped to assigned companies' shipments |
+| 2026-09-17 14:20 | Devin | UPDATE | app/Filament/Resources/Containers/ContainerResource.php | Containers scoped via their bill of lading |
+| 2026-09-17 14:20 | Devin | UPDATE | app/Filament/Resources/ActivityLogs/ActivityLogResource.php | Logs scoped via visible shipments/containers |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | Companies column lists names linking to company edit |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | Added company filter to users table |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Assert user company names link to company edit |
+| 2026-09-17 14:30 | Devin | UPDATE | app/Models/User.php | Added scopeToAssignedCompanies() query helper |
+| 2026-09-17 14:30 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Company picker scoped to assigned companies |
+| 2026-09-17 14:30 | Devin | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | B/L picker scoped to assigned companies |
+| 2026-09-17 14:30 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Tables/BillOfLadingsTable.php | Company filter options scoped |
+| 2026-09-17 14:30 | Devin | UPDATE | app/Filament/Resources/Containers/Tables/ContainersTable.php | B/L filter options scoped |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | docs/UAT.md | Users companies column + filter checklist |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Models/User.php | Added canViewAllShipments() for admin portal scope |
+| 2026-09-17 14:45 | Devin | UPDATE | database/seeders/DemoCompanySeeder.php | Links operator@example.com to NUS and SNI |
+| 2026-09-17 14:45 | Devin | CREATE | tests/Feature/Admin/OperatorRowScopeTest.php | Operator/admin visibility, 404s, picker scope |
+| 2026-09-17 14:45 | Devin | UPDATE | tests/Feature/Portal/PortalTest.php | M:N assertions count customers; operator links covered |
+| 2026-09-17 14:45 | Devin | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Cross-detach test compares operator sets before/after |
+| 2026-09-17 14:45 | Devin | UPDATE | docs/UAT.md | Operator row-scope checklist; sections renumbered |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Support/Otp/RegisteredUserResolver.php | Let admin/super_admin request portal OTP codes |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/Dashboard.php | Unscoped list, company filter and years for admins |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/BillOfLadingDetail.php | Admins may open any shipment |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/ContainerDetail.php | Admins may open any container |

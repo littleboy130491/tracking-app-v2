@@ -71,4 +71,23 @@ class Company extends Model
     {
         return $this->users()->role(Role::OPERATOR);
     }
+
+    /**
+     * Sync one role's links without touching the other role's rows.
+     * A plain sync() on the filtered relation would detach every pivot row
+     * outside the given ids — including the other role — because the detach
+     * query cannot see the role filter. So the diff is computed from the
+     * role-scoped relation and detached explicitly.
+     *
+     * @param  'customers'|'operators'  $relation
+     * @param  list<int>  $userIds
+     */
+    public function syncLinkedUsers(string $relation, array $userIds): void
+    {
+        $userIds = array_map('intval', $userIds);
+        $currentlyLinked = $this->{$relation}()->pluck('users.id')->all();
+
+        $this->users()->detach(array_diff($currentlyLinked, $userIds));
+        $this->users()->syncWithoutDetaching($userIds);
+    }
 }
