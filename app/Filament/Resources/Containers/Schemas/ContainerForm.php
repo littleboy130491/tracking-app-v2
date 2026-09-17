@@ -21,6 +21,7 @@ use App\Enums\FactoryLoadingStatus;
 use App\Enums\InspectionStatus;
 use App\Enums\ShipmentType;
 use App\Enums\StuffingStatus;
+use App\Livewire\NotesPanel;
 use App\Models\BillOfLading;
 use App\Models\Container;
 use App\Models\User;
@@ -28,6 +29,7 @@ use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -71,18 +73,36 @@ class ContainerForm
                         TextInput::make('license_number')
                             ->label('Truck plate number')
                             ->maxLength(100),
+                        TextInput::make('driver_license_number')
+                            ->label('Driver license number')
+                            ->maxLength(100),
                         TextInput::make('tracking_position')
                             ->label('Tracking position')
                             ->maxLength(255)
                             ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export),
+                        TextInput::make('tracking_position_url')
+                            ->label('Tracking position (url)')
+                            ->url()
+                            ->maxLength(500)
+                            ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export),
                     ]),
-                Section::make('Attachments')
-                    ->description('Photos and documents linked to this container.')
+                Section::make('Photos')
+                    ->description('Named photo slots for this container.')
+                    ->columns(2)
                     ->schema([
-                        CuratorPicker::make('attachment_items')
-                            ->hiddenLabel()
-                            ->multiple()
-                            ->dehydrated(false),
+                        ...array_map(
+                            fn (string $key): CuratorPicker => CuratorPicker::make($key)
+                                ->label([
+                                    'photo_door_items' => 'Photo — door',
+                                    'photo_floor_items' => 'Photo — floor',
+                                    'photo_seal_items' => 'Photo — seal',
+                                    'photo_eir_items' => 'Photo — EIR',
+                                    'photo_additional_items' => 'Additional photos',
+                                ][$key])
+                                ->multiple()
+                                ->dehydrated(false),
+                            array_keys(Container::photoPickers()),
+                        ),
                     ]),
                 Section::make('Pickup & stuffing — Export')
                     ->description('Process 2/3: pick up the empty container and stuff at the factory.')
@@ -108,7 +128,9 @@ class ContainerForm
                     ->schema([
                         TextInput::make('gate_in_port_name')
                             ->label('Gate in port')
-                            ->maxLength(255),
+                            ->maxLength(255)
+                            // EXPORT.md: the gate-in port starts as the B/L's port of loading.
+                            ->default(fn (Get $get): ?string => BillOfLading::query()->find($get('bill_of_lading_id'))?->port_of_loading),
                         DateTimePicker::make('gate_in_cy_at')
                             ->label('Gate in CY at'),
                         TextInput::make('vgm_value')
@@ -167,6 +189,14 @@ class ContainerForm
                             ->default(ContainerStatus::Pending->value)
                             ->required(),
                         DateTimePicker::make('completed_at'),
+                    ]),
+                Section::make('Notes')
+                    ->visibleOn('edit')
+                    ->schema([
+                        LivewireField::make('notes')
+                            ->hiddenLabel()
+                            ->dehydrated(false)
+                            ->component(NotesPanel::class),
                     ]),
             ]);
     }

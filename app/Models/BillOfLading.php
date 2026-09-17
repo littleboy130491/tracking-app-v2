@@ -19,7 +19,9 @@ use App\Enums\BillingResponse;
 use App\Enums\BillOfLadingStatus;
 use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ShipmentMilestone;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentType;
+use App\Models\Concerns\HasNotes;
 use App\Services\ActivityLogger;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -30,7 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'reference_number', 'bl_number', 'shipment_type', 'company_id', 'company_name_snapshot',
+    'reference_number', 'bl_number', 'shipment_type', 'shipment_mode', 'company_id', 'company_name_snapshot',
+    'document_received_date', 'document_received_by',
     'aju_number', 'do_number', 'shipping_line', 'vessel_name',
     'voyage_number', 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
     'departure_date', 'eta_at', 'actual_arrival_at', 'goods_description', 'package_count',
@@ -39,11 +42,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'billing_issuance_status', 'billing_issued_at', 'billing_payment_status', 'billing_paid_at',
     'billing_response', 'billing_response_at', 'thc_payment_status', 'thc_paid_at',
     'behandle_payment_status', 'behandle_paid_at', 'do_released_at', 'status', 'current_milestone',
+    'latest_event', 'latest_event_at',
     'completed_at', 'created_by', 'updated_by',
 ])]
 class BillOfLading extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasNotes, SoftDeletes;
 
     /**
      * The company name is captured once on create so a later rename does not
@@ -54,6 +58,8 @@ class BillOfLading extends Model
     {
         static::creating(function (BillOfLading $billOfLading): void {
             $billOfLading->company_name_snapshot ??= $billOfLading->company?->name;
+            $billOfLading->document_received_date ??= today();
+            $billOfLading->document_received_by ??= auth()->id();
         });
 
         static::saving(function (BillOfLading $billOfLading): void {
@@ -71,6 +77,7 @@ class BillOfLading extends Model
     {
         return [
             'shipment_type' => ShipmentType::class,
+            'shipment_mode' => ShipmentMode::class,
             'status' => BillOfLadingStatus::class,
             'current_milestone' => ShipmentMilestone::class,
             'draft_pib_confirmation_status' => DraftPibConfirmationStatus::class,
@@ -80,6 +87,8 @@ class BillOfLading extends Model
             'thc_payment_status' => BillingPaymentStatus::class,
             'behandle_payment_status' => BillingPaymentStatus::class,
             'depot_closing_at' => 'datetime',
+            'document_received_date' => 'date',
+            'latest_event_at' => 'datetime',
             'cy_closing_at' => 'datetime',
             'departure_date' => 'date',
             'eta_at' => 'datetime',
@@ -150,6 +159,14 @@ class BillOfLading extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function documentReceivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'document_received_by');
     }
 
     public function isImport(): bool

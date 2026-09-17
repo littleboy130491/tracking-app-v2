@@ -15,6 +15,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasNotes;
 use BenBjurstrom\Otpz\Models\Concerns\HasOtps;
 use BenBjurstrom\Otpz\Models\Concerns\Otpable;
 use Database\Factories\UserFactory;
@@ -34,7 +35,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, Otpable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasOtps, HasRoles, Notifiable;
+    use HasFactory, HasNotes, HasOtps, HasRoles, Notifiable;
 
     /**
      * @return array<string, string>

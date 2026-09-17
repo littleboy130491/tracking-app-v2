@@ -93,6 +93,10 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertArrayNotHasKey('updated_at', $log->new_values);
         $this->assertArrayNotHasKey('updated_by', $log->new_values);
         $this->assertFalse($log->is_customer_visible);
+
+        // Every recorded event stamps the denormalized latest-event columns.
+        $this->assertSame('bill_of_lading_updated', $billOfLading->refresh()->latest_event);
+        $this->assertNotNull($billOfLading->latest_event_at);
     }
 
     public function test_unchanged_bill_of_lading_save_creates_no_activity(): void
@@ -244,14 +248,14 @@ class ShipmentActivityLoggingTest extends TestCase
             'ext' => 'pdf',
         ] + $extra);
 
-        $linked = $media(['container_id' => $container->getKey()]);
+        $linked = $media(['container_id' => $container->getKey(), 'category' => 'door_photo']);
         $picked = $media();
-        $unpicked = $media(['container_id' => $container->getKey()]);
+        $unpicked = $media(['container_id' => $container->getKey(), 'category' => 'door_photo']);
 
         // CuratorPicker state is a uuid-keyed array of full media arrays, so
         // set() (not fillForm()) with complete media payloads mimics picking.
         Livewire::test(EditContainer::class, ['record' => $container->getRouteKey()])
-            ->set('data.attachment_items', [
+            ->set('data.photo_door_items', [
                 $linked->fresh()->toArray(),
                 $picked->fresh()->toArray(),
             ])
@@ -260,6 +264,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
         $this->assertSame($container->getKey(), $picked->fresh()->container_id);
         $this->assertSame($container->bill_of_lading_id, $picked->fresh()->bill_of_lading_id);
+        $this->assertSame('door_photo', $picked->fresh()->category?->value);
         $this->assertNull($unpicked->fresh()->container_id);
 
         $log = ActivityLog::query()

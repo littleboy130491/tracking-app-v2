@@ -22,6 +22,7 @@ enum AttachmentCategory: string
     case EirPhoto = 'eir_photo';
     case SealPhoto = 'seal_photo';
     case SupportingDocument = 'supporting_document';
+    case AdditionalPhoto = 'additional_photo';
 
     public function label(): string
     {
@@ -31,6 +32,7 @@ enum AttachmentCategory: string
             self::EirPhoto => 'EIR Photo',
             self::SealPhoto => 'Seal Photo',
             self::SupportingDocument => 'Supporting Document',
+            self::AdditionalPhoto => 'Additional Photo',
         };
     }
 }

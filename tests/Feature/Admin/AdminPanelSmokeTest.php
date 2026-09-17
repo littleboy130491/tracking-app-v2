@@ -14,6 +14,7 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\BillOfLadingStatus;
 use App\Enums\ShipmentMilestone;
+use App\Enums\ShipmentType;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
 use App\Filament\Resources\BillOfLadings\BillOfLadingResource;
 use App\Filament\Resources\BillOfLadings\Pages\CreateBillOfLading;
@@ -78,12 +79,12 @@ class AdminPanelSmokeTest extends TestCase
         $this->actingAs($admin)
             ->get(BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]))
             ->assertOk()
-            ->assertSee('Progress')
+            ->assertSee('Shipping Details')
             ->assertSee('Advance')
             ->assertSee('jumpToMilestone');
     }
 
-    public function test_admin_can_create_a_bill_of_lading_with_just_the_document_fields(): void
+    public function test_admin_can_create_a_bill_of_lading_with_just_the_customer_fields(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole(Role::ADMIN);
@@ -93,20 +94,55 @@ class AdminPanelSmokeTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(CreateBillOfLading::class)
-            ->assertDontSee('Progress')
+            ->assertDontSee('Shipping Details')
+            ->assertSee('Customer')
+            ->assertDontSee('AJU number')
+            ->assertDontSee('B/L number')
             ->fillForm([
-                'aju_number' => 'AJU-TEST-001',
-                'bl_number' => 'BL-TEST-001',
                 'shipment_type' => 'import',
                 'company_id' => $company->getKey(),
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $billOfLading = BillOfLading::query()->where('aju_number', 'AJU-TEST-001')->firstOrFail();
+        $billOfLading = BillOfLading::query()->latest('id')->firstOrFail();
 
         $this->assertNotNull($billOfLading->reference_number);
         $this->assertSame($company->name, $billOfLading->company_name_snapshot);
+        $this->assertTrue($billOfLading->isImport());
+    }
+
+    public function test_shipment_type_is_locked_after_create(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getKey()])
+            ->assertSee('Customer')
+            ->set('data.shipment_type', ShipmentType::Import->value)
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($billOfLading->refresh()->isExport());
+    }
+
+    public function test_shipment_mode_aju_and_bl_live_on_shipping_details_step_two(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]))
+            ->assertOk()
+            ->assertSee('Shipment mode')
+            ->assertSee('AJU number')
+            ->assertSee('B/L number');
     }
 
     public function test_admin_can_create_an_hs_code(): void
@@ -335,6 +371,34 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertSame(
             [$operator->getKey()],
             array_map('intval', $company->operators()->pluck('users.id')->all()),
+        );
+    }
+
+    public function test_container_repeater_header_shows_the_container_number(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole(Role::ADMIN);
+
+        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $container = $billOfLading->containers()->firstOrFail();
+
+        $this->actingAs($admin);
+
+        $component = Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()]);
+
+        // Existing containers show their number in the collapsed item header.
+        $this->assertMatchesRegularExpression(
+            '/fi-fo-repeater-item-header-label[^>]*>\s*'.preg_quote($container->container_number, '/').'\s*</s',
+            $component->html(),
+        );
+
+        // Renaming the container updates the header label.
+        $component
+            ->set("data.containers.record-{$container->getKey()}.container_number", 'TESTU7654321');
+
+        $this->assertMatchesRegularExpression(
+            '/fi-fo-repeater-item-header-label[^>]*>\s*TESTU7654321\s*</s',
+            $component->html(),
         );
     }
 

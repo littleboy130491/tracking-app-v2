@@ -24,12 +24,14 @@ use App\Enums\BillingResponse;
 use App\Enums\BillOfLadingStatus;
 use App\Enums\ContainerStatus;
 use App\Enums\DraftPibConfirmationStatus;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentType;
 use App\Enums\StuffingStatus;
 use App\Models\BillOfLading;
 use App\Models\Company;
 use App\Models\Container;
 use App\Models\HsCode;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DemoShipmentSeeder extends Seeder
@@ -49,6 +51,7 @@ class DemoShipmentSeeder extends Seeder
             'reference_number' => 'REF-EXP-0001',
             'bl_number' => 'BL-EXP-0001',
             'shipment_type' => ShipmentType::Export,
+            'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'Maersk',
             'vessel_name' => 'MV Ocean Star',
             'voyage_number' => 'V-001',
@@ -69,6 +72,7 @@ class DemoShipmentSeeder extends Seeder
             'reference_number' => 'REF-IMP-0001',
             'bl_number' => 'BL-IMP-0001',
             'shipment_type' => ShipmentType::Import,
+            'shipment_mode' => ShipmentMode::Lcl,
             'aju_number' => 'AJU-0001',
             'shipping_line' => 'CMA CGM',
             'vessel_name' => 'MV Southern Cross',
@@ -97,6 +101,7 @@ class DemoShipmentSeeder extends Seeder
             'reference_number' => 'REF-EXP-0002',
             'bl_number' => 'BL-EXP-0002',
             'shipment_type' => ShipmentType::Export,
+            'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'PIL',
             'vessel_name' => 'MV Bintulu Trader',
             'voyage_number' => 'V-310',
@@ -123,6 +128,7 @@ class DemoShipmentSeeder extends Seeder
             'reference_number' => 'REF-EXP-0003',
             'bl_number' => 'BL-EXP-0003',
             'shipment_type' => ShipmentType::Export,
+            'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'Evergreen',
             'vessel_name' => 'MV Ever Summit',
             'voyage_number' => 'V-512',
@@ -168,6 +174,7 @@ class DemoShipmentSeeder extends Seeder
             'reference_number' => 'REF-IMP-0002',
             'bl_number' => 'BL-IMP-0002',
             'shipment_type' => ShipmentType::Import,
+            'shipment_mode' => ShipmentMode::Air,
             'aju_number' => 'AJU-0002',
             'do_number' => 'DO-0002',
             'shipping_line' => 'ONE',
@@ -228,7 +235,13 @@ class DemoShipmentSeeder extends Seeder
         ]);
 
         if (! $billOfLading->exists) {
-            $billOfLading->fill($initial + ['status' => BillOfLadingStatus::InProgress]);
+            // Model events are disabled during seeding, so the Document
+            // Received defaults are written here as well.
+            $billOfLading->fill($initial + [
+                'status' => BillOfLadingStatus::InProgress,
+                'document_received_date' => today(),
+                'document_received_by' => User::query()->where('email', 'admin@example.com')->value('id'),
+            ]);
         }
 
         $billOfLading->save();

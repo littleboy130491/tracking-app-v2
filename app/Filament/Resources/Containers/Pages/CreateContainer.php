@@ -14,6 +14,7 @@
 namespace App\Filament\Resources\Containers\Pages;
 
 use App\Filament\Resources\Containers\ContainerResource;
+use App\Models\Container;
 use App\Services\ActivityLogger;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -24,7 +25,11 @@ class CreateContainer extends CreateRecord
     protected function afterCreate(): void
     {
         $this->record->syncAttachments(
-            collect($this->data['attachment_items'] ?? [])->pluck('id')->filter()->values()->all()
+            collect(Container::photoPickers())
+                ->mapWithKeys(fn (string $category, string $key): array => [
+                    $category => collect($this->data[$key] ?? [])->pluck('id')->filter()->map(fn ($v): int => (int) $v)->values()->all(),
+                ])
+                ->all()
         );
 
         app(ActivityLogger::class)->recordContainerCreated($this->record);

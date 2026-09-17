@@ -17,6 +17,7 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use App\Models\BillOfLading;
 use App\Models\Container;
+use App\Models\Note;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
@@ -33,6 +34,8 @@ class ActivityLogger
         'deleted_at',
         'created_by',
         'updated_by',
+        'latest_event',
+        'latest_event_at',
     ];
 
     /**
@@ -51,7 +54,7 @@ class ActivityLogger
         bool $customerVisible = false,
         ?User $actor = null,
     ): ActivityLog {
-        return ActivityLog::query()->create([
+        $log = ActivityLog::query()->create([
             'bill_of_lading_id' => $billOfLading->getKey(),
             'container_id' => $container?->getKey(),
             'actor_id' => $actor?->getKey() ?? auth()->id(),
@@ -64,6 +67,10 @@ class ActivityLogger
             'is_customer_visible' => $customerVisible,
             'occurred_at' => now(),
         ]);
+
+        $this->stampLatestEvent($billOfLading, $container, $event);
+
+        return $log;
     }
 
     /**
@@ -238,6 +245,64 @@ class ActivityLogger
             newValues: $this->nonNullValues($this->containerSnapshot($container)),
             customerSummary: 'Container '.$container->container_number.' created.',
         );
+    }
+
+    /**
+     * Records a note event against its target. Notes on a shipment or
+     * container keep the B/L/container linkage the operator scope and the
+     * portal read; notes on companies or users leave both columns null.
+     *
+     * @param  array<string, mixed>|null  $oldValues
+     * @param  array<string, mixed>|null  $newValues
+     */
+    public function recordNote(
+        Note $note,
+        string $event,
+        ?array $oldValues = null,
+        ?array $newValues = null,
+        ?User $actor = null,
+    ): ActivityLog {
+        $noteable = $note->noteable;
+
+        $log = ActivityLog::query()->create([
+            'bill_of_lading_id' => match (true) {
+                $noteable instanceof BillOfLading => $noteable->getKey(),
+                $noteable instanceof Container => $noteable->bill_of_lading_id,
+                default => null,
+            },
+            'container_id' => $noteable instanceof Container ? $noteable->getKey() : null,
+            'actor_id' => $actor?->getKey() ?? auth()->id(),
+            'event' => $event,
+            'entity_type' => Note::class,
+            'entity_id' => $note->getKey(),
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+            'customer_summary' => null,
+            'is_customer_visible' => false,
+            'occurred_at' => now(),
+        ]);
+
+        if ($noteable instanceof BillOfLading) {
+            $this->stampLatestEvent($noteable, null, $event);
+        } elseif ($noteable instanceof Container) {
+            $this->stampLatestEvent($noteable->billOfLading, $noteable, $event);
+        }
+
+        return $log;
+    }
+
+    /**
+     * Keeps the denormalized latest-event columns current. Every recorded
+     * event stamps the shipment; container-level events also stamp the
+     * container itself, so lists can show "what happened last" without
+     * touching the log table.
+     */
+    private function stampLatestEvent(BillOfLading $billOfLading, ?Container $container, string $event): void
+    {
+        $stamp = ['latest_event' => $event, 'latest_event_at' => now()];
+
+        $billOfLading->forceFill($stamp)->save();
+        $container?->forceFill($stamp)->save();
     }
 
     /** @return array<string, mixed> */

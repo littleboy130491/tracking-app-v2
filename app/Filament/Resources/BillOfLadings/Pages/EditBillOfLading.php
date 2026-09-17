@@ -74,12 +74,12 @@ class EditBillOfLading extends EditRecord
     }
 
     /**
-     * Media ids picked per container, keyed by container_number (unique per
-     * B/L, so it also covers rows created during this save). Captured in
-     * beforeSave because getState() reloads repeater items from the database
-     * afterwards and wipes the virtual picker state.
+     * Photo picks per container, keyed by container_number (unique per B/L,
+     * so it also covers rows created during this save) and grouped by media
+     * category. Captured in beforeSave because getState() reloads repeater
+     * items from the database afterwards and wipes the virtual picker state.
      *
-     * @var array<string, list<int>>
+     * @var array<string, array<string, list<int>>>
      */
     protected array $attachmentSelections = [];
 
@@ -89,8 +89,12 @@ class EditBillOfLading extends EditRecord
 
         $this->attachmentSelections = collect($this->data['containers'] ?? [])
             ->mapWithKeys(fn (array $item): array => [
-                (string) ($item['container_number'] ?? '') => collect($item['attachment_items'] ?? [])
-                    ->pluck('id')->filter()->map(fn ($id): int => (int) $id)->values()->all(),
+                (string) ($item['container_number'] ?? '') => collect(Container::photoPickers())
+                    ->mapWithKeys(fn (string $category, string $key): array => [
+                        $category => collect($item[$key] ?? [])
+                            ->pluck('id')->filter()->map(fn ($v): int => (int) $v)->values()->all(),
+                    ])
+                    ->all(),
             ])
             ->all();
     }

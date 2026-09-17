@@ -16,8 +16,10 @@
 
 namespace App\Filament\Resources\Companies\Schemas;
 
+use App\Livewire\NotesPanel;
 use App\Models\Role;
 use App\Models\User;
+use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -94,6 +96,14 @@ class CompanyForm
                             ->dehydrated(false)
                             ->options(fn (): array => User::query()->role(Role::OPERATOR)->orderBy('name')->pluck('name', 'id')->all())
                             ->helperText('Internal staff assigned to handle this company.'),
+                    ]),
+                Section::make('Notes')
+                    ->visibleOn('edit')
+                    ->schema([
+                        LivewireField::make('notes')
+                            ->hiddenLabel()
+                            ->dehydrated(false)
+                            ->component(NotesPanel::class),
                     ]),
             ]);
     }

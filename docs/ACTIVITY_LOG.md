@@ -340,3 +340,49 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/Dashboard.php | Unscoped list, company filter and years for admins |
 | 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/BillOfLadingDetail.php | Admins may open any shipment |
 | 2026-09-17 14:52 | Muse Spark | UPDATE | app/Livewire/Customer/ContainerDetail.php | Admins may open any container |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Admin sees all shipments, opens any record |
+| 2026-09-17 14:52 | Muse Spark | UPDATE | docs/UAT.md | Admin portal visibility checklist |
+| 2026-09-17 15:05 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Containers repeater in collapsible section; items collapsed |
+| 2026-09-17 15:05 | Devin | UPDATE | docs/UAT.md | Container collapse checklist items |
+| 2026-09-17 15:03 | Muse Spark | CREATE | app/Enums/ShipmentMode.php | FCL / LCL / Air shipment mode enum |
+| 2026-09-17 15:03 | Muse Spark | CREATE | database/migrations/2026_09_17_150300_add_shipment_mode_to_bill_of_ladings_table.php | Nullable shipment_mode column |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | app/Models/BillOfLading.php | Fillable + cast for shipment_mode |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Shipment mode on Document tab + Step 2 |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | database/seeders/DemoShipmentSeeder.php | Seed FCL/LCL/Air modes on demo shipments |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Shipment mode required + Step 2 tests |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | docs/UAT.md | Shipment mode manual checklist |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Renamed tabs: Customer / Shipping Details |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Tab rename assertions |
+| 2026-09-17 15:03 | Muse Spark | UPDATE | docs/UAT.md | Tab rename wording |
+| 2026-09-17 15:35 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Item header shows container number via raw state; live-on-blur |
+| 2026-09-17 15:35 | Devin | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Header label renders and updates on rename |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Customer tab trimmed; shipment type locked on edit |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | AJU/B/L + mode moved to Shipping Details Step 2 |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Customer-only create + type-lock tests |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | docs/UAT.md | Customer tab + Step 2 checklist |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Stepper above tabs; AJU/B/L/mode always editable |
+| 2026-09-17 15:17 | Muse Spark | UPDATE | docs/UAT.md | Stepper-above-tabs checklist |
+| 2026-09-17 16:10 | Devin | CREATE | database/migrations/2026_09_17_160000_create_notes_table.php | Polymorphic notes table with nullable author |
+| 2026-09-17 16:10 | Devin | CREATE | app/Models/Note.php | Note model with author, noteable, isEditableBy |
+| 2026-09-17 16:10 | Devin | CREATE | app/Models/Concerns/HasNotes.php | MorphMany notes relation trait |
+| 2026-09-17 16:10 | Devin | UPDATE | app/Models/{BillOfLading,Container,Company,User}.php | Applied HasNotes trait |
+| 2026-09-17 16:20 | Devin | CREATE | database/migrations/2026_09_17_160100_make_bill_of_lading_id_nullable_on_activity_logs_table.php | Notes on companies/users need null B/L |
+| 2026-09-17 16:20 | Devin | CREATE | app/Policies/NotePolicy.php | Internal read/create; author-only update/delete |
+| 2026-09-17 16:20 | Devin | UPDATE | app/Services/ActivityLogger.php | recordNote() with shipment/container linkage |
+| 2026-09-17 16:40 | Devin | CREATE | app/Livewire/NotesPanel.php | Notes add/read/edit/delete with scoped mount and audit |
+| 2026-09-17 16:40 | Devin | CREATE | resources/views/livewire/notes-panel.blade.php | Filament-styled notes list and form |
+| 2026-09-17 16:40 | Devin | CREATE | tests/Feature/Admin/NotesPanelTest.php | Author rules, visibility, logging, scoping |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Notes tab next to Activity log |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Filament/Resources/{Containers,Companies,Users}/Schemas/*.php | Notes section on edit forms |
+| 2026-09-17 16:55 | Devin | UPDATE | tests/Feature/Admin/NotesPanelTest.php | Embed check on all four edit pages |
+| 2026-09-17 16:55 | Devin | UPDATE | docs/UAT.md | Notes checklist; fixed duplicated section numbers |
+| 2026-09-17 17:20 | Devin | CREATE | database/migrations/2026_09_17_170000_add_export_spec_columns.php | Export-spec columns + latest_event stamps |
+| 2026-09-17 16:20 | Devin | UPDATE | app/Services/ActivityLogger.php | Stamps latest_event on every recorded event |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Models/Container.php | photoPickers() + category-aware syncAttachments() |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Enums/AttachmentCategory.php | Added AdditionalPhoto case |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Five photo pickers, driver license, tracking url, doc-received fields |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Same photo pickers and fields on the standalone form |
+| 2026-09-17 16:55 | Devin | UPDATE | app/Filament/Resources/{Containers,Companies}/Pages/*.php | Category-aware attachment sync on save |
+| 2026-09-17 16:55 | Devin | UPDATE | database/seeders/DemoShipmentSeeder.php | Document-received defaults written during seeding |
+| 2026-09-17 16:55 | Devin | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Photo picker sync + latest-event assertions |
+| 2026-09-17 16:55 | Devin | UPDATE | docs/UAT.md | Export spec and latest-event checklist |

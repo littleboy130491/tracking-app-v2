@@ -98,6 +98,12 @@ class PortalTest extends TestCase
             ->assertSessionHasErrors('email');
     }
 
+    public function test_an_admin_can_request_a_portal_code(): void
+    {
+        $this->post(route('customer.login.send'), ['email' => 'admin@example.com'])
+            ->assertRedirect();
+    }
+
     public function test_a_registered_customer_receives_a_signed_verify_link(): void
     {
         $customer = $this->portalUser();
@@ -297,6 +303,37 @@ class PortalTest extends TestCase
             ->call('clearFilters')
             ->assertSet('company', '')
             ->assertSee('REF-EXP-0001');
+    }
+
+    public function test_an_admin_sees_every_shipment_in_the_portal(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        Livewire::test(Dashboard::class)
+            ->assertSee('REF-EXP-0001')
+            ->assertSee('REF-IMP-0001')
+            ->assertSee('REF-EXP-0002')
+            ->assertSee('REF-EXP-0003')
+            ->assertSee('REF-IMP-0002');
+    }
+
+    public function test_an_admin_may_open_any_customers_shipment_and_container(): void
+    {
+        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+        $shipment = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $container = $shipment->containers()->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('customer.bill-of-ladings.show', ['billOfLading' => $shipment->getKey()]))
+            ->assertOk()
+            ->assertSee('REF-EXP-0001');
+
+        $this->actingAs($admin)
+            ->get(route('customer.containers.show', ['container' => $container->getKey()]))
+            ->assertOk()
+            ->assertSee($container->container_number);
     }
 
     public function test_a_customer_sees_only_their_own_shipments(): void

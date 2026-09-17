@@ -14,6 +14,8 @@
 namespace App\Filament\Resources\Containers\Pages;
 
 use App\Filament\Resources\Containers\ContainerResource;
+use App\Models\Attachment;
+use App\Models\Container;
 use App\Services\ActivityLogger;
 use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
@@ -31,7 +33,7 @@ class EditContainer extends EditRecord
     }
 
     /**
-     * The attachment picker is a virtual (non-relationship) field, so its
+     * The photo pickers are virtual (non-relationship) fields, so their
      * initial state is seeded here instead of loadStateFromRelationships —
      * Filament re-runs that hook during save and would clobber the user's
      * selection.
@@ -41,7 +43,13 @@ class EditContainer extends EditRecord
      */
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        $data['attachment_items'] = $this->record->attachments->map->toArray()->all();
+        foreach (Container::photoPickers() as $key => $category) {
+            $data[$key] = $this->record->attachments
+                ->filter(fn (Attachment $attachment): bool => $attachment->category?->value === $category)
+                ->values()
+                ->map->toArray()
+                ->all();
+        }
 
         return $data;
     }
@@ -49,7 +57,11 @@ class EditContainer extends EditRecord
     protected function afterSave(): void
     {
         $this->record->syncAttachments(
-            collect($this->data['attachment_items'] ?? [])->pluck('id')->filter()->values()->all()
+            collect(Container::photoPickers())
+                ->mapWithKeys(fn (string $category, string $key): array => [
+                    $category => collect($this->data[$key] ?? [])->pluck('id')->filter()->map(fn ($v): int => (int) $v)->values()->all(),
+                ])
+                ->all()
         );
 
         app(ActivityLogger::class)->recordContainerChanges($this->record, $this->auditSnapshot);

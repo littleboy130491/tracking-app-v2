@@ -14,8 +14,10 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Livewire\NotesPanel;
 use App\Models\Role;
 use App\Support\Authorization\AssignableRoles;
+use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -74,6 +76,14 @@ class UserForm
                             ->multiple()
                             ->preload()
                             ->searchable(),
+                    ]),
+                Section::make('Notes')
+                    ->visibleOn('edit')
+                    ->schema([
+                        LivewireField::make('notes')
+                            ->hiddenLabel()
+                            ->dehydrated(false)
+                            ->component(NotesPanel::class),
                     ]),
             ]);
     }
