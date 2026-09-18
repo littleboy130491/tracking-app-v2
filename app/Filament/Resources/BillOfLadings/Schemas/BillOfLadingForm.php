@@ -8,11 +8,13 @@
  *   create, customer/company relationship, document received fields), always
  *   visible; then the milestone stepper on edit only (Regress / Advance live
  *   in the edit page header).
- * - Tab "Shipping Details" (edit page only): shipment mode, AJU/B/L numbers
- *   (always editable, above the milestone gates) and every remaining flat
- *   field in a type-conditional list. Each field is disabled until its
- *   milestone is reached; locked fields show "Locked until Step X: name"
- *   naming the step that unlocks them.
+ * - Tab "Shipping Details" (edit page only): the "Checking booking order"
+ *   (Step 2) block first — AJU number, DO number, shipping line, vessel,
+ *   voyage, port of loading, port of discharge, depot/CY closing times,
+ *   shipment mode, B/L number — then every remaining flat field in a
+ *   type-conditional list. Each field is disabled until its milestone is
+ *   reached; locked fields show "Locked until Step X: name" naming the step
+ *   that unlocks them.
  * - Tab "Containers" (edit page only): the containers repeater, whose items
  *   stay open to distinguish individual container records.
  * - Tab "Notes" (edit page only): the notes panel.
@@ -141,30 +143,31 @@ class BillOfLadingForm
                             ->schema([
                                 Grid::make(2)
                                     ->schema([
-                                        self::gate(Select::make('shipment_mode')
-                                            ->label('Shipment mode')
-                                            ->options(ShipmentMode::options()), ShipmentMilestone::DocumentReceived),
+                                        // Step 2 — Checking booking order. These unlock together.
                                         self::gate(TextInput::make('aju_number')
                                             ->label('AJU number')
-                                            ->maxLength(100), ShipmentMilestone::DocumentReceived),
-                                        self::gate(TextInput::make('bl_number')
-                                            ->label('B/L number')
-                                            ->maxLength(100), ShipmentMilestone::DocumentReceived),
+                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder),
                                         self::gate(TextInput::make('do_number')
                                             ->label('DO number')
                                             ->maxLength(100), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DoRelease),
-                                        self::gate(TextInput::make('shipping_line'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
-                                        self::gate(TextInput::make('vessel_name'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                        self::gate(TextInput::make('shipping_line'), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(TextInput::make('vessel_name'), ShipmentMilestone::CheckingBookingOrder),
                                         self::gate(TextInput::make('voyage_number')
-                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
-                                        self::gate(TextInput::make('port_of_discharge'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::DraftPib),
+                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(TextInput::make('port_of_loading'), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(TextInput::make('port_of_discharge'), ShipmentMilestone::CheckingBookingOrder),
                                         self::gate(DateTimePicker::make('depot_closing_at')
                                             ->label('Closing time at depot')
                                             ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::CheckingBookingOrder),
                                         self::gate(DateTimePicker::make('cy_closing_at')
                                             ->label('Closing time at CY')
                                             ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::CheckingBookingOrder),
-                                        self::gate(TextInput::make('port_of_loading'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
+                                        self::gate(Select::make('shipment_mode')
+                                            ->label('Shipment mode')
+                                            ->options(ShipmentMode::options()), ShipmentMilestone::CheckingBookingOrder),
+                                        self::gate(TextInput::make('bl_number')
+                                            ->label('B/L number')
+                                            ->maxLength(100), ShipmentMilestone::CheckingBookingOrder),
                                         self::gate(DatePicker::make('departure_date'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
                                         self::gate(DateTimePicker::make('eta_at')
                                             ->label('ETA'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),

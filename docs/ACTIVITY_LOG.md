@@ -396,3 +396,6 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Lock helper text is now a data-bl-ms-goto link |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Assert locked helper link anchors |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added locked-field jump-to-milestone checks |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Reordered/gated Step 2 fields (AJU..B/L number) at Checking booking order |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Advance milestone so gated AJU/B/L fields are auditable |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Updated Step 2 field order expectations |

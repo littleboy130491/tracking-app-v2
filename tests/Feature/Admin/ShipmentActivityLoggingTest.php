@@ -70,6 +70,9 @@ class ShipmentActivityLoggingTest extends TestCase
     public function test_bill_of_lading_save_records_only_changed_fields_and_actor(): void
     {
         $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        // AJU/B/L numbers are gated at "Checking booking order"; advance so the
+        // form actually dehydrates them and they can be audited.
+        $billOfLading->update(['current_milestone' => ShipmentMilestone::CheckingBookingOrder]);
 
         Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
             ->fillForm([

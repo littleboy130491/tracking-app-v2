@@ -101,7 +101,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Shipping Details + stepper**
 
 - [ ] Same shipment → Edit. Expected: the milestone stepper sits **above the tabs** (not inside Shipping Details); on New it is absent.
-- [ ] **Shipping Details** tab. Expected: **Shipment mode**, **AJU number** and **B/L number** sit at the top, always editable with no lock message; the DO number below them still shows `Locked until Step 2` until reached.
+- [ ] **Shipping Details** tab. Expected: the first fields are the Step 2 group, in this order — **AJU number**, **DO number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, **B/L number**.
+- [ ] On a shipment still at Step 1, those fields show `Locked until Step 2: Checking booking order`. Move it to Step 2 → all become editable at once.
 
 ## 5. Admins see all shipments in the portal (2026-09-17)
 
