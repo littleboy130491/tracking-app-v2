@@ -154,7 +154,6 @@ class DemoShipmentSeeder extends Seeder
         $this->hsCodes($exported, '2604.00');
 
         $this->container($exported, 'EGHU6677881', '40', 'GP', 'SL-0006', [
-            'empty_picked_up_at' => now()->subDays(25),
             'driver_name' => 'Andi Pratama',
             'license_number' => 'DD 8123 KK',
             'tracking_position' => 'Passed Maros checkpoint',

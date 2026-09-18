@@ -362,23 +362,23 @@ class BillOfLadingForm
                 ->maxLength(30)
                 // Live-on-blur so the collapsed item header shows the number as soon as it is typed.
                 ->live(onBlur: true), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
-            self::gate(TextInput::make('seal_number')
-                ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
             self::gate(Select::make('size')
+                ->label('Container Size')
                 ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
             self::gate(Select::make('type')
+                ->label('Container Type')
                 ->options(['GP' => 'GP', 'HC' => 'HC', 'RF' => 'RF']), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
+            self::gate(TextInput::make('seal_number')
+                ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument, '../../'),
             self::gate(TextInput::make('driver_name')
                 ->maxLength(255), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
             self::gate(TextInput::make('license_number')
-                ->label('Truck plate number')
+                ->label('Vehicle / Truck Number')
                 ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
             self::gate(TextInput::make('driver_license_number')
-                ->label('Driver license number')
+                ->label('Driver License Number')
                 ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
-            self::gate(DateTimePicker::make('empty_picked_up_at')
-                ->label('Empty picked up at')
-                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
+            ...self::photoPickers(),
             self::gate(TextInput::make('tracking_position')
                 ->label('Tracking position')
                 ->maxLength(255)
@@ -389,7 +389,6 @@ class BillOfLadingForm
                 ->maxLength(500)
                 ->columnSpanFull()
                 ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::OnTheWayToFactory, prefix: '../../'),
-            ...self::photoPickers(),
             self::gate(Select::make('stuffing_status')
                 ->options(StuffingStatus::options())
                 ->default(StuffingStatus::NotStarted)
@@ -555,11 +554,11 @@ class BillOfLadingForm
     private static function photoPickers(): array
     {
         $labels = [
-            'photo_door_items' => 'Photo — door',
-            'photo_floor_items' => 'Photo — floor',
-            'photo_seal_items' => 'Photo — seal',
-            'photo_eir_items' => 'Photo — EIR',
-            'photo_additional_items' => 'Additional photos',
+            'photo_door_items' => 'Photo Door',
+            'photo_floor_items' => 'Photo Floor',
+            'photo_seal_items' => 'Photo Seal',
+            'photo_eir_items' => 'Photo EIR',
+            'photo_additional_items' => 'Additional Photos',
         ];
 
         return array_map(

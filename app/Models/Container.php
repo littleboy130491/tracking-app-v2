@@ -28,7 +28,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'bill_of_lading_id', 'container_number', 'size', 'type', 'seal_number',
-    'empty_picked_up_at',
     'stuffing_status', 'stuffing_started_at', 'stuffing_finished_at', 'driver_name',
     'license_number', 'driver_license_number', 'tracking_position', 'tracking_position_url',
     'gross_weight', 'gross_weight_unit', 'cbm', 'vgm_value',
@@ -51,7 +50,6 @@ class Container extends Model
             'inspection_status' => InspectionStatus::class,
             'factory_loading_status' => FactoryLoadingStatus::class,
             'status' => ContainerStatus::class,
-            'empty_picked_up_at' => 'datetime',
             'stuffing_started_at' => 'datetime',
             'stuffing_finished_at' => 'datetime',
             'gross_weight' => 'decimal:3',

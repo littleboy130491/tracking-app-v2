@@ -30,7 +30,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Pickup / stuffing fields moved to B/L level**
 
 - [ ] Open an **export** B/L → Edit → **Shipping Details**. Expected: after the cargo fields you see **Pick up depot**, **Stuffing date**, **Stuffing destination** as shipment-level fields (not inside any container), each showing `Locked until Step 3: Pick up empty container` until reached.
-- [ ] Open the same B/L's **Containers** tab and expand a container. Expected: those three fields are **not** there anymore; **Empty picked up at** still is.
+- [ ] Open the same B/L's **Containers** tab and expand a container. Expected: those three fields are **not** there anymore, and neither is **Empty picked up at** (removed).
 - [ ] Open an **import** B/L → Edit. Expected: the three fields are not shown (export only).
 
 **Customer field permissions**
@@ -59,9 +59,9 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Container fields (Containers tab → expand a container)**
 
-- [ ] At the pickup step each container shows **Driver license number** below the truck plate.
+- [ ] At the pickup step each container's fields appear in this order: **Container Number**, **Container Size**, **Container Type**, **Seal Number**, **Driver name**, **Vehicle / Truck Number**, **Driver License Number**, then the five photos.
 - [ ] At "Container on the way to factory" the container shows **Tracking position** and **Tracking position (url)**.
-- [ ] The containers area shows five photo pickers — **Photo — door / floor / seal / EIR** and **Additional photos**. Expected: pick or upload into each slot → Save → reopen: the photos stay in their slots.
+- [ ] The containers area shows five photo pickers — **Photo Door / Photo Floor / Photo Seal / Photo EIR** and **Additional Photos**. Expected: pick or upload into each slot → Save → reopen: the photos stay in their slots.
 - [ ] Remove a photo from a slot and Save. Expected: it detaches from the container (the file stays in the media library).
 - [ ] At "Checking PEB & NPE", a container's **Gate in port** starts as the B/L's **Port of loading** (e.g. `Jakarta (IDJKT)` for REF-EXP-0001) and stays editable.
 

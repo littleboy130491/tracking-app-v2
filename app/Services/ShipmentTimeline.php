@@ -83,14 +83,13 @@ class ShipmentTimeline
 
     /**
      * Container operational dates. Each maps to one reference-style event row.
-     * Pickup depot and stuffing destination live on the B/L header, so they are
-     * read from there and passed in.
+     * Stuffing destination lives on the B/L header, so it is read from there
+     * and passed in.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
     private function pushContainerDates(array &$candidates, Container $container, ?BillOfLading $billOfLading = null): void
     {
-        $this->dated($candidates, $container->empty_picked_up_at, 'Empty container picked up', $billOfLading?->pickup_depot_name, 'container:empty_picked_up_at');
         $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $billOfLading?->stuffing_destination, 'container:stuffing_started_at');
         $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $billOfLading?->stuffing_destination, 'container:stuffing_finished_at');
         $this->dated($candidates, $container->inspected_at, 'Container inspected', null, 'container:inspected_at');

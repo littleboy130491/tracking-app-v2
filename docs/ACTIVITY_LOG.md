@@ -411,3 +411,12 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Services/ShipmentTimeline.php | Read pickup depot/stuffing destination from the B/L |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | database/seeders/DemoShipmentSeeder.php | Seed moved fields on the B/L |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added pickup/stuffing B/L-level checks; removed stale container check |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Reordered container fields; moved photos up; relabelled |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Matching container/photo field labels |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Container field order + photo label expectations |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | CREATE | database/migrations/2026_09_18_110000_drop_empty_picked_up_at_from_containers.php | Drop empty_picked_up_at column |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Models/Container.php | Removed empty_picked_up_at fillable/cast |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Removed empty_picked_up_at from container repeater |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Removed field; renamed section to Stuffing |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Services/ShipmentTimeline.php | Dropped "Empty container picked up" row |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | database/seeders/DemoShipmentSeeder.php | Removed seeded empty pickup timestamp |

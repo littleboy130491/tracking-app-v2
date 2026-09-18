@@ -61,8 +61,10 @@ class ContainerForm
                         TextInput::make('seal_number')
                             ->maxLength(100),
                         Select::make('size')
+                            ->label('Container Size')
                             ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
                         Select::make('type')
+                            ->label('Container Type')
                             ->options(['GP' => 'GP', 'HC' => 'HC', 'RF' => 'RF']),
                     ]),
                 Section::make('Transport')
@@ -70,10 +72,10 @@ class ContainerForm
                     ->schema([
                         TextInput::make('driver_name')->maxLength(255),
                         TextInput::make('license_number')
-                            ->label('Truck plate number')
+                            ->label('Vehicle / Truck Number')
                             ->maxLength(100),
                         TextInput::make('driver_license_number')
-                            ->label('Driver license number')
+                            ->label('Driver License Number')
                             ->maxLength(100),
                         TextInput::make('tracking_position')
                             ->label('Tracking position')
@@ -92,24 +94,22 @@ class ContainerForm
                         ...array_map(
                             fn (string $key): CuratorPicker => CuratorPicker::make($key)
                                 ->label([
-                                    'photo_door_items' => 'Photo — door',
-                                    'photo_floor_items' => 'Photo — floor',
-                                    'photo_seal_items' => 'Photo — seal',
-                                    'photo_eir_items' => 'Photo — EIR',
-                                    'photo_additional_items' => 'Additional photos',
+                                    'photo_door_items' => 'Photo Door',
+                                    'photo_floor_items' => 'Photo Floor',
+                                    'photo_seal_items' => 'Photo Seal',
+                                    'photo_eir_items' => 'Photo EIR',
+                                    'photo_additional_items' => 'Additional Photos',
                                 ][$key])
                                 ->multiple()
                                 ->dehydrated(false),
                             array_keys(Container::photoPickers()),
                         ),
                     ]),
-                Section::make('Pickup & stuffing — Export')
-                    ->description('Process 2/3: pick up the empty container and stuff at the factory.')
+                Section::make('Stuffing — Export')
+                    ->description('Process 2/3: stuff the container at the factory.')
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export)
                     ->columns(3)
                     ->schema([
-                        DateTimePicker::make('empty_picked_up_at')
-                            ->label('Empty picked up at'),
                         Select::make('stuffing_status')
                             ->options(StuffingStatus::options())
                             ->default(StuffingStatus::NotStarted->value)
