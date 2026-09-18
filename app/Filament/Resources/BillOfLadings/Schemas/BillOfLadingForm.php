@@ -11,10 +11,11 @@
  * - Tab "Shipping Details" (edit page only): the "Checking booking order"
  *   (Step 2) block first — AJU number, DO number, shipping line, vessel,
  *   voyage, port of loading, port of discharge, depot/CY closing times,
- *   shipment mode, B/L number — then every remaining flat field in a
- *   type-conditional list. Each field is disabled until its milestone is
- *   reached; locked fields show "Locked until Step X: name" naming the step
- *   that unlocks them.
+ *   shipment mode, B/L number, then cargo details (goods description,
+ *   package count/unit, terminal, loading date/destination, HS codes) — then
+ *   every remaining flat field in a type-conditional list. Each field is
+ *   disabled until its milestone is reached; locked fields show "Locked
+ *   until Step X: name" naming the step that unlocks them.
  * - Tab "Containers" (edit page only): the containers repeater, whose items
  *   stay open to distinguish individual container records.
  * - Tab "Notes" (edit page only): the notes panel.
@@ -168,6 +169,44 @@ class BillOfLadingForm
                                         self::gate(TextInput::make('bl_number')
                                             ->label('B/L number')
                                             ->maxLength(100), ShipmentMilestone::CheckingBookingOrder),
+                                        // Step 2 (cont.) — cargo details; Step 3 for import.
+                                        self::gate(Textarea::make('goods_description')
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('package_count')
+                                            ->numeric(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('package_unit')
+                                            ->maxLength(50), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(TextInput::make('terminal_name'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(DatePicker::make('loading_date'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(Textarea::make('loading_destination')
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        self::gate(Select::make('hsCodes')
+                                            ->label('HS codes')
+                                            ->relationship('hsCodes', 'code')
+                                            ->multiple()
+                                            ->searchable()
+                                            ->preload()
+                                            ->createOptionModalHeading('New HS code')
+                                            ->createOptionForm([
+                                                TextInput::make('code')
+                                                    ->label('HS code')
+                                                    ->required()
+                                                    ->unique('hs_codes', 'code')
+                                                    ->maxLength(30),
+                                                Textarea::make('description')
+                                                    ->rows(3),
+                                            ])
+                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
+                                        // Step 3 — Pick up empty container (export only).
+                                        self::gate(TextInput::make('pickup_depot_name')
+                                            ->label('Pick up depot')
+                                            ->maxLength(255)
+                                            ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::PickupEmptyContainer),
+                                        self::gate(DatePicker::make('stuffing_date')
+                                            ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::PickupEmptyContainer),
+                                        self::gate(Textarea::make('stuffing_destination')
+                                            ->columnSpanFull()
+                                            ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::PickupEmptyContainer),
                                         self::gate(DatePicker::make('departure_date'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
                                         self::gate(DateTimePicker::make('eta_at')
                                             ->label('ETA'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
@@ -220,33 +259,6 @@ class BillOfLadingForm
                                         self::gate(DateTimePicker::make('behandle_paid_at')
                                             ->label('Paid at')
                                             ->visible(self::visibleTo(ShipmentType::Import)), ShipmentMilestone::BehandlePayment),
-                                        self::gate(Textarea::make('goods_description')
-                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(TextInput::make('package_count')
-                                            ->numeric(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(TextInput::make('package_unit')
-                                            ->maxLength(50), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(TextInput::make('terminal_name'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(DatePicker::make('loading_date'), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(Textarea::make('loading_destination')
-                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
-                                        self::gate(Select::make('hsCodes')
-                                            ->label('HS codes')
-                                            ->relationship('hsCodes', 'code')
-                                            ->multiple()
-                                            ->searchable()
-                                            ->preload()
-                                            ->createOptionModalHeading('New HS code')
-                                            ->createOptionForm([
-                                                TextInput::make('code')
-                                                    ->label('HS code')
-                                                    ->required()
-                                                    ->unique('hs_codes', 'code')
-                                                    ->maxLength(30),
-                                                Textarea::make('description')
-                                                    ->rows(3),
-                                            ])
-                                            ->columnSpanFull(), ShipmentMilestone::CheckingBookingOrder, ShipmentMilestone::CheckingDocument),
                                         self::gate(Select::make('status')
                                             ->options(BillOfLadingStatus::options())
                                             ->default(BillOfLadingStatus::Draft), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned),
@@ -330,7 +342,9 @@ class BillOfLadingForm
     /**
      * The flat field list inside one container repeater item. Each field reads
      * the parent B/L's milestone via '../../' so it unlocks on its own step:
-     * export fills identity, transport and pickup at "Pick up empty container",
+     * export fills identity, transport and pickup at "Pick up empty container"
+     * (identity/transport first, then pick up depot, stuffing date and
+     * stuffing destination together),
      * tracks the driver position "On the way to factory", stuffs at
      * "Stuffing / PEB & NPE", records gate-in port and date at "Checking PEB
      * & NPE", VGM at "Gate in CY" and the final check at "Final checking".
@@ -362,17 +376,8 @@ class BillOfLadingForm
             self::gate(TextInput::make('driver_license_number')
                 ->label('Driver license number')
                 ->maxLength(100), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::OnTheWayToConsignee, '../../'),
-            self::gate(TextInput::make('pickup_depot_name')
-                ->label('Pick up depot')
-                ->maxLength(255)
-                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
             self::gate(DateTimePicker::make('empty_picked_up_at')
                 ->label('Empty picked up at')
-                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
-            self::gate(DatePicker::make('stuffing_date')
-                ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
-            self::gate(Textarea::make('stuffing_destination')
-                ->columnSpanFull()
                 ->visible(self::visibleTo(ShipmentType::Export, '../../')), ShipmentMilestone::PickupEmptyContainer, prefix: '../../'),
             self::gate(TextInput::make('tracking_position')
                 ->label('Tracking position')

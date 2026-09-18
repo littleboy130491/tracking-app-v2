@@ -399,3 +399,15 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Reordered/gated Step 2 fields (AJU..B/L number) at Checking booking order |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Advance milestone so gated AJU/B/L fields are auditable |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Updated Step 2 field order expectations |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Grouped cargo fields into the Step 2 block after B/L number |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Step 2 order now includes cargo fields |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Grouped Pick up depot/Stuffing date/destination consecutively |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added pickup-step field order check |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | CREATE | database/migrations/2026_09_18_100000_move_pickup_stuffing_columns_to_bill_of_ladings.php | Move pickup/stuffing columns to bill_of_ladings |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Models/BillOfLading.php | Fillable/casts for pickup depot, stuffing date/destination |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Models/Container.php | Removed moved pickup/stuffing fields |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Moved 3 fields from container repeater to Shipping Details Step 3 |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Removed moved pickup/stuffing fields |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Services/ShipmentTimeline.php | Read pickup depot/stuffing destination from the B/L |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | database/seeders/DemoShipmentSeeder.php | Seed moved fields on the B/L |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added pickup/stuffing B/L-level checks; removed stale container check |

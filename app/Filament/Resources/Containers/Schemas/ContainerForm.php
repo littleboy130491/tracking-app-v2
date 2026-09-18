@@ -27,7 +27,6 @@ use App\Models\Container;
 use App\Models\User;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Filament\Forms\Components\Checkbox;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
@@ -109,18 +108,14 @@ class ContainerForm
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export)
                     ->columns(3)
                     ->schema([
-                        TextInput::make('pickup_depot_name')->maxLength(255),
                         DateTimePicker::make('empty_picked_up_at')
                             ->label('Empty picked up at'),
-                        DatePicker::make('stuffing_date'),
                         Select::make('stuffing_status')
                             ->options(StuffingStatus::options())
                             ->default(StuffingStatus::NotStarted->value)
                             ->required(),
                         DateTimePicker::make('stuffing_started_at'),
                         DateTimePicker::make('stuffing_finished_at'),
-                        Textarea::make('stuffing_destination')
-                            ->columnSpanFull(),
                     ]),
                 Section::make('Gate in & VGM — Export')
                     ->visible(fn (Get $get, ?Container $record, LivewireComponent $livewire): bool => self::shipmentType($get, $record, $livewire) === ShipmentType::Export)

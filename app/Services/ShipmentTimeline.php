@@ -35,7 +35,7 @@ class ShipmentTimeline
         $billOfLading = $container->billOfLading;
         $candidates = [];
 
-        $this->pushContainerDates($candidates, $container);
+        $this->pushContainerDates($candidates, $container, $billOfLading);
 
         if ($billOfLading) {
             $this->pushVoyageDates($candidates, $billOfLading);
@@ -83,14 +83,16 @@ class ShipmentTimeline
 
     /**
      * Container operational dates. Each maps to one reference-style event row.
+     * Pickup depot and stuffing destination live on the B/L header, so they are
+     * read from there and passed in.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
-    private function pushContainerDates(array &$candidates, Container $container): void
+    private function pushContainerDates(array &$candidates, Container $container, ?BillOfLading $billOfLading = null): void
     {
-        $this->dated($candidates, $container->empty_picked_up_at, 'Empty container picked up', $container->pickup_depot_name, 'container:empty_picked_up_at');
-        $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $container->stuffing_destination, 'container:stuffing_started_at');
-        $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $container->stuffing_destination, 'container:stuffing_finished_at');
+        $this->dated($candidates, $container->empty_picked_up_at, 'Empty container picked up', $billOfLading?->pickup_depot_name, 'container:empty_picked_up_at');
+        $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $billOfLading?->stuffing_destination, 'container:stuffing_started_at');
+        $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $billOfLading?->stuffing_destination, 'container:stuffing_finished_at');
         $this->dated($candidates, $container->inspected_at, 'Container inspected', null, 'container:inspected_at');
         $this->dated($candidates, $container->factory_arrived_at, 'Arrived at factory', null, 'container:factory_arrived_at');
         $this->dated($candidates, $container->gate_in_cy_at, 'Gate in to terminal', $container->gate_in_port_name, 'container:gate_in_cy_at');

@@ -27,6 +27,12 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Open a B/L → Edit. Expected, top to bottom: full-width **Customer** section, then the **milestone stepper**, then the tabs **Shipping Details | Containers | Notes | Activity log**.
 - [ ] Open the **Containers** tab. Expected: the container repeater with expandable items (it is no longer nested inside Shipping Details).
 
+**Pickup / stuffing fields moved to B/L level**
+
+- [ ] Open an **export** B/L → Edit → **Shipping Details**. Expected: after the cargo fields you see **Pick up depot**, **Stuffing date**, **Stuffing destination** as shipment-level fields (not inside any container), each showing `Locked until Step 3: Pick up empty container` until reached.
+- [ ] Open the same B/L's **Containers** tab and expand a container. Expected: those three fields are **not** there anymore; **Empty picked up at** still is.
+- [ ] Open an **import** B/L → Edit. Expected: the three fields are not shown (export only).
+
 **Customer field permissions**
 
 - [ ] As **admin**, open a B/L → Edit. Expected: the **Customer** dropdown is visible and editable; **Customer name** shows the snapshot.
@@ -101,7 +107,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Shipping Details + stepper**
 
 - [ ] Same shipment → Edit. Expected: the milestone stepper sits **above the tabs** (not inside Shipping Details); on New it is absent.
-- [ ] **Shipping Details** tab. Expected: the first fields are the Step 2 group, in this order — **AJU number**, **DO number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, **B/L number**.
+- [ ] **Shipping Details** tab. Expected: the first fields are the Step 2 group, in this order — **AJU number**, **DO number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, **B/L number**, then the cargo fields: **Goods description**, **Package count**, **Package unit**, **Terminal name**, **Loading date**, **Loading destination**, **HS codes**.
 - [ ] On a shipment still at Step 1, those fields show `Locked until Step 2: Checking booking order`. Move it to Step 2 → all become editable at once.
 
 ## 5. Admins see all shipments in the portal (2026-09-17)

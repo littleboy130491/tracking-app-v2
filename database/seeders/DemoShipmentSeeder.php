@@ -143,6 +143,9 @@ class DemoShipmentSeeder extends Seeder
             'goods_description' => 'Nickel ore concentrate',
             'package_count' => 240,
             'package_unit' => 'bag',
+            'pickup_depot_name' => 'Depot Makassar Utama',
+            'stuffing_date' => now()->subDays(24)->toDateString(),
+            'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',
         ], [
             'status' => BillOfLadingStatus::Completed,
             'completed_at' => now()->subDays(6),
@@ -151,10 +154,7 @@ class DemoShipmentSeeder extends Seeder
         $this->hsCodes($exported, '2604.00');
 
         $this->container($exported, 'EGHU6677881', '40', 'GP', 'SL-0006', [
-            'pickup_depot_name' => 'Depot Makassar Utama',
             'empty_picked_up_at' => now()->subDays(25),
-            'stuffing_date' => now()->subDays(24)->toDateString(),
-            'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',
             'driver_name' => 'Andi Pratama',
             'license_number' => 'DD 8123 KK',
             'tracking_position' => 'Passed Maros checkpoint',
