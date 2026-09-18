@@ -4,22 +4,24 @@
  * File: app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php
  * Responsibility: Admin form for the shipment header.
  * What it does:
- * - Tab 1 "Customer": shipment type (locked after create) and customer
- *   (company) relationship.
- * - The milestone stepper sits above the tabs on edit (Regress / Advance
- *   live in the edit page header); hidden on create.
- * - Tab 2 "Shipping Details" (edit page only): shipment mode, AJU/B/L
- *   numbers (always editable, above the milestone gates) and every remaining
- *   field in a flat, type-conditional list — including the
- *   containers repeater, which only exists to distinguish multiple
- *   container records and whose items stay open. Each field is disabled
- *   until its milestone is reached; locked fields show "Locked until
- *   Step X: name" naming the step that unlocks them.
- * - Tab 3 "Activity log": read-only table of the shipment's audit entries
- *   (edit page only).
+ * - Above the tabs: a plain "Customer" section (shipment type, locked after
+ *   create, customer/company relationship, document received fields), always
+ *   visible; then the milestone stepper on edit only (Regress / Advance live
+ *   in the edit page header).
+ * - Tab "Shipping Details" (edit page only): shipment mode, AJU/B/L numbers
+ *   (always editable, above the milestone gates) and every remaining flat
+ *   field in a type-conditional list. Each field is disabled until its
+ *   milestone is reached; locked fields show "Locked until Step X: name"
+ *   naming the step that unlocks them.
+ * - Tab "Containers" (edit page only): the containers repeater, whose items
+ *   stay open to distinguish individual container records.
+ * - Tab "Notes" (edit page only): the notes panel.
+ * - Tab "Activity log" (edit page only): read-only table of the shipment's
+ *   audit entries.
  * - reference_number is generated via a hidden field; company_name_snapshot
- *   is set by the model on create and editable on edit by admin/super-admin
- *   only.
+ *   ("Customer name") is set by the model on create and editable on edit by
+ *   admin/super-admin only. The Customer dropdown is hidden on edit for
+ *   non-privileged roles, who only see the read-only Customer name.
  * How to use: Rendered by the B/L create and edit pages.
  * How to extend: Add a field inside the Shipping Details tab grid and wrap it in
  *   self::gate() with the milestone that unlocks it.
@@ -77,53 +79,63 @@ class BillOfLadingForm
     {
         return $schema
             ->components([
+                Section::make()
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        Select::make('shipment_type')
+                            ->options(ShipmentType::options())
+                            ->default(ShipmentType::Export)
+                            ->required()
+                            ->live()
+                            ->disabledOn('edit'),
+                        Select::make('company_id')
+                            ->label('Customer')
+                            ->relationship('company', 'name', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query))
+                            ->required()
+                            // Editable only while creating, or on edit by admin/super-admin.
+                            ->hidden(fn (string $operation): bool => $operation === 'edit' && ! auth()->user()?->hasAnyRole(Role::PRIVILEGED)),
+                        TextInput::make('company_name_snapshot')
+                            ->label('Customer name')
+                            ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED))
+                            ->visibleOn('edit'),
+                        DatePicker::make('document_received_date')
+                            ->label('Document received date')
+                            ->default(today())
+                            ->required(),
+                        Select::make('document_received_by')
+                            ->label('Document received by')
+                            ->relationship('documentReceivedBy', 'name')
+                            ->default(auth()->id())
+                            ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED))
+                            ->dehydrated(fn (): bool => (bool) auth()->user()?->hasAnyRole(Role::PRIVILEGED)),
+                    ]),
                 Placeholder::make('milestone_stepper')
                     ->hiddenLabel()
                     ->columnSpanFull()
                     ->visibleOn('edit')
-                    ->content(fn (Get $get, ?BillOfLading $record): HtmlString => new HtmlString(
-                        view('filament.bill-of-ladings.milestone-stepper', [
-                            'sequence' => ($type = self::enumValue($get('shipment_type'), ShipmentType::class))
-                                ? ShipmentMilestone::sequence($type, self::enumValue($get('billing_response'), BillingResponse::class))
-                                : [],
-                            'current' => self::enumValue($get('current_milestone'), ShipmentMilestone::class),
-                            'editable' => (bool) $record?->exists,
-                        ])->render()
-                    )),
+                    ->content(function (Get $get, ?BillOfLading $record): HtmlString {
+                        // The create page has no record and therefore no milestone state;
+                        // returning an empty string (instead of an empty wrapper) keeps the
+                        // form from showing a blank styled block above the tabs.
+                        if (! $record?->exists) {
+                            return new HtmlString('');
+                        }
+
+                        return new HtmlString(
+                            view('filament.bill-of-ladings.milestone-stepper', [
+                                'sequence' => ($type = self::enumValue($get('shipment_type'), ShipmentType::class))
+                                    ? ShipmentMilestone::sequence($type, self::enumValue($get('billing_response'), BillingResponse::class))
+                                    : [],
+                                'current' => self::enumValue($get('current_milestone'), ShipmentMilestone::class),
+                                'editable' => true,
+                            ])->render()
+                        );
+                    }),
                 Tabs::make('Bill of lading')
                     ->columnSpanFull()
+                    ->visibleOn('edit')
                     ->tabs([
-                        Tab::make('Customer')
-                            ->schema([
-                                Section::make()
-                                    ->columns(2)
-                                    ->schema([
-                                        Select::make('shipment_type')
-                                            ->options(ShipmentType::options())
-                                            ->default(ShipmentType::Export)
-                                            ->required()
-                                            ->live()
-                                            ->disabledOn('edit'),
-                                        Select::make('company_id')
-                                            ->label('Customer')
-                                            ->relationship('company', 'name', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query))
-                                            ->required(),
-                                        TextInput::make('company_name_snapshot')
-                                            ->label('Customer name (snapshot)')
-                                            ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED))
-                                            ->visibleOn('edit'),
-                                        DatePicker::make('document_received_date')
-                                            ->label('Document received date')
-                                            ->default(today())
-                                            ->required(),
-                                        Select::make('document_received_by')
-                                            ->label('Document received by')
-                                            ->relationship('documentReceivedBy', 'name')
-                                            ->default(auth()->id())
-                                            ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED))
-                                            ->dehydrated(fn (): bool => (bool) auth()->user()?->hasAnyRole(Role::PRIVILEGED)),
-                                    ]),
-                            ]),
                         Tab::make('Shipping Details')
                             ->visibleOn('edit')
                             ->schema([
@@ -152,29 +164,6 @@ class BillOfLadingForm
                                         self::gate(DateTimePicker::make('cy_closing_at')
                                             ->label('Closing time at CY')
                                             ->visible(self::visibleTo(ShipmentType::Export)), ShipmentMilestone::CheckingBookingOrder),
-                                        Section::make('Containers')
-                                            ->collapsible()
-                                            ->schema([
-                                                self::gate(Repeater::make('containers')
-                                                    ->relationship()
-                                                    ->defaultItems(0)
-                                                    ->itemLabel(function ($container): string {
-                                                        // Read the raw item state: the dehydrated snapshot Filament
-                                                        // passes as $state drops every form-field key, so it would be empty.
-                                                        $state = (array) $container->getRawState();
-
-                                                        return $state['container_number'] ?? 'New container';
-                                                    })
-                                                    ->collapsible()
-                                                    ->collapsed()
-                                                    ->columns(3)
-                                                    ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => [
-                                                        ...$data,
-                                                        ...self::photoPickerItems($data['id'] ?? null),
-                                                    ])
-                                                    ->schema(self::containerItemFields()), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument),
-                                            ])
-                                            ->columnSpanFull(),
                                         self::gate(TextInput::make('port_of_loading'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
                                         self::gate(DatePicker::make('departure_date'), ShipmentMilestone::GateInCy, ShipmentMilestone::DraftPib),
                                         self::gate(DateTimePicker::make('eta_at')
@@ -261,6 +250,28 @@ class BillOfLadingForm
                                         self::gate(DateTimePicker::make('completed_at')
                                             ->label('Completed at'), ShipmentMilestone::FinalChecking, ShipmentMilestone::EmptyReturned),
                                     ]),
+                            ]),
+                        Tab::make('Containers')
+                            ->visibleOn('edit')
+                            ->schema([
+                                self::gate(Repeater::make('containers')
+                                    ->relationship()
+                                    ->defaultItems(0)
+                                    ->itemLabel(function ($container): string {
+                                        // Read the raw item state: the dehydrated snapshot Filament
+                                        // passes as $state drops every form-field key, so it would be empty.
+                                        $state = (array) $container->getRawState();
+
+                                        return $state['container_number'] ?? 'New container';
+                                    })
+                                    ->collapsible()
+                                    ->collapsed()
+                                    ->columns(3)
+                                    ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => [
+                                        ...$data,
+                                        ...self::photoPickerItems($data['id'] ?? null),
+                                    ])
+                                    ->schema(self::containerItemFields()), ShipmentMilestone::PickupEmptyContainer, ShipmentMilestone::CheckingDocument),
                             ]),
                         Tab::make('Notes')
                             ->visibleOn('edit')
@@ -482,6 +493,10 @@ class BillOfLadingForm
      * Per-field locked message, e.g. "Locked until Step 3: Pick up empty
      * container at depot". The step number is the milestone's position in the
      * shipment's sequence so the text matches the stepper above.
+     *
+     * The message is a link carrying data-bl-ms-goto="N"; clicking it scrolls
+     * the page to that milestone dot and pulses it (see milestone-stepper
+     * blade, which owns the delegated click handler).
      */
     private static function lockedHelperText(
         ShipmentMilestone $required,
@@ -490,7 +505,7 @@ class BillOfLadingForm
     ): Closure {
         $locked = self::locked($required, $import, $prefix);
 
-        return function (Get $get) use ($locked, $required, $import, $prefix): ?string {
+        return function (Get $get) use ($locked, $required, $import, $prefix): ?HtmlString {
             if (! $locked($get)) {
                 return null;
             }
@@ -500,7 +515,18 @@ class BillOfLadingForm
             $sequence = ShipmentMilestone::sequence($type, self::enumValue($get($prefix.'billing_response'), BillingResponse::class));
             $step = array_search($milestone, $sequence, true);
 
-            return 'Locked until Step '.($step === false ? '?' : $step + 1).': '.$milestone->getLabel();
+            $label = 'Locked until Step '.($step === false ? '?' : $step + 1).': '.$milestone->getLabel();
+
+            if ($step === false) {
+                return new HtmlString($label);
+            }
+
+            return new HtmlString(
+                '<button type="button" class="bl-ms-goto" data-bl-ms-goto="'.($step + 1).'">'
+                .'<span class="bl-ms-goto-dot">'.($step + 1).'</span> '
+                .e($label)
+                .'</button>'
+            );
         };
     }
 

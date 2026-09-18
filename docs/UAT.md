@@ -11,19 +11,47 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
-## 1. Export spec fields + latest event (2026-09-17)
+## 1. B/L form layout + customer permissions (2026-09-18)
+
+**Prerequisites**
+
+- Run `php artisan migrate:fresh --seed` first.
+- Admin panel: `http://localhost:8000/admin` — log in as `admin@example.com` / `password` (second account: `operator@example.com` / `password`).
+
+**Create page**
+
+- [ ] Bill of ladings → New. Expected: only the **Customer** section is shown — a full-width section with shipment type, Customer, Document received date and Document received by. No milestone stepper, no tabs, no empty box under the fields.
+
+**Edit page layout (as admin)**
+
+- [ ] Open a B/L → Edit. Expected, top to bottom: full-width **Customer** section, then the **milestone stepper**, then the tabs **Shipping Details | Containers | Notes | Activity log**.
+- [ ] Open the **Containers** tab. Expected: the container repeater with expandable items (it is no longer nested inside Shipping Details).
+
+**Customer field permissions**
+
+- [ ] As **admin**, open a B/L → Edit. Expected: the **Customer** dropdown is visible and editable; **Customer name** shows the snapshot.
+- [ ] As **operator** (`operator@example.com`), open a B/L → Edit. Expected: the **Customer** dropdown is **not** shown; only the read-only **Customer name** is displayed.
+- [ ] As operator, Save the form. Expected: no validation error and the customer is unchanged.
+
+**Locked field jumps to milestone**
+
+- [ ] On Edit, find a field showing `Locked until Step N: …` (e.g. **DO number** → Step 2). Expected: the message is a green clickable link with a small step-number dot.
+- [ ] Click that message. Expected: the page smooth-scrolls up to the milestone stepper and the matching dot (same number N) pulses green for ~2 seconds.
+- [ ] Repeat for a different step (e.g. import B/L **DO released at** → Step 7) and confirm the correct dot pulses.
+
+## 2. Export spec fields + latest event (2026-09-17)
 
 **Prerequisites**
 
 - Run `php artisan migrate:fresh --seed` first.
 - Admin panel: `http://localhost:8000/admin` — log in as `admin@example.com` / `password`.
 
-**Document received (Customer tab)**
+**Document received (Customer section)**
 
-- [ ] Bill of ladings → New. Expected: the Customer tab shows **Document received date** (defaulted to today) and **Document received by** (default = you); both required.
-- [ ] Reopen that shipment → Edit → Customer tab. Expected: the date is editable; **Document received by** is disabled for operators and editable for admin/super_admin.
+- [ ] Bill of ladings → New. Expected: the **Customer** section shows **Document received date** (defaulted to today) and **Document received by** (default = you); both required.
+- [ ] Reopen that shipment → Edit → **Customer** section. Expected: the date is editable; **Document received by** is disabled for operators and editable for admin/super_admin.
 
-**Container fields (Shipping Details → expand a container)**
+**Container fields (Containers tab → expand a container)**
 
 - [ ] At the pickup step each container shows **Driver license number** below the truck plate.
 - [ ] At "Container on the way to factory" the container shows **Tracking position** and **Tracking position (url)**.
@@ -36,7 +64,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Save any change on a B/L (or move a milestone). Expected: the shipment's `latest_event` updates — visible in the Activity log as the newest row with the matching time.
 - [ ] Change a container-level field (e.g. stuffing status) and Save. Expected: both the container row and its B/L show the container event as their latest event.
 
-## 2. Notes on shipments, containers, companies, users (2026-09-17)
+## 3. Notes on shipments, containers, companies, users (2026-09-17)
 
 **Prerequisites**
 
@@ -58,24 +86,24 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Back on the B/L → Activity log tab. Expected: `note_created` / `note_updated` / `note_deleted` rows naming you as the actor.
 - [ ] Shipments → Activity logs as the operator. Expected: note entries for unassigned companies' shipments are not listed.
 
-## 3. Customer tab + Shipping Details Step 2 (2026-09-17)
+## 4. Customer section + Shipping Details Step 2 (2026-09-17)
 
 **Prerequisites**
 
 - Run `php artisan migrate:fresh --seed` first.
 - Admin panel: `http://localhost:8000/admin` — log in as `admin@example.com` / `password`.
 
-**Customer tab (create)**
+**Customer section (create)**
 
-- [ ] Bill of ladings → New. Expected: the **Customer** tab shows only **Shipment type** + **Customer**; no AJU, B/L, or mode fields. Saving with just those two succeeds.
-- [ ] Reopen that shipment → Edit → Customer tab. Expected: **Shipment type** is disabled (locked) and **Customer name (snapshot)** is shown read-only.
+- [ ] Bill of ladings → New. Expected: the **Customer** section shows **Shipment type**, **Customer**, **Document received date** and **Document received by**; no AJU, B/L, or mode fields. Saving with just the required fields succeeds.
+- [ ] Reopen that shipment → Edit → **Customer** section. Expected: **Shipment type** is disabled (locked) and **Customer name** is shown read-only.
 
 **Shipping Details + stepper**
 
 - [ ] Same shipment → Edit. Expected: the milestone stepper sits **above the tabs** (not inside Shipping Details); on New it is absent.
 - [ ] **Shipping Details** tab. Expected: **Shipment mode**, **AJU number** and **B/L number** sit at the top, always editable with no lock message; the DO number below them still shows `Locked until Step 2` until reached.
 
-## 4. Admins see all shipments in the portal (2026-09-17)
+## 5. Admins see all shipments in the portal (2026-09-17)
 
 **Prerequisites**
 
@@ -89,7 +117,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Open a shipment the admin has no link to (e.g. `REF-IMP-0002` / JRD) and one of its containers. Expected: both pages open normally.
 - [ ] Log in as a customer (e.g. `rina@nusantara.test`). Expected: only their companies' shipments appear; guessing another company's shipment URL still 404s.
 
-## 5. Operator row-level scope (2026-09-17)
+## 6. Operator row-level scope (2026-09-17)
 
 **Prerequisites**
 
@@ -111,7 +139,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Customer portal → log in as `customer@example.com`. Expected: only NUS/SIN/BJM shipments appear (unchanged behaviour; portal scoping matches the admin rule).
 - [ ] Paste another company's shipment URL. Expected: **404**.
 
-## 6. Staff impersonation (2026-09-17)
+## 7. Staff impersonation (2026-09-17)
 
 **Prerequisites**
 
@@ -127,7 +155,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] As `admin@example.com`, open the edit page of `superadmin@example.com`. Expected: no impersonate button (admins cannot impersonate super admins).
 - [ ] As `superadmin@example.com`, open any user edit page. Expected: impersonate button present in the header.
 
-## 7. Portal journey timeline like the reference tracker (2026-09-16)
+## 8. Portal journey timeline like the reference tracker (2026-09-16)
 
 **Prerequisites**
 
@@ -150,7 +178,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Portal home → shipment table. Expected: **Latest place** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
 - [ ] Search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `REF-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
 
-## 8. B/L Progress milestones & audit (2026-09-16)
+## 9. B/L Progress milestones & audit (2026-09-16)
 
 **Prerequisites**
 
@@ -186,7 +214,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Log in to the portal as a customer user and open a tracked container. Expected: the details grid shows the **Tracking position** text when it is filled in; there is no location-history table.
 
-## 9. Users & Companies CRUD (2026-09-15)
+## 10. Users & Companies CRUD (2026-09-15)
 
 **Prerequisites**
 

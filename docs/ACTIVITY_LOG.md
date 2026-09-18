@@ -386,3 +386,13 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-17 16:55 | Devin | UPDATE | database/seeders/DemoShipmentSeeder.php | Document-received defaults written during seeding |
 | 2026-09-17 16:55 | Devin | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Photo picker sync + latest-event assertions |
 | 2026-09-17 16:55 | Devin | UPDATE | docs/UAT.md | Export spec and latest-event checklist |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Customer above stepper; Containers split into own tab |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Customer full width; empty stepper shell hidden on create |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Hide Tabs container on create; only Customer section shows |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Customer relation hidden on edit for non-admin/super-admin |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Renamed snapshot label to "Customer name"; updated docblock |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added B/L layout + customer permission checks; renumbered sections |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Step anchors, goto-click scroll+flash, lock-link styles |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/BillOfLadings/Schemas/BillOfLadingForm.php | Lock helper text is now a data-bl-ms-goto link |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Assert locked helper link anchors |
+| 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Added locked-field jump-to-milestone checks |

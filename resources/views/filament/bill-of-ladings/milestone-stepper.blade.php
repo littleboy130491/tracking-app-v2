@@ -6,6 +6,9 @@
       current = highlighted ring, upcoming = translucent grey.
     - Each step is a button calling jumpToMilestone() on the edit page;
       wire:confirm guards against misclicks.
+    - Each step is addressable (id="bl-ms-step-N") and a delegated click
+      handler scrolls to + pulses it when a locked field's helper text
+      (data-bl-ms-goto="N") is clicked.
     - Styles are scoped in this file (the .bl-ms prefix) because the admin
       panel ships precompiled CSS — app Tailwind classes are not generated.
     Props: $sequence (ShipmentMilestone[]), $current (?ShipmentMilestone),
@@ -34,13 +37,25 @@
     .dark .bl-ms li.current .ms-dot { background: rgb(3, 235, 98); color: rgb(4, 60, 30); }
     .dark .bl-ms .ms-label { color: rgb(148, 163, 184); }
     .dark .bl-ms li.current .ms-label { color: rgb(74, 222, 128); }
+    /* Pulse shown when a locked field's helper text scrolls here. */
+    .bl-ms li.flash .ms-dot { animation: bl-ms-flash 1.2s ease-in-out 2; }
+    @keyframes bl-ms-flash {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(2, 180, 75, 0); }
+        50% { box-shadow: 0 0 0 8px rgba(2, 180, 75, .45); }
+    }
+    /* "Locked until Step N: ..." helper text rendered by the form as a link. */
+    .bl-ms-goto { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; padding: 0; font: inherit; color: rgb(2, 140, 60); cursor: pointer; text-align: left; }
+    .bl-ms-goto:hover { text-decoration: underline; }
+    .bl-ms-goto-dot { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 9999px; font-size: 10px; font-weight: 600; background: rgba(3, 235, 98, .25); color: rgb(2, 140, 60); }
+    .dark .bl-ms-goto { color: rgb(74, 222, 128); }
+    .dark .bl-ms-goto-dot { background: rgba(74, 222, 128, .2); color: rgb(74, 222, 128); }
 </style>
 @php
     $currentIndex = $current ? array_search($current, $sequence, true) : false;
     // Forward moves are capped at one step; any earlier step stays clickable.
     $nextAllowedIndex = $currentIndex === false ? 0 : $currentIndex + 1;
 @endphp
-<div class="bl-ms">
+<div class="bl-ms" id="bl-ms">
     <ol>
         @foreach ($sequence as $i => $step)
             @php
@@ -49,7 +64,11 @@
                 $allowed = $editable && ! $active && $i <= $nextAllowedIndex;
                 $liClass = $done ? 'done reached' : ($active ? 'current reached' : '');
             @endphp
-            <li class="{{ $liClass }}">
+            <li
+                id="bl-ms-step-{{ $i + 1 }}"
+                data-bl-ms-step="{{ $i + 1 }}"
+                class="{{ $liClass }}"
+            >
                 <button
                     type="button"
                     wire:click="mountAction('jumpToMilestone', {'milestone': '{{ $step->value }}'})"
@@ -63,3 +82,29 @@
         @endforeach
     </ol>
 </div>
+<script>
+    // Scrolled-to from a locked field's helper text: bring the matching
+    // milestone dot into view and pulse it. Delegated so it survives
+    // Livewire re-renders of the form.
+    if (! window.__blMsGotoBound) {
+        window.__blMsGotoBound = true;
+
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('[data-bl-ms-goto]');
+            if (! trigger) return;
+
+            const step = trigger.getAttribute('data-bl-ms-goto');
+            const target = document.getElementById('bl-ms-step-' + step);
+            if (! target) return;
+
+            event.preventDefault();
+
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            target.classList.remove('flash');
+            void target.offsetWidth;
+            target.classList.add('flash');
+            setTimeout(() => target.classList.remove('flash'), 3000);
+        });
+    }
+</script>

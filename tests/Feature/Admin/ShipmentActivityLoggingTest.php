@@ -55,6 +55,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
         Livewire::test(EditBillOfLading::class, ['record' => $export->getRouteKey()])
             ->assertSee('Locked until Step 2: Checking booking order')
+            ->assertSee('data-bl-ms-goto="2"', false)
             ->assertDontSee('Current step:')
             ->assertDontSee('Available since');
 
@@ -62,7 +63,8 @@ class ShipmentActivityLoggingTest extends TestCase
         $import->update(['current_milestone' => ShipmentMilestone::DraftPib]);
 
         Livewire::test(EditBillOfLading::class, ['record' => $import->getRouteKey()])
-            ->assertSee('Locked until Step 7: DO release');
+            ->assertSee('Locked until Step 7: DO release')
+            ->assertSee('data-bl-ms-goto="7"', false);
     }
 
     public function test_bill_of_lading_save_records_only_changed_fields_and_actor(): void
