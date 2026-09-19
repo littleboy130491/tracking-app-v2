@@ -124,7 +124,7 @@ class ImportShipmentDetail extends Component
 
     private function shipment(): ImportShipment
     {
-        $query = ImportShipment::query()->with('company');
+        $query = ImportShipment::query()->with('company')->visibleInPortal();
 
         // Admins open any shipment; customers stay scoped to their companies.
         if (! auth()->user()->canViewAllShipments()) {

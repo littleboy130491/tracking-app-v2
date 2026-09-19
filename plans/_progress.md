@@ -128,6 +128,11 @@ Blocked: None
 - Post-plan tweak (09:42): export container **Status** + **Completed at** fields removed (repeater + standalone form); columns kept for the list/portal, import container forms keep the fields.
 - Post-plan tweak (09:45): export shipment form drops **Departure date / ETA / Actual arrival / Status / Completed at** (columns kept — the engine still completes shipments and the portal still reads the sailing dates).
 - Post-plan tweak (09:47): new **Status** tab on the export shipment form (after Containers) holding Status + Completed at; shared `ShipmentFields::statusTab()` builder so the import form can adopt it later.
+- Post-plan tweak (09:51): export container stuffing field labelled **Stuffing status at Factory**.
+- Post-plan tweak (09:54): stuffing status reduced to **On Process / Finished** (default On Process) — "Not Started" dropped from the enum, form and DB default.
+- Post-plan tweak (09:57): **Stuffing date** is now date + time (column changed to timestamp, picker switched to DateTimePicker, seeder updated).
+- Post-plan tweak (10:03): portal hides **draft** shipments (list + detail + container URLs 404, admins included); the milestone engine flips draft → in progress as soon as a shipment advances past Document received.
+- Post-plan tweak (10:06): export container **Final checked** is a toggle instead of a checkbox.
 
 ## Notes
 

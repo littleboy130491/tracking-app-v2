@@ -38,7 +38,7 @@ return new class extends Migration
             $table->string('tracking_position')->nullable();
             $table->string('tracking_position_url', 500)->nullable();
 
-            $table->string('stuffing_status', 30)->default('not_started');
+            $table->string('stuffing_status', 30)->default('on_process');
 
             $table->string('port_of_loading')->nullable();
             $table->timestamp('gate_in_cy_at')->nullable();

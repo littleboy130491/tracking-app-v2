@@ -4,7 +4,8 @@
  * File: app/Enums/StuffingStatus.php
  * Responsibility: Stuffing progress for a container.
  * What it does:
- * - Tracks not_started / on_process / finished as required by migration_plan.md.
+ * - Tracks on_process / finished; stuffing starts as soon as the container is
+ *   being loaded, so there is no "not started" state.
  * How to use: Container casts `stuffing_status` to this enum.
  * How to extend: Add stages such as "cancelled" if the operation allows it.
  */
@@ -17,14 +18,12 @@ enum StuffingStatus: string
 {
     use HasSelectOptions;
 
-    case NotStarted = 'not_started';
     case OnProcess = 'on_process';
     case Finished = 'finished';
 
     public function label(): string
     {
         return match ($this) {
-            self::NotStarted => 'Not Started',
             self::OnProcess => 'On Process',
             self::Finished => 'Finished',
         };

@@ -18,6 +18,7 @@ namespace App\Models\Concerns;
 use App\Enums\ShipmentStatus;
 use App\Services\ActivityLogger;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 trait ActsAsShipment
@@ -36,6 +37,15 @@ trait ActsAsShipment
             $shipment->document_received_date ??= today();
             $shipment->document_received_by ??= auth()->id();
         });
+    }
+
+    /**
+     * The customer portal only lists and opens shipments that have left the
+     * draft state; drafts stay internal until the process starts.
+     */
+    public function scopeVisibleInPortal(Builder $query): Builder
+    {
+        return $query->where('status', '!=', ShipmentStatus::Draft->value);
     }
 
     /**
@@ -91,7 +101,8 @@ trait ActsAsShipment
     /**
      * Sets the milestone directly — used by the stepper's click-to-jump and by
      * advance/regress. Reaching the last milestone completes the shipment;
-     * moving off it reopens it. Every change is written to the activity log.
+     * moving off it reopens it; leaving the first milestone publishes a draft.
+     * Every change is written to the activity log.
      */
     public function moveToMilestone(BackedEnum $target): void
     {
@@ -110,6 +121,10 @@ trait ActsAsShipment
         } elseif ($this->status === ShipmentStatus::Completed) {
             $this->status = ShipmentStatus::InProgress;
             $this->completed_at = null;
+        } elseif ($this->status === ShipmentStatus::Draft) {
+            // Leaving "document received" means the process has started, which
+            // publishes the shipment to the customer portal.
+            $this->status = ShipmentStatus::InProgress;
         }
 
         $this->save();

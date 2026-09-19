@@ -238,6 +238,21 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertNull($export->completed_at);
     }
 
+    public function test_a_draft_shipment_publishes_when_it_advances(): void
+    {
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+        $export->update(['status' => ShipmentStatus::Draft]);
+
+        // Advancing past "document received" publishes it to the portal.
+        $export->advanceMilestone();
+        $this->assertSame(ShipmentStatus::InProgress, $export->status);
+
+        // A cancelled shipment keeps its status when the milestone moves.
+        $export->update(['status' => ShipmentStatus::Cancelled]);
+        $export->advanceMilestone();
+        $this->assertSame(ShipmentStatus::Cancelled, $export->status);
+    }
+
     public function test_milestone_stepper_jumps_and_logs_each_change(): void
     {
         $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();

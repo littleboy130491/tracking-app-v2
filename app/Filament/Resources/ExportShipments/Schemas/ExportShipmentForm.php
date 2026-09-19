@@ -22,7 +22,6 @@ use App\Enums\ShipmentMode;
 use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ExportContainer;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -110,7 +109,7 @@ class ExportShipmentForm
                                         TextInput::make('pickup_depot_name')
                                             ->label('Pick up depot')
                                             ->maxLength(255),
-                                        DatePicker::make('stuffing_date'),
+                                        DateTimePicker::make('stuffing_date'),
                                         Textarea::make('stuffing_destination')
                                             ->columnSpanFull(),
                                     ], $enum, ExportMilestone::PickupEmptyContainer),

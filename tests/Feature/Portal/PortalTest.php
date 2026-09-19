@@ -18,6 +18,7 @@ namespace Tests\Feature\Portal;
 use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ExportMilestone;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentStatus;
 use App\Livewire\Customer\Dashboard;
 use App\Livewire\Customer\ExportShipmentDetail;
 use App\Livewire\Customer\ImportShipmentDetail;
@@ -371,6 +372,53 @@ class PortalTest extends TestCase
             ->assertSee($importContainer->container_number);
     }
 
+    public function test_draft_shipments_are_hidden_from_the_portal(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->first();
+
+        $active = $this->exportShipmentFor($company, 'BL-PORTAL-ACTIVE');
+        $draft = $this->exportShipmentFor($company, 'BL-PORTAL-DRAFT', ShipmentStatus::Draft);
+        $draftContainer = $draft->containers()->firstOrFail();
+
+        $this->assertNotSame($active->getKey(), $draft->getKey());
+
+        $this->actingAs($user)
+            ->get(route('customer.dashboard'))
+            ->assertOk()
+            ->assertSee('BL-PORTAL-ACTIVE')
+            ->assertDontSee('BL-PORTAL-DRAFT');
+
+        // Drafts stay closed by URL too, for the shipment and its containers.
+        $this->actingAs($user)
+            ->get(route('customer.export-shipments.show', ['exportShipment' => $draft->getKey()]))
+            ->assertNotFound();
+
+        $this->actingAs($user)
+            ->get(route('customer.export-containers.show', ['exportContainer' => $draftContainer->getKey()]))
+            ->assertNotFound();
+
+        // Admins browse the portal as the customer sees it, so drafts stay hidden.
+        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get(route('customer.dashboard'))
+            ->assertOk()
+            ->assertDontSee('BL-PORTAL-DRAFT');
+
+        // Advancing past the first milestone publishes it.
+        $draft->advanceMilestone();
+
+        $this->actingAs($user)
+            ->get(route('customer.dashboard'))
+            ->assertOk()
+            ->assertSee('BL-PORTAL-DRAFT');
+
+        $this->actingAs($user)
+            ->get(route('customer.export-containers.show', ['exportContainer' => $draftContainer->getKey()]))
+            ->assertOk();
+    }
+
     public function test_a_customer_sees_only_their_own_shipments(): void
     {
         $mine = $this->portalUser();
@@ -575,13 +623,14 @@ class PortalTest extends TestCase
         return $user->refresh();
     }
 
-    private function exportShipmentFor(Company $company, string $reference): ExportShipment
+    private function exportShipmentFor(Company $company, string $reference, ShipmentStatus $status = ShipmentStatus::InProgress): ExportShipment
     {
         $shipment = ExportShipment::query()->create([
             'bl_number' => $reference,
             'company_id' => $company->getKey(),
             'company_name_snapshot' => $company->name,
             'current_milestone' => ExportMilestone::DocumentReceived,
+            'status' => $status,
         ]);
 
         $shipment->containers()->create([
@@ -591,13 +640,14 @@ class PortalTest extends TestCase
         return $shipment->refresh();
     }
 
-    private function importShipmentFor(Company $company, string $reference): ImportShipment
+    private function importShipmentFor(Company $company, string $reference, ShipmentStatus $status = ShipmentStatus::InProgress): ImportShipment
     {
         $shipment = ImportShipment::query()->create([
             'bl_number' => $reference,
             'company_id' => $company->getKey(),
             'company_name_snapshot' => $company->name,
             'current_milestone' => ImportMilestone::DocumentReceived,
+            'status' => $status,
             'draft_pib_confirmation_status' => DraftPibConfirmationStatus::Pending,
         ]);
 

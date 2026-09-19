@@ -95,7 +95,7 @@ class DemoExportShipmentSeeder extends Seeder
             'actual_arrival_at' => now()->subDays(6),
             'goods_description' => 'Nickel ore concentrate',
             'pickup_depot_name' => 'Depot Makassar Utama',
-            'stuffing_date' => now()->subDays(24)->toDateString(),
+            'stuffing_date' => now()->subDays(24),
             'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',
         ], [
             'status' => ShipmentStatus::Completed,

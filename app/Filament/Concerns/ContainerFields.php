@@ -20,13 +20,13 @@ use App\Enums\StuffingStatus;
 use App\Livewire\NotesPanel;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Closure;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 
 class ContainerFields
@@ -144,8 +144,9 @@ class ContainerFields
     {
         return [
             Select::make('stuffing_status')
+                ->label('Stuffing status at Factory')
                 ->options(StuffingStatus::options())
-                ->default(StuffingStatus::NotStarted->value)
+                ->default(StuffingStatus::OnProcess->value)
                 ->required(),
         ];
     }
@@ -191,7 +192,7 @@ class ContainerFields
     public static function exportFinalCheck(): array
     {
         return [
-            Checkbox::make('final_checked')
+            Toggle::make('final_checked')
                 ->label('Final checked'),
             DateTimePicker::make('final_checked_at'),
         ];

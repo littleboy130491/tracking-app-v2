@@ -28,10 +28,10 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Bill of Ladings → Export → New. Expected: only the **Customer** section (Customer, Document received date/by); no stepper, no tabs.
 - [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**.
-- [ ] Shipping Details order: **B/L number, DO number, AJU number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description**. **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
+- [ ] Shipping Details order: **B/L number, DO number, AJU number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description**. **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
 - [ ] **Status** tab (between Containers and Notes). Expected: **Status** dropdown (draft / in progress / completed / cancelled) + **Completed at**, both editable once Step 8 is reached; Save persists them and the Activity log records the change.
 - [ ] At Step 1 the fields show `Locked until Step 2: Checking booking order`. Click **Advance** → they become editable.
-- [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; **Stuffing status** at "Stuffing at factory / PEB & NPE"; **Port of loading** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** at "Final checking".
+- [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; **Stuffing status at Factory** (On Process / Finished, defaulting to On Process) at "Stuffing at factory / PEB & NPE"; **Port of loading** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** (toggle) at "Final checking".
 
 **Import shipment form**
 
@@ -53,6 +53,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Open `BL-IMP-0001` → Import shipment page: facts, **Draft PIB confirmation** with Confirm / Request revision, journey, containers.
 - [ ] Open an export container page (`MSKU1234567`) and an import container page (`CMAU7654321`). Expected: per-type facts (export: tracking/VGM/final check; import: gate-out/weights/return) + Sailing information + Journey.
 - [ ] `sari@java-retail.test` opens `BL-IMP-0002` (already confirmed): the Confirm and Request revision actions are **not** offered.
+- [ ] A **draft** shipment (Status = Draft) is **not** listed in the portal, and opening its shipment or container URL returns **404**. Advance it past **Document received** → it becomes In progress and appears (with its container pages).
 
 **Audit**
 
@@ -256,7 +257,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Each export container item shows five photo pickers at the pickup step. Expected: pick existing files or upload new ones → Save → files stay attached to that container.
 - [ ] Reopen the shipment after saving. Expected: the picked attachments are still shown on the container; remove one and save → it detaches (the file itself remains in the media library).
 - [ ] **Tracking position** is a single text field per export container, unlocked at "Container on the way to factory" (Step 4) — not a repeatable list.
-- [ ] At "Checking PEB & NPE" the container unlocks **Port of loading** + **Gate in CY** date; at "Gate in CY" it unlocks **VGM (kg)** (weight only, no unit selector); at "Final checking" it unlocks **Final checked** + **Final checked at**.
+- [ ] At "Checking PEB & NPE" the container unlocks **Port of loading** + **Gate in CY** date; at "Gate in CY" it unlocks **VGM (kg)** (weight only, no unit selector); at "Final checking" it unlocks **Final checked** (toggle) + **Final checked at**.
 - [ ] Containers → Export → edit a container directly: the same fields appear, including the photo pickers.
 
 **Activity log**

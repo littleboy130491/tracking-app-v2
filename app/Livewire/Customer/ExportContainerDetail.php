@@ -48,6 +48,9 @@ class ExportContainerDetail extends Component
     {
         $query = ExportContainer::query()->with('shipment');
 
+        // Draft shipments stay internal, so their containers do too.
+        $query->whereHas('shipment', fn (Builder $query) => $query->visibleInPortal());
+
         // Admins open any container; customers stay scoped to their companies.
         if (! auth()->user()->canViewAllShipments()) {
             $companyIds = auth()->user()->companies()->pluck('companies.id')->all();

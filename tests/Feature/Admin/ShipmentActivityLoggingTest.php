@@ -223,7 +223,7 @@ class ShipmentActivityLoggingTest extends TestCase
                 'container_number' => 'AUDIT-CONT-NEW',
                 'size' => '40',
                 'type' => 'HC',
-                'stuffing_status' => 'not_started',
+                'stuffing_status' => 'on_process',
             ])
             ->call('create')
             ->assertHasNoFormErrors();

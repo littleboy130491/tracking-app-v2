@@ -38,7 +38,7 @@ return new class extends Migration
             $table->timestamp('depot_closing_at')->nullable();
             $table->timestamp('cy_closing_at')->nullable();
             $table->string('pickup_depot_name')->nullable();
-            $table->date('stuffing_date')->nullable();
+            $table->timestamp('stuffing_date')->nullable();
             $table->text('stuffing_destination')->nullable();
             $table->date('departure_date')->nullable();
             $table->timestamp('eta_at')->nullable();

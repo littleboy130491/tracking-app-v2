@@ -70,6 +70,7 @@ class Dashboard extends Component
         $model = $isExport ? ExportShipment::class : ImportShipment::class;
 
         $shipments = $model::query()
+            ->visibleInPortal()
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with(['company', 'containers'])
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))

@@ -591,3 +591,24 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Status tab added after Containers |
 | 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Edit page asserts the Status tab |
 | 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Status tab checklist items added |
+| 2026-09-19 09:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Stuffing status label clarified to "Stuffing status at Factory" |
+| 2026-09-19 09:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Container checklist uses the new label |
+| 2026-09-19 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Enums/StuffingStatus.php | Reduced to On Process / Finished |
+| 2026-09-19 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | stuffing_status defaults to on_process |
+| 2026-09-19 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Stuffing status defaults to On Process |
+| 2026-09-19 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Container create test uses on_process |
+| 2026-09-19 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Stuffing status values documented |
+| 2026-09-19 09:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_export_shipments_table.php | stuffing_date is a timestamp now |
+| 2026-09-19 09:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportShipment.php | stuffing_date casts to datetime |
+| 2026-09-19 09:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Stuffing date uses a date + time picker |
+| 2026-09-19 09:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Seeds a stuffing datetime |
+| 2026-09-19 09:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Stuffing date documented as date + time |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Concerns/ActsAsShipment.php | visibleInPortal scope; drafts publish on milestone progress |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Portal list hides draft shipments |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/{Export,Import}ShipmentDetail.php | Draft shipments 404 in the portal |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/{Export,Import}ContainerDetail.php | Containers of drafts 404 in the portal |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Draft hidden + publishes on advance |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Draft publishes on advance; cancelled stays |
+| 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Draft visibility rule documented |
+| 2026-09-19 10:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Final checked is a toggle now |
+| 2026-09-19 10:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Final checked noted as a toggle |

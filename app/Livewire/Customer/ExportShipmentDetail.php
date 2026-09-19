@@ -44,7 +44,7 @@ class ExportShipmentDetail extends Component
 
     private function shipment(): ExportShipment
     {
-        $query = ExportShipment::query()->with('company');
+        $query = ExportShipment::query()->with('company')->visibleInPortal();
 
         // Admins open any shipment; customers stay scoped to their companies.
         if (! auth()->user()->canViewAllShipments()) {

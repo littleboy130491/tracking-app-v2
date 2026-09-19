@@ -74,7 +74,7 @@ class ExportShipment extends Model
             'document_received_date' => 'date',
             'depot_closing_at' => 'datetime',
             'cy_closing_at' => 'datetime',
-            'stuffing_date' => 'date',
+            'stuffing_date' => 'datetime',
             'departure_date' => 'date',
             'eta_at' => 'datetime',
             'actual_arrival_at' => 'datetime',
