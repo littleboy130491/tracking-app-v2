@@ -4,9 +4,10 @@
  * File: app/Services/ActivityLogger.php
  * Responsibility: Writes append-only audit entries for shipment changes.
  * What it does:
- * - Records the event, actor, affected entity and before/after values.
- * - Can snapshot shipment data (B/L, containers, HS codes) and record only
- *   the fields that actually changed between two snapshots.
+ * - Records the event, actor, affected entity and before/after values, linked
+ *   to the export/import shipment and (optionally) one of its containers.
+ * - Can snapshot shipment data (shipment, containers, HS codes) and record
+ *   only the fields that actually changed between two snapshots.
  * - Stores a customer-safe summary plus the visibility flag the portal reads.
  * How to use: call `record()` inside the same transaction as the change it logs.
  * How to extend: add new event names; never update or delete existing rows.
@@ -15,8 +16,10 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
-use App\Models\BillOfLading;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
+use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +31,10 @@ class ActivityLogger
     /** @var list<string> */
     private const IGNORED_ATTRIBUTES = [
         'id',
-        'bill_of_lading_id',
+        'export_shipment_id',
+        'import_shipment_id',
+        'export_container_id',
+        'import_container_id',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -43,20 +49,25 @@ class ActivityLogger
      * @param  array<string, mixed>|null  $newValues
      */
     public function record(
-        BillOfLading $billOfLading,
+        ExportShipment|ImportShipment $shipment,
         string $event,
         string $entityType,
         int $entityId,
-        ?Container $container = null,
+        ExportContainer|ImportContainer|null $container = null,
         ?array $oldValues = null,
         ?array $newValues = null,
         ?string $customerSummary = null,
         bool $customerVisible = false,
         ?User $actor = null,
     ): ActivityLog {
+        $links = [$shipment->activityLogShipmentKey() => $shipment->getKey()];
+
+        if ($container) {
+            $links[$container->activityLogContainerKey()] = $container->getKey();
+        }
+
         $log = ActivityLog::query()->create([
-            'bill_of_lading_id' => $billOfLading->getKey(),
-            'container_id' => $container?->getKey(),
+            ...$links,
             'actor_id' => $actor?->getKey() ?? auth()->id(),
             'event' => $event,
             'entity_type' => $entityType,
@@ -68,33 +79,33 @@ class ActivityLogger
             'occurred_at' => now(),
         ]);
 
-        $this->stampLatestEvent($billOfLading, $container, $event);
+        $this->stampLatestEvent($shipment, $container, $event);
 
         return $log;
     }
 
     /**
      * @return array{
-     *     bill_of_lading: array<string, mixed>,
+     *     shipment: array<string, mixed>,
      *     containers: array<int, array<string, mixed>>,
      *     hs_codes: list<string>
      * }
      */
-    public function shipmentSnapshot(BillOfLading $billOfLading): array
+    public function shipmentSnapshot(ExportShipment|ImportShipment $shipment): array
     {
-        $billOfLading->refresh();
+        $shipment->refresh();
 
         return [
-            'bill_of_lading' => $this->auditableAttributes($billOfLading),
-            'containers' => $billOfLading->containers()
-                ->with('attachments:id,container_id')
+            'shipment' => $this->auditableAttributes($shipment),
+            'containers' => $shipment->containers()
+                ->with('attachments')
                 ->get()
-                ->mapWithKeys(fn (Container $container): array => [
+                ->mapWithKeys(fn (Model $container): array => [
                     $container->getKey() => $this->auditableAttributes($container)
                         + ['attachments' => $container->attachments->pluck('id')->sort()->values()->all()],
                 ])
                 ->all(),
-            'hs_codes' => $billOfLading->hsCodes()
+            'hs_codes' => $shipment->hsCodes()
                 ->orderBy('code')
                 ->pluck('code')
                 ->values()
@@ -103,7 +114,7 @@ class ActivityLogger
     }
 
     /** @return array<string, mixed> */
-    public function containerSnapshot(Container $container): array
+    public function containerSnapshot(ExportContainer|ImportContainer $container): array
     {
         $container->refresh();
 
@@ -112,26 +123,26 @@ class ActivityLogger
     }
 
     /**
-     * Records every B/L, nested-container and HS-code assignment change made
-     * since `$before`. Unchanged saves produce no activity rows.
+     * Records every shipment, nested-container and HS-code assignment change
+     * made since `$before`. Unchanged saves produce no activity rows.
      *
      * @param array{
-     *     bill_of_lading: array<string, mixed>,
+     *     shipment: array<string, mixed>,
      *     containers: array<int, array<string, mixed>>,
      *     hs_codes: list<string>
      * } $before
      */
-    public function recordShipmentChanges(BillOfLading $billOfLading, array $before): int
+    public function recordShipmentChanges(ExportShipment|ImportShipment $shipment, array $before): int
     {
-        $after = $this->shipmentSnapshot($billOfLading);
+        $after = $this->shipmentSnapshot($shipment);
         $recorded = 0;
 
         if ($this->recordAttributeChanges(
-            $billOfLading,
-            $billOfLading,
-            $before['bill_of_lading'],
-            $after['bill_of_lading'],
-            'bill_of_lading_updated',
+            $shipment,
+            $shipment,
+            $before['shipment'],
+            $after['shipment'],
+            'shipment_updated',
             'Updated shipment fields: ',
         )) {
             $recorded++;
@@ -142,7 +153,7 @@ class ActivityLogger
         $containerIds = array_unique([...array_keys($beforeContainers), ...array_keys($afterContainers)]);
 
         foreach ($containerIds as $containerId) {
-            $container = Container::withTrashed()->find($containerId);
+            $container = $shipment->containers()->withTrashed()->find($containerId);
 
             if (! $container) {
                 continue;
@@ -155,9 +166,9 @@ class ActivityLogger
                 $values = $this->nonNullValues($afterContainers[$containerId]);
 
                 $this->record(
-                    $billOfLading,
+                    $shipment,
                     'container_created',
-                    Container::class,
+                    $container::class,
                     $container->getKey(),
                     container: $container,
                     newValues: $values,
@@ -172,9 +183,9 @@ class ActivityLogger
                 $values = $this->nonNullValues($beforeContainers[$containerId]);
 
                 $this->record(
-                    $billOfLading,
+                    $shipment,
                     'container_deleted',
-                    Container::class,
+                    $container::class,
                     $container->getKey(),
                     container: $container,
                     oldValues: $values,
@@ -186,7 +197,7 @@ class ActivityLogger
             }
 
             if ($this->recordAttributeChanges(
-                $billOfLading,
+                $shipment,
                 $container,
                 $beforeContainers[$containerId],
                 $afterContainers[$containerId],
@@ -200,10 +211,10 @@ class ActivityLogger
 
         if ($before['hs_codes'] !== $after['hs_codes']) {
             $this->record(
-                $billOfLading,
+                $shipment,
                 'hs_codes_updated',
-                BillOfLading::class,
-                $billOfLading->getKey(),
+                $shipment::class,
+                $shipment->getKey(),
                 oldValues: ['hs_codes' => $before['hs_codes']],
                 newValues: ['hs_codes' => $after['hs_codes']],
                 customerSummary: 'Updated shipment HS codes.',
@@ -217,12 +228,12 @@ class ActivityLogger
     /**
      * @param  array<string, mixed>  $before
      */
-    public function recordContainerChanges(Container $container, array $before): ?ActivityLog
+    public function recordContainerChanges(ExportContainer|ImportContainer $container, array $before): ?ActivityLog
     {
         $after = $this->containerSnapshot($container);
 
         return $this->recordAttributeChanges(
-            $container->billOfLading,
+            $container->shipment,
             $container,
             $before,
             $after,
@@ -232,14 +243,14 @@ class ActivityLogger
         );
     }
 
-    public function recordContainerCreated(Container $container): ActivityLog
+    public function recordContainerCreated(ExportContainer|ImportContainer $container): ActivityLog
     {
         $container->refresh();
 
         return $this->record(
-            $container->billOfLading,
+            $container->shipment,
             'container_created',
-            Container::class,
+            $container::class,
             $container->getKey(),
             container: $container,
             newValues: $this->nonNullValues($this->containerSnapshot($container)),
@@ -249,8 +260,8 @@ class ActivityLogger
 
     /**
      * Records a note event against its target. Notes on a shipment or
-     * container keep the B/L/container linkage the operator scope and the
-     * portal read; notes on companies or users leave both columns null.
+     * container keep the shipment/container linkage the operator scope and
+     * the portal read; notes on companies or users leave the links null.
      *
      * @param  array<string, mixed>|null  $oldValues
      * @param  array<string, mixed>|null  $newValues
@@ -264,13 +275,21 @@ class ActivityLogger
     ): ActivityLog {
         $noteable = $note->noteable;
 
+        $links = match (true) {
+            $noteable instanceof ExportShipment, $noteable instanceof ImportShipment => [
+                $noteable->activityLogShipmentKey() => $noteable->getKey(),
+            ],
+            // Containers read their parent FK column by name so the same code
+            // serves both processes.
+            $noteable instanceof ExportContainer, $noteable instanceof ImportContainer => [
+                $noteable->activityLogShipmentKey() => $noteable->{$noteable->activityLogShipmentKey()},
+                $noteable->activityLogContainerKey() => $noteable->getKey(),
+            ],
+            default => [],
+        };
+
         $log = ActivityLog::query()->create([
-            'bill_of_lading_id' => match (true) {
-                $noteable instanceof BillOfLading => $noteable->getKey(),
-                $noteable instanceof Container => $noteable->bill_of_lading_id,
-                default => null,
-            },
-            'container_id' => $noteable instanceof Container ? $noteable->getKey() : null,
+            ...$links,
             'actor_id' => $actor?->getKey() ?? auth()->id(),
             'event' => $event,
             'entity_type' => Note::class,
@@ -282,10 +301,10 @@ class ActivityLogger
             'occurred_at' => now(),
         ]);
 
-        if ($noteable instanceof BillOfLading) {
+        if ($noteable instanceof ExportShipment || $noteable instanceof ImportShipment) {
             $this->stampLatestEvent($noteable, null, $event);
-        } elseif ($noteable instanceof Container) {
-            $this->stampLatestEvent($noteable->billOfLading, $noteable, $event);
+        } elseif ($noteable instanceof ExportContainer || $noteable instanceof ImportContainer) {
+            $this->stampLatestEvent($noteable->shipment, $noteable, $event);
         }
 
         return $log;
@@ -297,11 +316,14 @@ class ActivityLogger
      * container itself, so lists can show "what happened last" without
      * touching the log table.
      */
-    private function stampLatestEvent(BillOfLading $billOfLading, ?Container $container, string $event): void
-    {
+    private function stampLatestEvent(
+        ExportShipment|ImportShipment $shipment,
+        ExportContainer|ImportContainer|null $container,
+        string $event,
+    ): void {
         $stamp = ['latest_event' => $event, 'latest_event_at' => now()];
 
-        $billOfLading->forceFill($stamp)->save();
+        $shipment->forceFill($stamp)->save();
         $container?->forceFill($stamp)->save();
     }
 
@@ -316,13 +338,13 @@ class ActivityLogger
      * @param  array<string, mixed>  $after
      */
     private function recordAttributeChanges(
-        BillOfLading $billOfLading,
+        ExportShipment|ImportShipment $shipment,
         Model $entity,
         array $before,
         array $after,
         string $event,
         string $summaryPrefix,
-        ?Container $container = null,
+        ExportContainer|ImportContainer|null $container = null,
     ): ?ActivityLog {
         [$oldValues, $newValues] = $this->changedValues($before, $after);
 
@@ -331,7 +353,7 @@ class ActivityLogger
         }
 
         return $this->record(
-            $billOfLading,
+            $shipment,
             $event,
             $entity::class,
             $entity->getKey(),

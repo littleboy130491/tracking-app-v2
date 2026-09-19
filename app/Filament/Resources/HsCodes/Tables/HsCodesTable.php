@@ -30,9 +30,13 @@ class HsCodesTable
                 TextColumn::make('description')
                     ->limit(80)
                     ->searchable(),
-                TextColumn::make('bill_of_ladings_count')
-                    ->label('Shipments')
-                    ->counts('billOfLadings')
+                TextColumn::make('export_shipments_count')
+                    ->label('Export shipments')
+                    ->counts('exportShipments')
+                    ->sortable(),
+                TextColumn::make('import_shipments_count')
+                    ->label('Import shipments')
+                    ->counts('importShipments')
                     ->sortable(),
             ])
             ->recordActions([

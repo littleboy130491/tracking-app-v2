@@ -6,7 +6,7 @@
  * What it does:
  * - SPPB, AP, SPJK and SPJM as listed in migration_plan.md §4 and §12.
  * - SPJM marks the behandle branch; SPPB is the follow-up state after SPJM.
- * How to use: BillOfLading casts `billing_response` to this enum (nullable).
+ * How to use: ImportShipment casts `billing_response` to this enum (nullable).
  * How to extend: Add new response codes as cases plus a label.
  */
 

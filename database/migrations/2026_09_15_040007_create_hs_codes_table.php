@@ -2,14 +2,14 @@
 
 /**
  * File: database/migrations/2026_09_15_040007_create_hs_codes_table.php
- * Responsibility: Creates the `hs_codes` master table and its B/L pivot.
+ * Responsibility: Creates the `hs_codes` master table and its shipment pivots.
  * What it does:
  * - HS codes are shared master data (one row per code) so the same code can
- *   be reused across shipments; `bill_of_lading_hs_code` links them.
- * How to use: App\Models\HsCode belongsToMany BillOfLading; the B/L form's
- *   multi-select attaches codes and can create new ones inline.
- * How to extend: Add quantity/unit columns on the pivot if per-shipment
- *   volumes are needed.
+ *   be reused across shipments; two pivots link them to export and import
+ *   shipments.
+ * How to use: App\Models\HsCode belongsToMany ExportShipment / ImportShipment.
+ * How to extend: Add quantity/unit columns on a pivot if per-shipment volumes
+ *   are needed.
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -27,19 +27,29 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create('bill_of_lading_hs_code', function (Blueprint $table) {
+        Schema::create('export_shipment_hs_code', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bill_of_lading_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('export_shipment_id')->constrained()->cascadeOnDelete();
             $table->foreignId('hs_code_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
 
-            $table->unique(['bill_of_lading_id', 'hs_code_id']);
+            $table->unique(['export_shipment_id', 'hs_code_id']);
+        });
+
+        Schema::create('import_shipment_hs_code', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('import_shipment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('hs_code_id')->constrained()->cascadeOnDelete();
+            $table->timestamps();
+
+            $table->unique(['import_shipment_id', 'hs_code_id']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('bill_of_lading_hs_code');
+        Schema::dropIfExists('import_shipment_hs_code');
+        Schema::dropIfExists('export_shipment_hs_code');
         Schema::dropIfExists('hs_codes');
     }
 };

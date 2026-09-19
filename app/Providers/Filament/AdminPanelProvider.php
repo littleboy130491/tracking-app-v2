@@ -19,6 +19,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -54,6 +55,15 @@ class AdminPanelProvider extends PanelProvider
             ])
             // style.md: all admin pages render full width by default.
             ->maxContentWidth(Width::Full)
+            // Sidebar order: the shipment and container entities first, then
+            // the supporting groups. Resources declare their group by name.
+            ->navigationGroups([
+                NavigationGroup::make('Bill of Ladings'),
+                NavigationGroup::make('Containers'),
+                NavigationGroup::make('CRM'),
+                NavigationGroup::make('Master data'),
+                NavigationGroup::make('Monitoring'),
+            ])
             ->unsavedChangesAlerts()
             ->sidebarFullyCollapsibleOnDesktop()
             ->plugins([

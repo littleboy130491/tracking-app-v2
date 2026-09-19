@@ -420,3 +420,132 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Containers/Schemas/ContainerForm.php | Removed field; renamed section to Stuffing |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | app/Services/ShipmentTimeline.php | Dropped "Empty container picked up" row |
 | 2026-09-18 00:00 | opencode (deepseek-v4.1-flash) | UPDATE | database/seeders/DemoShipmentSeeder.php | Removed seeded empty pickup timestamp |
+| 2026-09-19 07:38 | Devin (DeepSeek V4.1 Flash Max) | CREATE | .env | Local env from example; APP_URL=http://tracking-app-v2.test |
+| 2026-09-19 08:06 | Devin (DeepSeek V4.1 Flash Max) | CREATE | plans/split-export-import.md | Design freeze: split Export/Import into separate shipment models |
+| 2026-09-19 08:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | New split-models checklist; Step 1 done |
+| 2026-09-19 08:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/split-export-import.md | v2: containers split too; fresh-app approach, no data migration |
+| 2026-09-19 08:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | v2 scope: container models, fresh migrations and seeders |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/migrations/2026_09_15_040006_create_export_shipments_table.php | Export shipment table (fresh schema) |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Import shipment table (fresh schema) |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | Export container table (fresh schema) |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | Import container table (fresh schema) |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040007_create_hs_codes_table.php | Two shipment HS-code pivots replace the B/L pivot |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040017_create_activity_logs_table.php | Split shipment/container link columns |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_101000_add_shipment_columns_to_curator_table.php | Split shipment/container link columns |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_15_040006_create_bill_of_ladings_table.php | Replaced by export/import shipment tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_15_040008_create_containers_table.php | Replaced by export/import container tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_17_150300_add_shipment_mode_to_bill_of_ladings_table.php | Folded into the new shipment tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_17_160100_make_bill_of_lading_id_nullable_on_activity_logs_table.php | Folded into the rewritten activity_logs table |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_17_170000_add_export_spec_columns.php | Folded into the new shipment/container tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_18_100000_move_pickup_stuffing_columns_to_bill_of_ladings.php | Folded into the new shipment tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/migrations/2026_09_18_110000_drop_empty_picked_up_at_from_containers.php | Folded into the new container tables |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Enums/ExportMilestone.php | Export milestone sequence enum |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Enums/ImportMilestone.php | Import milestone sequence enum with SPJM branch |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Enums/ShipmentStatus.php | Shipment status enum (replaces BillOfLadingStatus) |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/Concerns/ActsAsShipment.php | Shared shipment defaults and milestone helpers |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/Concerns/ActsAsContainer.php | Shared container photo pickers and attachment sync |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/ExportShipment.php | Export shipment model |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/ImportShipment.php | Import shipment model |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/ExportContainer.php | Export container model |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Models/ImportContainer.php | Import container model |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Step2SchemaCheckTest.php | Temporary Step 2 verification test |
+| 2026-09-19 08:24 | Devin (DeepSeek V4.1 Flash Max) | DELETE | tests/Feature/Step2SchemaCheckTest.php | Removed after the verification passed |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ActivityLogger.php | Reworked for the split shipment/container models |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | forShipment/forContainer with split log links |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ActivityLog.php | Split shipment/container links, relations and helpers |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Attachment.php | Split shipment/container links, relations and helpers |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/HsCode.php | Two shipment pivots replace the B/L pivot |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Company.php | exportShipments/importShipments relations |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Concerns/ActsAsShipment.php | Milestone changes now written to the audit log |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Concerns/ActsAsContainer.php | Renamed attachment link constants |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportShipment.php | Activity-log key helper |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportShipment.php | Activity-log key helper |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportContainer.php | Activity-log key helpers + link constants |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportContainer.php | Activity-log key helpers + link constants |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Note.php | Docblock: noteable targets renamed |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Step3ServicesCheckTest.php | Temporary Step 3 verification test |
+| 2026-09-19 08:30 | Devin (DeepSeek V4.1 Flash Max) | DELETE | tests/Feature/Step3ServicesCheckTest.php | Removed after 6 tests / 29 assertions passed |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Concerns/ShipmentFields.php | Shared shipment form builders + milestone gating |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Concerns/ContainerFields.php | Shared container field groups |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/ExportShipments/** | Export shipment resource, form, table and pages |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/ImportShipments/** | Import shipment resource, form, table and pages |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/ExportContainers/** | Export container resource, form, table and pages |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/ImportContainers/** | Import container resource, form, table and pages |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Policies/ExportShipmentPolicy.php | Shield policy for export shipments |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Policies/ImportShipmentPolicy.php | Shield policy for import shipments |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Policies/ExportContainerPolicy.php | Shield policy for export containers |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Policies/ImportContainerPolicy.php | Shield policy for import containers |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Company page export shipment list |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Company page import shipment list |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/Companies/CompanyResource.php | Two shipment relation managers |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ActivityLogs/Tables/ActivityLogsTable.php | Shipment/container columns via split links |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ActivityLogs/Schemas/ActivityLogForm.php | Shipment/container context fields |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ActivityLogs/ActivityLogResource.php | Operator scope + eager loading for split links |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/HsCodes/Tables/HsCodesTable.php | Export/import shipment counts |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/HsCodes/HsCodeResource.php | Moved to the Master data menu group |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/NotesPanel.php | Note targets: the four split models |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Enums/{BillingIssuanceStatus,BillingPaymentStatus,BillingResponse,DraftPibConfirmationStatus,ShipmentMode,ShipmentType}.php | Docblocks point at the split models |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Filament/Resources/BillOfLadings/ (6 files) | Replaced by Export/Import shipment resources |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Filament/Resources/Containers/ (6 files) | Replaced by Export/Import container resources |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Filament/Resources/Companies/RelationManagers/BillOfLadingsRelationManager.php | Replaced by two per-process managers |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Policies/BillOfLadingPolicy.php | Replaced by two shipment policies |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Policies/ContainerPolicy.php | Replaced by two container policies |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Step4AdminCheckTest.php | Temporary Step 4 verification test |
+| 2026-09-19 08:40 | Devin (DeepSeek V4.1 Flash Max) | DELETE | tests/Feature/Step4AdminCheckTest.php | Removed after 5 tests / 34 assertions passed |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Export/Import tabs for the split models |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Livewire/Customer/ExportShipmentDetail.php | Export shipment portal page |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Livewire/Customer/ImportShipmentDetail.php | Import shipment portal page + draft PIB actions |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Livewire/Customer/ExportContainerDetail.php | Export container portal page |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Livewire/Customer/ImportContainerDetail.php | Import container portal page |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Tabs + split shipment list |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | resources/views/livewire/customer/{export,import}-shipment-detail.blade.php | Per-process shipment detail views |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | resources/views/livewire/customer/{export,import}-container-detail.blade.php | Per-process container detail views |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | resources/views/livewire/customer/partials/*.blade.php | Summary, containers and sailing partials |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | routes/web.php | Per-process portal routes |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Livewire/Customer/{BillOfLadingDetail,ContainerDetail}.php | Replaced by per-process components |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | DELETE | resources/views/livewire/customer/{bill-of-lading-detail,container-detail}.blade.php | Replaced by per-process views |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Step5PortalCheckTest.php | Temporary Step 5 verification test |
+| 2026-09-19 08:50 | Devin (DeepSeek V4.1 Flash Max) | DELETE | tests/Feature/Step5PortalCheckTest.php | Removed after 5 tests / 25 assertions passed |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Added the missing do_number column |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportShipment.php | do_number fillable |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoExportShipmentSeeder.php | Demo export shipments + containers |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoImportShipmentSeeder.php | Demo import shipments + containers |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DatabaseSeeder.php | Runs the two per-process demo seeders |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | DELETE | database/seeders/DemoShipmentSeeder.php | Replaced by per-process seeders |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Models/BillOfLading.php | Replaced by ExportShipment/ImportShipment |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Models/Container.php | Replaced by ExportContainer/ImportContainer |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | DELETE | app/Enums/BillOfLadingStatus.php | Replaced by ShipmentStatus |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Rewritten for the split resources |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Rewritten for the split events and links |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/OperatorRowScopeTest.php | Rewritten for the split menus |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/NotesPanelTest.php | Note targets on the split models |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/UserRoleAssignmentTest.php | Permission names for the split models |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Rewritten for tabs and per-process routes |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Seeders/SeederIdempotencyTest.php | Split snapshot + completed shipments |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Activity-log container entry via state closure |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | phpunit.xml | CURATOR_GLIDE_TOKEN for tests |
+| 2026-09-19 08:57 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | .env | CURATOR_GLIDE_TOKEN via curator:token |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | README.md | Split models, menus, routes, config and demo data |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | New split-models checklist; stale sections updated |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Split schema ERD + notes |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | migration_plan.md | Status banner pointing at the split schema |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | IMPORT.md | Removed the five removed fields from the process spec |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/split-export-import.md | Marked EXECUTED (7/7 phases) |
+| 2026-09-19 09:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Final summary; all seven steps done |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/ExportShipmentResource.php | Navigation: Bill of Ladings → Export |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/ImportShipmentResource.php | Navigation: Bill of Ladings → Import |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/ExportContainerResource.php | Navigation: Containers → Export |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/ImportContainerResource.php | Navigation: Containers → Import |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Navigation group/label regression test |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Menu paths use the Bill of Ladings / Containers groups |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | README.md | Menu paths updated |
+| 2026-09-19 09:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/split-export-import.md | D2 records the final menu structure |
+| 2026-09-19 09:11 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Providers/Filament/AdminPanelProvider.php | Navigation group order: Bill of Ladings, Containers, CRM, Master data, Monitoring |
+| 2026-09-19 09:11 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Rendered-sidebar group-order regression test |
+| 2026-09-19 09:11 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Menu checklist states the top-to-bottom group order |
+| 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Type dropdown replaces the Export/Import tab buttons |
+| 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Type select in the filter row (7-column grid) |
+| 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Type-filter assertions replace switchType calls |
+| 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Portal checklist uses the Type dropdown wording |
+| 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | README.md | Portal Type dropdown wording |
+| 2026-09-19 09:17 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Removed the greeting subtitle under the portal heading |

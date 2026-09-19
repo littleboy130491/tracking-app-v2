@@ -4,10 +4,10 @@
  * File: app/Models/Note.php
  * Responsibility: One free-text note attached to a record.
  * What it does:
- * - Stores the body, its author, and the polymorphic target (bill of
- *   lading, container, company or user).
+ * - Stores the body, its author, and the polymorphic target (shipment,
+ *   container, company or user).
  * - Author-only editing is enforced by NotePolicy via isEditableBy().
- * How to use: `$billOfLading->notes()->create([...])`, `$note->author`.
+ * How to use: `$shipment->notes()->create([...])`, `$note->author`.
  * How to extend: add fields here and to the notes panel component.
  */
 

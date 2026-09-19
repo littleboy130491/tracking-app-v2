@@ -1,0 +1,149 @@
+<?php
+
+/**
+ * File: app/Models/ExportShipment.php
+ * Responsibility: The export-process shipment header shared by its containers.
+ * What it does:
+ * - Stores booking-order, pickup/stuffing and sailing fields plus status and
+ *   milestone state.
+ * - Serves as the parent for export containers, HS codes, attachments and logs.
+ * How to use: `$shipment->containers`, `$shipment->hsCodes`, `$shipment->advanceMilestone()`.
+ * How to extend: Add export fields as columns and expose them in ExportShipmentForm.
+ */
+
+namespace App\Models;
+
+use App\Enums\ExportMilestone;
+use App\Enums\ShipmentMode;
+use App\Enums\ShipmentStatus;
+use App\Enums\ShipmentType;
+use App\Models\Concerns\ActsAsShipment;
+use App\Models\Concerns\HasNotes;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+#[Fillable([
+    'reference_number', 'bl_number', 'shipment_mode', 'company_id', 'company_name_snapshot',
+    'document_received_date', 'document_received_by',
+    'aju_number', 'do_number', 'shipping_line', 'vessel_name',
+    'voyage_number', 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
+    'pickup_depot_name', 'stuffing_date', 'stuffing_destination',
+    'departure_date', 'eta_at', 'actual_arrival_at', 'goods_description',
+    'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
+    'created_by', 'updated_by',
+])]
+class ExportShipment extends Model
+{
+    use ActsAsShipment, HasFactory, HasNotes, SoftDeletes;
+
+    /**
+     * @return class-string<ExportMilestone>
+     */
+    public static function milestoneEnum(): string
+    {
+        return ExportMilestone::class;
+    }
+
+    public function shipmentType(): ShipmentType
+    {
+        return ShipmentType::Export;
+    }
+
+    /**
+     * The activity-log column that links entries to this shipment.
+     */
+    public function activityLogShipmentKey(): string
+    {
+        return 'export_shipment_id';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'shipment_mode' => ShipmentMode::class,
+            'status' => ShipmentStatus::class,
+            'current_milestone' => ExportMilestone::class,
+            'document_received_date' => 'date',
+            'depot_closing_at' => 'datetime',
+            'cy_closing_at' => 'datetime',
+            'stuffing_date' => 'date',
+            'departure_date' => 'date',
+            'eta_at' => 'datetime',
+            'actual_arrival_at' => 'datetime',
+            'latest_event_at' => 'datetime',
+            'completed_at' => 'datetime',
+        ];
+    }
+
+    /**
+     * @return BelongsTo<Company, $this>
+     */
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * @return HasMany<ExportContainer, $this>
+     */
+    public function containers(): HasMany
+    {
+        return $this->hasMany(ExportContainer::class, 'export_shipment_id');
+    }
+
+    /**
+     * @return BelongsToMany<HsCode, $this>
+     */
+    public function hsCodes(): BelongsToMany
+    {
+        return $this->belongsToMany(HsCode::class, 'export_shipment_hs_code');
+    }
+
+    /**
+     * @return HasMany<Attachment, $this>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(Attachment::class, 'export_shipment_id');
+    }
+
+    /**
+     * @return HasMany<ActivityLog, $this>
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class, 'export_shipment_id')->latest('occurred_at');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function documentReceivedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'document_received_by');
+    }
+}

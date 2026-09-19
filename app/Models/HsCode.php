@@ -4,11 +4,12 @@
  * File: app/Models/HsCode.php
  * Responsibility: A harmonized-system code (master data).
  * What it does:
- * - Shared across shipments via the bill_of_lading_hs_code pivot, so one
- *   code + description is defined once and reused.
- * How to use: `$hsCode->billOfLadings`; managed under Shipments → HS codes.
- * How to extend: Add columns such as duty rate; pivot extras live on
- *   bill_of_lading_hs_code.
+ * - Shared across shipments via two pivots (export_shipment_hs_code and
+ *   import_shipment_hs_code), so one code + description is defined once and
+ *   reused.
+ * How to use: `$hsCode->exportShipments`, `$hsCode->importShipments`.
+ * How to extend: Add columns such as duty rate; pivot extras live on the
+ *   shipment-specific pivot tables.
  */
 
 namespace App\Models;
@@ -24,10 +25,18 @@ class HsCode extends Model
     use HasFactory;
 
     /**
-     * @return BelongsToMany<BillOfLading, $this>
+     * @return BelongsToMany<ExportShipment, $this>
      */
-    public function billOfLadings(): BelongsToMany
+    public function exportShipments(): BelongsToMany
     {
-        return $this->belongsToMany(BillOfLading::class, 'bill_of_lading_hs_code');
+        return $this->belongsToMany(ExportShipment::class, 'export_shipment_hs_code');
+    }
+
+    /**
+     * @return BelongsToMany<ImportShipment, $this>
+     */
+    public function importShipments(): BelongsToMany
+    {
+        return $this->belongsToMany(ImportShipment::class, 'import_shipment_hs_code');
     }
 }

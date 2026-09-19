@@ -5,7 +5,7 @@
  * Responsibility: Whether the billing document has been issued.
  * What it does:
  * - Tracks not_issued / issued for a bill of lading.
- * How to use: BillOfLading casts `billing_issuance_status` to this enum.
+ * How to use: ImportShipment casts `billing_issuance_status` to this enum.
  * How to extend: Add "cancelled" if billing can be voided.
  */
 

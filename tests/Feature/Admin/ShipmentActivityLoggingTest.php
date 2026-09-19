@@ -5,8 +5,8 @@
  * Responsibility: Verifies milestone guidance and shipment change auditing.
  * What it does:
  * - Confirms locked sections name the milestone that unlocks their fields.
- * - Verifies B/L, HS-code and container changes store exact old/new values,
- *   actor attribution, and no technical fields.
+ * - Verifies shipment, HS-code and container changes store exact old/new
+ *   values, actor attribution, and no technical fields.
  * - Confirms unchanged saves do not produce audit noise.
  * How to use: `php artisan test --filter=ShipmentActivityLoggingTest`.
  * How to extend: Add one case for each new shipment editing surface.
@@ -14,15 +14,18 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Enums\ShipmentMilestone;
-use App\Filament\Resources\BillOfLadings\Pages\EditBillOfLading;
-use App\Filament\Resources\Containers\Pages\CreateContainer;
-use App\Filament\Resources\Containers\Pages\EditContainer;
+use App\Enums\ExportMilestone;
+use App\Enums\ImportMilestone;
+use App\Filament\Resources\ExportContainers\Pages\CreateExportContainer;
+use App\Filament\Resources\ExportContainers\Pages\EditExportContainer;
+use App\Filament\Resources\ExportShipments\Pages\EditExportShipment;
+use App\Filament\Resources\ImportShipments\Pages\EditImportShipment;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
-use App\Models\BillOfLading;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
 use App\Models\HsCode;
+use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -51,30 +54,30 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_locked_fields_name_the_milestone_that_unlocks_them(): void
     {
-        $export = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
-        Livewire::test(EditBillOfLading::class, ['record' => $export->getRouteKey()])
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->assertSee('Locked until Step 2: Checking booking order')
             ->assertSee('data-bl-ms-goto="2"', false)
             ->assertDontSee('Current step:')
             ->assertDontSee('Available since');
 
-        $import = BillOfLading::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
-        $import->update(['current_milestone' => ShipmentMilestone::DraftPib]);
+        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import->update(['current_milestone' => ImportMilestone::DraftPib]);
 
-        Livewire::test(EditBillOfLading::class, ['record' => $import->getRouteKey()])
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
             ->assertSee('Locked until Step 7: DO release')
             ->assertSee('data-bl-ms-goto="7"', false);
     }
 
-    public function test_bill_of_lading_save_records_only_changed_fields_and_actor(): void
+    public function test_shipment_save_records_only_changed_fields_and_actor(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
         // AJU/B/L numbers are gated at "Checking booking order"; advance so the
         // form actually dehydrates them and they can be audited.
-        $billOfLading->update(['current_milestone' => ShipmentMilestone::CheckingBookingOrder]);
+        $export->update(['current_milestone' => ExportMilestone::CheckingBookingOrder]);
 
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->fillForm([
                 'bl_number' => 'BL-AUDITED-001',
                 'aju_number' => 'AJU-AUDITED-001',
@@ -83,8 +86,8 @@ class ShipmentActivityLoggingTest extends TestCase
             ->assertHasNoFormErrors();
 
         $log = ActivityLog::query()
-            ->where('bill_of_lading_id', $billOfLading->getKey())
-            ->where('event', 'bill_of_lading_updated')
+            ->where('export_shipment_id', $export->getKey())
+            ->where('event', 'shipment_updated')
             ->latest('id')
             ->firstOrFail();
 
@@ -100,44 +103,44 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertFalse($log->is_customer_visible);
 
         // Every recorded event stamps the denormalized latest-event columns.
-        $this->assertSame('bill_of_lading_updated', $billOfLading->refresh()->latest_event);
-        $this->assertNotNull($billOfLading->latest_event_at);
+        $this->assertSame('shipment_updated', $export->refresh()->latest_event);
+        $this->assertNotNull($export->latest_event_at);
     }
 
-    public function test_unchanged_bill_of_lading_save_creates_no_activity(): void
+    public function test_unchanged_shipment_save_creates_no_activity(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
         $before = ActivityLog::query()->count();
 
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $this->assertSame($before, ActivityLog::query()->count());
     }
 
-    public function test_bill_of_lading_save_records_hs_code_assignments(): void
+    public function test_shipment_save_records_hs_code_assignments(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
-        $billOfLading->update(['current_milestone' => ShipmentMilestone::CheckingDocument]);
+        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import->update(['current_milestone' => ImportMilestone::CheckingDocument]);
 
         $newHsCode = HsCode::query()
-            ->whereDoesntHave('billOfLadings', fn ($query) => $query->whereKey($billOfLading->getKey()))
+            ->whereDoesntHave('importShipments', fn ($query) => $query->whereKey($import->getKey()))
             ->orderBy('code')
             ->firstOrFail();
 
-        $oldCodes = $billOfLading->hsCodes()->orderBy('code')->pluck('code')->all();
-        $ids = [...$billOfLading->hsCodes()->pluck('hs_codes.id')->all(), $newHsCode->getKey()];
+        $oldCodes = $import->hsCodes()->orderBy('code')->pluck('code')->all();
+        $ids = [...$import->hsCodes()->pluck('hs_codes.id')->all(), $newHsCode->getKey()];
         $newCodes = [...$oldCodes, $newHsCode->code];
         sort($newCodes);
 
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
             ->fillForm(['hsCodes' => $ids])
             ->call('save')
             ->assertHasNoFormErrors();
 
         $log = ActivityLog::query()
-            ->where('bill_of_lading_id', $billOfLading->getKey())
+            ->where('import_shipment_id', $import->getKey())
             ->where('event', 'hs_codes_updated')
             ->latest('id')
             ->firstOrFail();
@@ -149,12 +152,12 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_shipment_diff_records_nested_container_create_update_and_remove(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-        $containers = $billOfLading->containers()->orderBy('id')->get();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $containers = $export->containers()->orderBy('id')->get();
         $this->assertCount(2, $containers);
 
         $logger = app(ActivityLogger::class);
-        $before = $logger->shipmentSnapshot($billOfLading);
+        $before = $logger->shipmentSnapshot($export);
 
         $updated = $containers->first();
         $removed = $containers->last();
@@ -162,9 +165,9 @@ class ShipmentActivityLoggingTest extends TestCase
 
         $updated->update(['seal_number' => 'SEAL-AUDITED']);
         $removed->delete();
-        $created = $billOfLading->containers()->create(['container_number' => 'AUDIT-CONT-001']);
+        $created = $export->containers()->create(['container_number' => 'AUDIT-CONT-001']);
 
-        $this->assertSame(3, $logger->recordShipmentChanges($billOfLading, $before));
+        $this->assertSame(3, $logger->recordShipmentChanges($export, $before));
 
         $updatedLog = ActivityLog::query()
             ->where('event', 'container_updated')
@@ -179,7 +182,7 @@ class ShipmentActivityLoggingTest extends TestCase
             ->firstOrFail();
         $this->assertNull($createdLog->old_values);
         $this->assertSame('AUDIT-CONT-001', $createdLog->new_values['container_number']);
-        $this->assertArrayNotHasKey('bill_of_lading_id', $createdLog->new_values);
+        $this->assertArrayNotHasKey('export_shipment_id', $createdLog->new_values);
 
         $removedLog = ActivityLog::query()
             ->where('event', 'container_deleted')
@@ -191,9 +194,9 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_standalone_container_edit_records_changed_fields(): void
     {
-        $container = Container::query()->firstOrFail();
+        $container = ExportContainer::query()->firstOrFail();
 
-        Livewire::test(EditContainer::class, ['record' => $container->getRouteKey()])
+        Livewire::test(EditExportContainer::class, ['record' => $container->getRouteKey()])
             ->fillForm(['driver_name' => 'Audit Driver'])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -212,11 +215,11 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_standalone_container_create_records_initial_values(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
-        Livewire::test(CreateContainer::class)
+        Livewire::test(CreateExportContainer::class)
             ->fillForm([
-                'bill_of_lading_id' => $billOfLading->getKey(),
+                'export_shipment_id' => $export->getKey(),
                 'container_number' => 'AUDIT-CONT-NEW',
                 'size' => '40',
                 'type' => 'HC',
@@ -226,7 +229,7 @@ class ShipmentActivityLoggingTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $container = Container::query()->where('container_number', 'AUDIT-CONT-NEW')->firstOrFail();
+        $container = ExportContainer::query()->where('container_number', 'AUDIT-CONT-NEW')->firstOrFail();
         $log = ActivityLog::query()
             ->where('event', 'container_created')
             ->where('entity_id', $container->getKey())
@@ -238,13 +241,13 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertSame('HC', $log->new_values['type']);
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertArrayNotHasKey('id', $log->new_values);
-        $this->assertArrayNotHasKey('bill_of_lading_id', $log->new_values);
+        $this->assertArrayNotHasKey('export_shipment_id', $log->new_values);
         $this->assertFalse($log->is_customer_visible);
     }
 
     public function test_container_attachment_picker_syncs_media_rows(): void
     {
-        $container = Container::query()->firstOrFail();
+        $container = ExportContainer::query()->firstOrFail();
         $media = fn (array $extra = []): Attachment => Attachment::query()->create([
             'disk' => 'public',
             'name' => 'doc.pdf',
@@ -253,13 +256,13 @@ class ShipmentActivityLoggingTest extends TestCase
             'ext' => 'pdf',
         ] + $extra);
 
-        $linked = $media(['container_id' => $container->getKey(), 'category' => 'door_photo']);
+        $linked = $media(['export_container_id' => $container->getKey(), 'category' => 'door_photo']);
         $picked = $media();
-        $unpicked = $media(['container_id' => $container->getKey(), 'category' => 'door_photo']);
+        $unpicked = $media(['export_container_id' => $container->getKey(), 'category' => 'door_photo']);
 
         // CuratorPicker state is a uuid-keyed array of full media arrays, so
         // set() (not fillForm()) with complete media payloads mimics picking.
-        Livewire::test(EditContainer::class, ['record' => $container->getRouteKey()])
+        Livewire::test(EditExportContainer::class, ['record' => $container->getRouteKey()])
             ->set('data.photo_door_items', [
                 $linked->fresh()->toArray(),
                 $picked->fresh()->toArray(),
@@ -267,10 +270,10 @@ class ShipmentActivityLoggingTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame($container->getKey(), $picked->fresh()->container_id);
-        $this->assertSame($container->bill_of_lading_id, $picked->fresh()->bill_of_lading_id);
+        $this->assertSame($container->getKey(), $picked->fresh()->export_container_id);
+        $this->assertSame($container->export_shipment_id, $picked->fresh()->export_shipment_id);
         $this->assertSame('door_photo', $picked->fresh()->category?->value);
-        $this->assertNull($unpicked->fresh()->container_id);
+        $this->assertNull($unpicked->fresh()->export_container_id);
 
         $log = ActivityLog::query()
             ->where('event', 'container_updated')

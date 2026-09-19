@@ -41,13 +41,9 @@ Hscode -> field
 Payment Bahandle -> progress
 Gross Weight -> subfield-container
 Container Inspection -> progress
-Packages -> field
 Waiting Change Status of SPJM to SPPB -> progress
 CBM / Measurement -> subfield-container
 Container Shipping Schedule -> progress
-Terminal Name -> field
-Date of Loading -> field
-Loading Destination -> field
 
 FINAL - Process 3
 

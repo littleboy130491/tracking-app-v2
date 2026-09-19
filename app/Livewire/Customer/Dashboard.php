@@ -2,11 +2,12 @@
 
 /**
  * File: app/Livewire/Customer/Dashboard.php
- * Responsibility: Customer portal home: greeting, filters and shipment list.
+ * Responsibility: Customer portal home: greeting, Type filter, filters and shipment list.
  * What it does:
- * - Lists the bills of lading of the companies the signed-in user manages,
- *   filtered by company, number (B/L, reference, container, seal), status,
- *   year and month (spec.md).
+ * - Lists the shipments of the companies the signed-in user manages; the
+ *   **Type** dropdown switches between the Export and Import lists.
+ * - Filters by type, company, number (B/L, reference, container, seal),
+ *   status, year and month (spec.md).
  * - Adds each shipment's latest journey entry so the list shows Latest Place
  *   and Latest Event like the reference tracker.
  * - Privileged staff (admin/super_admin) see every shipment; customers stay
@@ -17,9 +18,10 @@
 
 namespace App\Livewire\Customer;
 
-use App\Enums\BillOfLadingStatus;
-use App\Models\BillOfLading;
+use App\Enums\ShipmentStatus;
 use App\Models\Company;
+use App\Models\ExportShipment;
+use App\Models\ImportShipment;
 use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,6 +33,9 @@ use Livewire\WithPagination;
 class Dashboard extends Component
 {
     use WithPagination;
+
+    /** Active list: 'export' or 'import' (the Type filter). */
+    public string $type = 'export';
 
     public string $company = '';
 
@@ -61,7 +66,10 @@ class Dashboard extends Component
         $viewAll = $user->canViewAllShipments();
         $companyIds = $viewAll ? [] : $user->companies()->pluck('companies.id')->all();
 
-        $billOfLadings = BillOfLading::query()
+        $isExport = $this->type === 'export';
+        $model = $isExport ? ExportShipment::class : ImportShipment::class;
+
+        $shipments = $model::query()
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with(['company', 'containers'])
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))
@@ -80,19 +88,21 @@ class Dashboard extends Component
             ->paginate(15);
 
         $timeline = app(ShipmentTimeline::class);
-        $latest = $billOfLadings->getCollection()->mapWithKeys(
-            fn (BillOfLading $billOfLading) => [$billOfLading->getKey() => $timeline->latestForBillOfLading($billOfLading)],
+        $latest = $shipments->getCollection()->mapWithKeys(
+            fn (ExportShipment|ImportShipment $shipment) => [$shipment->getKey() => $timeline->latestForShipment($shipment)],
         );
 
         return view('livewire.customer.dashboard', [
-            'billOfLadings' => $billOfLadings,
+            'shipments' => $shipments,
             'latest' => $latest,
+            'routeName' => $isExport ? 'customer.export-shipments.show' : 'customer.import-shipments.show',
+            'routeParam' => $isExport ? 'exportShipment' : 'importShipment',
             // Admins choose from every company; customers from their own.
             'companies' => $viewAll
                 ? Company::query()->orderBy('name')->pluck('name', 'id')->all()
                 : $user->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
-            'statuses' => BillOfLadingStatus::options(),
-            'years' => BillOfLading::query()
+            'statuses' => ShipmentStatus::options(),
+            'years' => $model::query()
                 ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
                 ->selectRaw('distinct strftime("%Y", created_at) as year')
                 ->orderByDesc('year')

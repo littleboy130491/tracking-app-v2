@@ -69,12 +69,18 @@ class ActivityLogResource extends Resource
 
     /**
      * Row-level scope: privileged staff see every entry; operators only
-     * entries about a visible bill of lading or container. Entries with
-     * neither (global logs) stay hidden from them.
+     * entries about a visible shipment (container entries carry the shipment
+     * link too). Entries with no shipment link (global logs) stay hidden.
      */
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        $query = parent::getEloquentQuery()
+            ->with([
+                'exportShipment:id,reference_number',
+                'importShipment:id,reference_number',
+                'exportContainer:id,container_number',
+                'importContainer:id,container_number',
+            ]);
         $user = auth()->user();
 
         if (! $user instanceof User || $user->hasAnyRole(Role::PRIVILEGED)) {
@@ -84,8 +90,8 @@ class ActivityLogResource extends Resource
         $companyIds = $user->companyIds();
 
         return $query->where(function (Builder $query) use ($companyIds): void {
-            $query->whereHas('billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds))
-                ->orWhereHas('container.billOfLading', fn (Builder $query) => $query->whereIn('company_id', $companyIds));
+            $query->whereHas('exportShipment', fn (Builder $query) => $query->whereIn('company_id', $companyIds))
+                ->orWhereHas('importShipment', fn (Builder $query) => $query->whereIn('company_id', $companyIds));
         });
     }
 }

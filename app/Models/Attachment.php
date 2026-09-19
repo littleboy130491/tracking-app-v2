@@ -2,15 +2,15 @@
 
 /**
  * File: app/Models/Attachment.php
- * Responsibility: A file attached to a shipment, backed by Filament Curator.
+ * Responsibility: A file attached to a shipment or container, backed by Filament Curator.
  * What it does:
  * - Extends Curator's Media model, so uploads, storage, image conversions and
- *   the media picker all come from the package; this class only adds the link
- *   to the shipment (B/L, container), the category, the customer-portal
- *   visibility flag and who uploaded it.
+ *   the media picker all come from the package; this class only adds the links
+ *   to the shipment/container, the category, the customer-portal visibility
+ *   flag and who uploaded it.
  * - Registered as Curator's model in config/curator.php, so Curator's own
  *   resource and picker read and write this table.
- * How to use: `$billOfLading->attachments`, `$container->attachments`.
+ * How to use: `$shipment->attachments`, `$container->attachments`.
  * How to extend: add linkage columns in the curator-table migration.
  */
 
@@ -27,8 +27,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // derives the file metadata and removes the file when the record is deleted.
 #[ObservedBy([MediaObserver::class])]
 #[Fillable([
-    'bill_of_lading_id',
-    'container_id',
+    'export_shipment_id',
+    'import_shipment_id',
+    'export_container_id',
+    'import_container_id',
     'category',
     'is_customer_visible',
     'uploaded_by',
@@ -49,19 +51,35 @@ class Attachment extends Media
     }
 
     /**
-     * @return BelongsTo<BillOfLading, $this>
+     * @return BelongsTo<ExportShipment, $this>
      */
-    public function billOfLading(): BelongsTo
+    public function exportShipment(): BelongsTo
     {
-        return $this->belongsTo(BillOfLading::class);
+        return $this->belongsTo(ExportShipment::class, 'export_shipment_id');
     }
 
     /**
-     * @return BelongsTo<Container, $this>
+     * @return BelongsTo<ImportShipment, $this>
      */
-    public function container(): BelongsTo
+    public function importShipment(): BelongsTo
     {
-        return $this->belongsTo(Container::class);
+        return $this->belongsTo(ImportShipment::class, 'import_shipment_id');
+    }
+
+    /**
+     * @return BelongsTo<ExportContainer, $this>
+     */
+    public function exportContainer(): BelongsTo
+    {
+        return $this->belongsTo(ExportContainer::class, 'export_container_id');
+    }
+
+    /**
+     * @return BelongsTo<ImportContainer, $this>
+     */
+    public function importContainer(): BelongsTo
+    {
+        return $this->belongsTo(ImportContainer::class, 'import_container_id');
     }
 
     /**
@@ -70,5 +88,21 @@ class Attachment extends Media
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * The linked shipment, whichever process it belongs to.
+     */
+    public function linkedShipment(): ExportShipment|ImportShipment|null
+    {
+        return $this->export_shipment_id ? $this->exportShipment : $this->importShipment;
+    }
+
+    /**
+     * The linked container, if the file belongs to one.
+     */
+    public function linkedContainer(): ExportContainer|ImportContainer|null
+    {
+        return $this->export_container_id ? $this->exportContainer : $this->importContainer;
     }
 }

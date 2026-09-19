@@ -13,14 +13,15 @@
 
 namespace Tests\Feature\Admin;
 
-use App\Filament\Resources\BillOfLadings\BillOfLadingResource;
 use App\Filament\Resources\Companies\CompanyResource;
-use App\Filament\Resources\Containers\ContainerResource;
+use App\Filament\Resources\ExportContainers\ExportContainerResource;
+use App\Filament\Resources\ExportShipments\ExportShipmentResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Livewire\NotesPanel;
 use App\Models\ActivityLog;
-use App\Models\BillOfLading;
 use App\Models\Company;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
 use App\Models\Note;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -48,11 +49,11 @@ class NotesPanelTest extends TestCase
 
     public function test_a_note_is_created_with_author_and_logged(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
         $this->actingAs($this->admin);
 
-        Livewire::test(NotesPanel::class, ['record' => $billOfLading])
+        Livewire::test(NotesPanel::class, ['record' => $shipment])
             ->set('body', 'Booking confirmed with the agent.')
             ->call('addNote')
             ->assertHasNoErrors()
@@ -61,24 +62,24 @@ class NotesPanelTest extends TestCase
 
         $note = Note::query()->firstOrFail();
         $this->assertSame($this->admin->getKey(), $note->author_id);
-        $this->assertTrue($note->noteable->is($billOfLading));
+        $this->assertTrue($note->noteable->is($shipment));
 
         $log = ActivityLog::query()->where('event', 'note_created')->firstOrFail();
-        $this->assertSame($billOfLading->getKey(), $log->bill_of_lading_id);
+        $this->assertSame($shipment->getKey(), $log->export_shipment_id);
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertSame(['body' => 'Booking confirmed with the agent.'], $log->new_values);
     }
 
     public function test_everyone_reads_all_notes_but_only_the_author_edits(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
-        $adminNote = $billOfLading->notes()->create(['body' => 'Admin note', 'author_id' => $this->admin->getKey()]);
+        $adminNote = $shipment->notes()->create(['body' => 'Admin note', 'author_id' => $this->admin->getKey()]);
 
         $this->actingAs($this->operator);
 
         // The operator sees the admin's note.
-        Livewire::test(NotesPanel::class, ['record' => $billOfLading])
+        Livewire::test(NotesPanel::class, ['record' => $shipment])
             ->assertSee('Admin note')
             ->call('startEditing', $adminNote->getKey())
             ->assertStatus(403);
@@ -86,11 +87,11 @@ class NotesPanelTest extends TestCase
 
     public function test_the_author_can_edit_and_delete_their_note(): void
     {
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
         $this->actingAs($this->admin);
 
-        $component = Livewire::test(NotesPanel::class, ['record' => $billOfLading])
+        $component = Livewire::test(NotesPanel::class, ['record' => $shipment])
             ->set('body', 'First version')
             ->call('addNote');
 
@@ -120,7 +121,7 @@ class NotesPanelTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $container = BillOfLading::query()->firstOrFail()->containers()->firstOrFail();
+        $container = ExportContainer::query()->firstOrFail();
         $company = Company::query()->firstOrFail();
         $user = User::query()->where('email', 'customer@example.com')->firstOrFail();
 
@@ -135,14 +136,24 @@ class NotesPanelTest extends TestCase
         $this->assertSame(1, $company->notes()->count());
         $this->assertSame(1, $user->notes()->count());
 
-        // Company/user notes carry no shipment linkage in the log.
-        $companyLog = ActivityLog::query()->where('event', 'note_created')->whereNull('bill_of_lading_id')->firstOrFail();
-        $this->assertNull($companyLog->container_id);
+        // Container notes carry the shipment link; company/user notes carry none.
+        $containerLog = ActivityLog::query()
+            ->where('event', 'note_created')
+            ->where('export_container_id', $container->getKey())
+            ->firstOrFail();
+        $this->assertSame($container->export_shipment_id, $containerLog->export_shipment_id);
+
+        $companyLog = ActivityLog::query()
+            ->where('event', 'note_created')
+            ->whereNull('export_shipment_id')
+            ->whereNull('import_shipment_id')
+            ->firstOrFail();
+        $this->assertNull($companyLog->export_container_id);
     }
 
     public function test_operator_cannot_reach_notes_on_an_unassigned_shipment(): void
     {
-        $hidden = BillOfLading::query()
+        $hidden = ExportShipment::query()
             ->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))
             ->firstOrFail();
 
@@ -153,18 +164,18 @@ class NotesPanelTest extends TestCase
         Livewire::test(NotesPanel::class, ['record' => $hidden]);
     }
 
-    public function test_the_panel_is_embedded_on_all_four_edit_pages(): void
+    public function test_the_panel_is_embedded_on_the_edit_pages(): void
     {
         $this->actingAs($this->admin);
 
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-        $container = $billOfLading->containers()->firstOrFail();
-        $company = $billOfLading->company;
+        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $container = $shipment->containers()->firstOrFail();
+        $company = $shipment->company;
         $user = User::query()->where('email', 'customer@example.com')->firstOrFail();
 
         $pages = [
-            BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]),
-            ContainerResource::getUrl('edit', ['record' => $container]),
+            ExportShipmentResource::getUrl('edit', ['record' => $shipment]),
+            ExportContainerResource::getUrl('edit', ['record' => $container]),
             CompanyResource::getUrl('edit', ['record' => $company]),
             UserResource::getUrl('edit', ['record' => $user]),
         ];
@@ -186,12 +197,12 @@ class NotesPanelTest extends TestCase
 
     public function test_deleting_someone_elses_note_is_forbidden(): void
     {
-        $billOfLading = BillOfLading::query()->firstOrFail();
-        $note = $billOfLading->notes()->create(['body' => 'Admin only', 'author_id' => $this->admin->getKey()]);
+        $shipment = ExportShipment::query()->firstOrFail();
+        $note = $shipment->notes()->create(['body' => 'Admin only', 'author_id' => $this->admin->getKey()]);
 
         $this->actingAs($this->operator);
 
-        Livewire::test(NotesPanel::class, ['record' => $billOfLading])
+        Livewire::test(NotesPanel::class, ['record' => $shipment])
             ->call('deleteNote', $note->getKey())
             ->assertStatus(403);
 

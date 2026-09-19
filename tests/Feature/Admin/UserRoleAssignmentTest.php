@@ -184,7 +184,8 @@ class UserRoleAssignmentTest extends TestCase
         // The whole delete lifecycle is admin territory, on every resource.
         foreach (['Delete', 'DeleteAny', 'ForceDelete', 'ForceDeleteAny', 'Restore', 'RestoreAny'] as $ability) {
             $this->assertFalse($operator->can("$ability:Company"), "operator should not hold $ability:Company");
-            $this->assertFalse($operator->can("$ability:BillOfLading"), "operator should not hold $ability:BillOfLading");
+            $this->assertFalse($operator->can("$ability:ExportShipment"), "operator should not hold $ability:ExportShipment");
+            $this->assertFalse($operator->can("$ability:ImportShipment"), "operator should not hold $ability:ImportShipment");
         }
 
         $this->assertTrue($this->admin->can('Delete:Company'));
@@ -192,7 +193,8 @@ class UserRoleAssignmentTest extends TestCase
         $this->assertTrue($this->superAdmin->can('Delete:Company'));
 
         // Operators still keep their write access on shipments.
-        $this->assertTrue($operator->can('Update:BillOfLading'));
+        $this->assertTrue($operator->can('Update:ExportShipment'));
+        $this->assertTrue($operator->can('Update:ImportShipment'));
     }
 
     public function test_operators_cannot_access_companies_and_users(): void

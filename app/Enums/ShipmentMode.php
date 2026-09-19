@@ -5,7 +5,7 @@
  * Responsibility: Identifies how a shipment's cargo is loaded and moved.
  * What it does:
  * - FCL / LCL split sea freight by container use; Air covers air shipments.
- * How to use: BillOfLading casts `shipment_mode` to this enum.
+ * How to use: ExportShipment and ImportShipment cast `shipment_mode` to this enum.
  * How to extend: Add further modes and their labels.
  */
 

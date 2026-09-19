@@ -11,6 +11,7 @@
 
 namespace App\Filament\Resources\ActivityLogs\Schemas;
 
+use App\Models\ActivityLog;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -44,11 +45,13 @@ class ActivityLogForm
                 Section::make('Context')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('billOfLading.reference_number')
-                            ->label('Bill of lading')
+                        TextInput::make('shipment')
+                            ->label('Shipment')
+                            ->state(fn (?ActivityLog $record): ?string => $record?->linkedShipment()?->reference_number)
                             ->disabled(),
-                        TextInput::make('container.container_number')
+                        TextInput::make('container')
                             ->label('Container')
+                            ->state(fn (?ActivityLog $record): ?string => $record?->linkedContainer()?->container_number)
                             ->disabled(),
                         Textarea::make('customer_summary')
                             ->disabled()

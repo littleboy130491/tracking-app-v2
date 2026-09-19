@@ -5,13 +5,14 @@
  * Responsibility: Creates the append-only `activity_logs` table.
  * What it does:
  * - Records what changed, when, by whom, plus a customer-safe summary.
- * - is_customer_visible controls what the customer dashboard may show.
+ * - Links each entry to an export/import shipment and (optionally) to one of
+ *   its containers; entries about companies or users leave all four null.
  * How to use: App\Models\ActivityLog; written by App\Services\ActivityLogger.
  * How to extend: Add new event types; never update or delete existing rows.
  *
- * Note: spatie/laravel-activitylog was evaluated but rejected because this
- * schema (bill_of_lading_id, container_id, customer_summary,
- * is_customer_visible, occurred_at) is fixed by migration_plan.md §10.
+ * Note: the four nullable links exist because the domain is split per process.
+ * Exactly one shipment link is set per row; a container link, when present,
+ * matches the shipment's process.
  */
 
 use Illuminate\Database\Migrations\Migration;
@@ -24,8 +25,10 @@ return new class extends Migration
     {
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bill_of_lading_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('container_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('export_shipment_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('import_shipment_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('export_container_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('import_container_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('actor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('event', 100);
             $table->string('entity_type', 100);
@@ -37,7 +40,8 @@ return new class extends Migration
             $table->timestamp('occurred_at');
             $table->timestamps();
 
-            $table->index(['bill_of_lading_id', 'occurred_at']);
+            $table->index(['export_shipment_id', 'occurred_at']);
+            $table->index(['import_shipment_id', 'occurred_at']);
             $table->index(['entity_type', 'entity_id']);
         });
     }

@@ -5,7 +5,8 @@
  * Responsibility: One append-only audit entry.
  * What it does:
  * - Records the event, actor, changed values and a customer-safe summary.
- * - `is_customer_visible` limits what the portal may read.
+ * - Links to an export/import shipment and (optionally) one of its containers;
+ *   `is_customer_visible` limits what the portal may read.
  * How to use: Written by App\Services\ActivityLogger in the same transaction as
  *   the change; never updated or deleted afterwards.
  * How to extend: Add new `event` values as new actions get logged.
@@ -19,13 +20,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
-    'bill_of_lading_id', 'container_id', 'actor_id', 'event',
-    'entity_type', 'entity_id', 'old_values', 'new_values', 'customer_summary',
-    'is_customer_visible', 'occurred_at',
+    'export_shipment_id', 'import_shipment_id', 'export_container_id', 'import_container_id',
+    'actor_id', 'event', 'entity_type', 'entity_id', 'old_values', 'new_values',
+    'customer_summary', 'is_customer_visible', 'occurred_at',
 ])]
 class ActivityLog extends Model
 {
     use HasFactory;
+
+    /** Columns linking an entry to a shipment; exactly one is set. */
+    public const SHIPMENT_KEYS = ['export_shipment_id', 'import_shipment_id'];
+
+    /** Columns linking an entry to a container; at most one is set. */
+    public const CONTAINER_KEYS = ['export_container_id', 'import_container_id'];
 
     /**
      * @return array<string, string>
@@ -41,19 +48,35 @@ class ActivityLog extends Model
     }
 
     /**
-     * @return BelongsTo<BillOfLading, $this>
+     * @return BelongsTo<ExportShipment, $this>
      */
-    public function billOfLading(): BelongsTo
+    public function exportShipment(): BelongsTo
     {
-        return $this->belongsTo(BillOfLading::class);
+        return $this->belongsTo(ExportShipment::class, 'export_shipment_id');
     }
 
     /**
-     * @return BelongsTo<Container, $this>
+     * @return BelongsTo<ImportShipment, $this>
      */
-    public function container(): BelongsTo
+    public function importShipment(): BelongsTo
     {
-        return $this->belongsTo(Container::class);
+        return $this->belongsTo(ImportShipment::class, 'import_shipment_id');
+    }
+
+    /**
+     * @return BelongsTo<ExportContainer, $this>
+     */
+    public function exportContainer(): BelongsTo
+    {
+        return $this->belongsTo(ExportContainer::class, 'export_container_id');
+    }
+
+    /**
+     * @return BelongsTo<ImportContainer, $this>
+     */
+    public function importContainer(): BelongsTo
+    {
+        return $this->belongsTo(ImportContainer::class, 'import_container_id');
     }
 
     /**
@@ -62,5 +85,21 @@ class ActivityLog extends Model
     public function actor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actor_id');
+    }
+
+    /**
+     * The linked shipment, whichever process it belongs to.
+     */
+    public function linkedShipment(): ExportShipment|ImportShipment|null
+    {
+        return $this->export_shipment_id ? $this->exportShipment : $this->importShipment;
+    }
+
+    /**
+     * The linked container, if the entry is about one.
+     */
+    public function linkedContainer(): ExportContainer|ImportContainer|null
+    {
+        return $this->export_container_id ? $this->exportContainer : $this->importContainer;
     }
 }

@@ -4,10 +4,10 @@
  * File: app/Models/Company.php
  * Responsibility: A customer company that owns shipments.
  * What it does:
- * - Holds company identity/contact data and its shipments (bills of lading).
+ * - Holds company identity/contact data and its export/import shipments.
  * - Links to the users who handle it: `customers()` for portal access,
  *   `operators()` for assigned staff (same company_user pivot, split by role).
- * How to use: `$company->billOfLadings`, `$company->customers`, `$company->operators`.
+ * How to use: `$company->exportShipments`, `$company->importShipments`, `$company->customers`, `$company->operators`.
  * How to extend: Add company-level fields as columns on the companies table.
  */
 
@@ -36,11 +36,19 @@ class Company extends Model
     }
 
     /**
-     * @return HasMany<BillOfLading, $this>
+     * @return HasMany<ExportShipment, $this>
      */
-    public function billOfLadings(): HasMany
+    public function exportShipments(): HasMany
     {
-        return $this->hasMany(BillOfLading::class);
+        return $this->hasMany(ExportShipment::class);
+    }
+
+    /**
+     * @return HasMany<ImportShipment, $this>
+     */
+    public function importShipments(): HasMany
+    {
+        return $this->hasMany(ImportShipment::class);
     }
 
     /**

@@ -31,7 +31,7 @@ class HsCodeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
-    protected static string|UnitEnum|null $navigationGroup = 'Shipments';
+    protected static string|UnitEnum|null $navigationGroup = 'Master data';
 
     protected static ?int $navigationSort = 30;
 

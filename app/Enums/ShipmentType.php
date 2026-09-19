@@ -5,7 +5,8 @@
  * Responsibility: Identifies whether a shipment is an export or an import.
  * What it does:
  * - Drives which form sections a B/L and its containers show.
- * How to use: BillOfLading casts `shipment_type` to this enum.
+ * How to use: shipment models report their type via `shipmentType()`; used for
+ *   labels and badges.
  * How to extend: Add further types (e.g. domestic) and their labels.
  */
 

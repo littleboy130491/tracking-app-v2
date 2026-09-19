@@ -4,32 +4,39 @@
  * File: tests/Feature/Admin/AdminPanelSmokeTest.php
  * Responsibility: Guards the admin panel against runtime errors.
  * What it does:
- * - Seeds the database and, as an admin, opens every resource list page.
- * - Asserts the customer-portal role cannot reach the panel.
+ * - Seeds the database and, as an admin, opens every resource list and edit page.
+ * - Covers shipment creation, HS codes, milestone transitions, the stepper and
+ *   the company relation managers.
  * How to use: `php artisan test --filter=AdminPanelSmokeTest`.
  * How to extend: Add create/edit page assertions as resources grow.
  */
 
 namespace Tests\Feature\Admin;
 
-use App\Enums\BillOfLadingStatus;
-use App\Enums\ShipmentMilestone;
-use App\Enums\ShipmentType;
+use App\Enums\ExportMilestone;
+use App\Enums\ImportMilestone;
+use App\Enums\ShipmentStatus;
 use App\Filament\Resources\ActivityLogs\ActivityLogResource;
-use App\Filament\Resources\BillOfLadings\BillOfLadingResource;
-use App\Filament\Resources\BillOfLadings\Pages\CreateBillOfLading;
-use App\Filament\Resources\BillOfLadings\Pages\EditBillOfLading;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
-use App\Filament\Resources\Companies\RelationManagers\BillOfLadingsRelationManager;
-use App\Filament\Resources\Containers\ContainerResource;
+use App\Filament\Resources\Companies\RelationManagers\ExportShipmentsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\ImportShipmentsRelationManager;
+use App\Filament\Resources\ExportContainers\ExportContainerResource;
+use App\Filament\Resources\ExportShipments\ExportShipmentResource;
+use App\Filament\Resources\ExportShipments\Pages\CreateExportShipment;
+use App\Filament\Resources\ExportShipments\Pages\EditExportShipment;
 use App\Filament\Resources\HsCodes\HsCodeResource;
 use App\Filament\Resources\HsCodes\Pages\CreateHsCode;
+use App\Filament\Resources\ImportContainers\ImportContainerResource;
+use App\Filament\Resources\ImportShipments\ImportShipmentResource;
+use App\Filament\Resources\ImportShipments\Pages\CreateImportShipment;
+use App\Filament\Resources\ImportShipments\Pages\EditImportShipment;
 use App\Filament\Resources\Users\UserResource;
-use App\Models\BillOfLading;
 use App\Models\Company;
+use App\Models\ExportShipment;
 use App\Models\HsCode;
+use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -50,16 +57,25 @@ class AdminPanelSmokeTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
-    public function test_admin_can_open_every_resource_list_page(): void
+    private function admin(): User
     {
         $admin = User::factory()->create();
         $admin->assignRole(Role::ADMIN);
 
+        return $admin;
+    }
+
+    public function test_admin_can_open_every_resource_list_page(): void
+    {
+        $admin = $this->admin();
+
         $urls = [
             UserResource::getUrl('index'),
             CompanyResource::getUrl('index'),
-            BillOfLadingResource::getUrl('index'),
-            ContainerResource::getUrl('index'),
+            ExportShipmentResource::getUrl('index'),
+            ImportShipmentResource::getUrl('index'),
+            ExportContainerResource::getUrl('index'),
+            ImportContainerResource::getUrl('index'),
             HsCodeResource::getUrl('index'),
             ActivityLogResource::getUrl('index'),
         ];
@@ -69,86 +85,99 @@ class AdminPanelSmokeTest extends TestCase
         }
     }
 
-    public function test_admin_can_open_the_bill_of_lading_edit_page(): void
+    public function test_navigation_groups_ladings_and_containers_with_export_and_import_items(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $this->assertSame('Bill of Ladings', ExportShipmentResource::getNavigationGroup());
+        $this->assertSame('Export', ExportShipmentResource::getNavigationLabel());
+        $this->assertSame('Bill of Ladings', ImportShipmentResource::getNavigationGroup());
+        $this->assertSame('Import', ImportShipmentResource::getNavigationLabel());
 
-        $billOfLading = BillOfLading::query()->firstOrFail();
+        $this->assertSame('Containers', ExportContainerResource::getNavigationGroup());
+        $this->assertSame('Export', ExportContainerResource::getNavigationLabel());
+        $this->assertSame('Containers', ImportContainerResource::getNavigationGroup());
+        $this->assertSame('Import', ImportContainerResource::getNavigationLabel());
+    }
+
+    public function test_navigation_group_order_is_ladings_then_containers(): void
+    {
+        $admin = $this->admin();
+
+        // Read the rendered sidebar: every group wrapper carries its label in
+        // data-group-label, in top-to-bottom order.
+        $html = $this->actingAs($admin)
+            ->get(ExportShipmentResource::getUrl('index'))
+            ->assertOk()
+            ->getContent();
+
+        preg_match_all('/data-group-label="([^"]+)"/', (string) $html, $matches);
+
+        $this->assertSame(
+            ['Bill of Ladings', 'Containers', 'CRM', 'Master data', 'Monitoring'],
+            $matches[1],
+        );
+    }
+
+    public function test_admin_can_open_the_shipment_edit_pages(): void
+    {
+        $admin = $this->admin();
+
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
 
         $this->actingAs($admin)
-            ->get(BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]))
+            ->get(ExportShipmentResource::getUrl('edit', ['record' => $export]))
+            ->assertOk()
+            ->assertSee('Shipping Details')
+            ->assertSee('Advance')
+            ->assertSee('jumpToMilestone');
+
+        $this->actingAs($admin)
+            ->get(ImportShipmentResource::getUrl('edit', ['record' => $import]))
             ->assertOk()
             ->assertSee('Shipping Details')
             ->assertSee('Advance')
             ->assertSee('jumpToMilestone');
     }
 
-    public function test_admin_can_create_a_bill_of_lading_with_just_the_customer_fields(): void
+    public function test_admin_can_create_shipments_with_just_the_customer_fields(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
-
+        $admin = $this->admin();
         $company = Company::query()->firstOrFail();
 
         $this->actingAs($admin);
 
-        Livewire::test(CreateBillOfLading::class)
+        Livewire::test(CreateExportShipment::class)
             ->assertDontSee('Shipping Details')
             ->assertSee('Customer')
             ->assertDontSee('AJU number')
-            ->assertDontSee('B/L number')
             ->fillForm([
-                'shipment_type' => 'import',
                 'company_id' => $company->getKey(),
+                'document_received_date' => today()->toDateString(),
             ])
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $billOfLading = BillOfLading::query()->latest('id')->firstOrFail();
+        $export = ExportShipment::query()->latest('id')->firstOrFail();
+        $this->assertNotNull($export->reference_number);
+        $this->assertSame($company->name, $export->company_name_snapshot);
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
-        $this->assertNotNull($billOfLading->reference_number);
-        $this->assertSame($company->name, $billOfLading->company_name_snapshot);
-        $this->assertTrue($billOfLading->isImport());
-    }
-
-    public function test_shipment_type_is_locked_after_create(): void
-    {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
-
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-
-        $this->actingAs($admin);
-
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getKey()])
-            ->assertSee('Customer')
-            ->set('data.shipment_type', ShipmentType::Import->value)
-            ->call('save')
+        Livewire::test(CreateImportShipment::class)
+            ->fillForm([
+                'company_id' => $company->getKey(),
+                'document_received_date' => today()->toDateString(),
+            ])
+            ->call('create')
             ->assertHasNoFormErrors();
 
-        $this->assertTrue($billOfLading->refresh()->isExport());
-    }
-
-    public function test_shipment_mode_aju_and_bl_live_on_shipping_details_step_two(): void
-    {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
-
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-
-        $this->actingAs($admin)
-            ->get(BillOfLadingResource::getUrl('edit', ['record' => $billOfLading]))
-            ->assertOk()
-            ->assertSee('Shipment mode')
-            ->assertSee('AJU number')
-            ->assertSee('B/L number');
+        $import = ImportShipment::query()->latest('id')->firstOrFail();
+        $this->assertSame($company->name, $import->company_name_snapshot);
+        $this->assertSame(ImportMilestone::DocumentReceived, $import->current_milestone);
     }
 
     public function test_admin_can_create_an_hs_code(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
         $this->actingAs($admin);
 
@@ -163,72 +192,70 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertDatabaseHas('hs_codes', ['code' => '9999.99']);
     }
 
-    public function test_admin_can_attach_an_hs_code_on_the_bill_of_lading_form(): void
+    public function test_admin_can_attach_an_hs_code_on_the_import_shipment_form(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
-
+        $admin = $this->admin();
         $hsCode = HsCode::query()->firstOrFail();
 
-        // Cargo & terminal is milestone-gated, so the shipment must have
+        // The cargo fields are milestone-gated, so the shipment must have
         // reached "checking document" before HS codes can be attached.
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
-        $billOfLading->update(['current_milestone' => ShipmentMilestone::CheckingDocument]);
+        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import->update(['current_milestone' => ImportMilestone::CheckingDocument]);
 
         $this->actingAs($admin);
 
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
             ->fillForm(['hsCodes' => [$hsCode->getKey()]])
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertTrue($billOfLading->refresh()->hsCodes->contains($hsCode));
+        $this->assertTrue($import->refresh()->hsCodes->contains($hsCode));
     }
 
-    public function test_shipment_milestones_advance_regress_and_complete(): void
+    public function test_export_milestones_advance_regress_and_complete(): void
     {
-        $export = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
-        $this->assertSame(ShipmentMilestone::DocumentReceived, $export->current_milestone);
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
         $export->advanceMilestone();
-        $this->assertSame(ShipmentMilestone::CheckingBookingOrder, $export->current_milestone);
+        $this->assertSame(ExportMilestone::CheckingBookingOrder, $export->current_milestone);
 
         $export->regressMilestone();
-        $this->assertSame(ShipmentMilestone::DocumentReceived, $export->current_milestone);
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
         $this->assertNull($export->previousMilestone());
 
         foreach (range(1, 10) as $ignored) {
             $export->advanceMilestone();
         }
 
-        $this->assertSame(ShipmentMilestone::FinalChecking, $export->current_milestone);
-        $this->assertSame(BillOfLadingStatus::Completed, $export->status);
+        $this->assertSame(ExportMilestone::FinalChecking, $export->current_milestone);
+        $this->assertSame(ShipmentStatus::Completed, $export->status);
         $this->assertNotNull($export->completed_at);
 
         $export->regressMilestone();
-        $this->assertSame(BillOfLadingStatus::InProgress, $export->status);
+        $this->assertSame(ShipmentStatus::InProgress, $export->status);
         $this->assertNull($export->completed_at);
     }
 
     public function test_milestone_stepper_jumps_and_logs_each_change(): void
     {
-        $export = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
 
         // Jumping forward skips the steps in between.
-        $export->moveToMilestone(ShipmentMilestone::GateInCy);
-        $this->assertSame(ShipmentMilestone::GateInCy, $export->current_milestone);
+        $export->moveToMilestone(ExportMilestone::GateInCy);
+        $this->assertSame(ExportMilestone::GateInCy, $export->current_milestone);
 
-        // A milestone outside this type's sequence is ignored.
-        $export->moveToMilestone(ShipmentMilestone::EmptyReturned);
-        $this->assertSame(ShipmentMilestone::GateInCy, $export->current_milestone);
+        // A milestone outside this process's sequence is ignored.
+        $export->moveToMilestone(ImportMilestone::EmptyReturned);
+        $this->assertSame(ExportMilestone::GateInCy, $export->current_milestone);
 
         // Jumping to the last milestone completes; jumping off it reopens.
-        $export->moveToMilestone(ShipmentMilestone::FinalChecking);
-        $this->assertSame(BillOfLadingStatus::Completed, $export->status);
+        $export->moveToMilestone(ExportMilestone::FinalChecking);
+        $this->assertSame(ShipmentStatus::Completed, $export->status);
 
-        $export->moveToMilestone(ShipmentMilestone::DocumentReceived);
-        $this->assertSame(BillOfLadingStatus::InProgress, $export->status);
+        $export->moveToMilestone(ExportMilestone::DocumentReceived);
+        $this->assertSame(ShipmentStatus::InProgress, $export->status);
         $this->assertNull($export->completed_at);
 
         // Each real change lands in the activity log (the ignored jump did not).
@@ -237,48 +264,46 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_stepper_moves_at_most_one_step_forward(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->current_milestone);
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
         $this->actingAs($admin);
 
         // Two steps ahead is rejected — only the next step may be jumped to.
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->mountAction('jumpToMilestone', ['milestone' => 'pickup_empty_container'])
             ->callMountedAction();
 
-        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->refresh()->current_milestone);
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->refresh()->current_milestone);
 
         // One step forward works, and jumping back is unrestricted.
-        Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()])
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->mountAction('jumpToMilestone', ['milestone' => 'checking_booking_order'])
             ->callMountedAction()
             ->mountAction('jumpToMilestone', ['milestone' => 'document_received'])
             ->callMountedAction();
 
-        $this->assertSame(ShipmentMilestone::DocumentReceived, $billOfLading->refresh()->current_milestone);
+        $this->assertSame(ExportMilestone::DocumentReceived, $export->refresh()->current_milestone);
     }
 
     public function test_import_milestones_skip_the_spjm_branch_unless_the_response_is_spjm(): void
     {
-        $spjm = BillOfLading::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
-        $spjm->update(['current_milestone' => ShipmentMilestone::BillingResponseReceived]);
+        $spjm = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $spjm->update(['current_milestone' => ImportMilestone::BillingResponseReceived]);
         $spjm->advanceMilestone();
-        $this->assertSame(ShipmentMilestone::DocumentsUploaded, $spjm->current_milestone);
+        $this->assertSame(ImportMilestone::DocumentsUploaded, $spjm->current_milestone);
 
-        $sppb = BillOfLading::query()->where('reference_number', 'REF-IMP-0002')->firstOrFail();
-        $sppb->update(['current_milestone' => ShipmentMilestone::BillingResponseReceived]);
+        $sppb = ImportShipment::query()->where('reference_number', 'REF-IMP-0002')->firstOrFail();
+        $sppb->update(['current_milestone' => ImportMilestone::BillingResponseReceived]);
         $sppb->advanceMilestone();
-        $this->assertSame(ShipmentMilestone::GateOutCy, $sppb->current_milestone);
+        $this->assertSame(ImportMilestone::GateOutCy, $sppb->current_milestone);
     }
 
     public function test_company_list_links_customers_and_operators_to_their_edit_page(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
         $company = Company::query()->whereHas('users')->firstOrFail();
         $customer = $company->customers()->firstOrFail();
@@ -298,8 +323,7 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_company_form_keeps_operator_links_when_customers_change(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
         $company = Company::query()->whereHas('customers')->firstOrFail();
 
@@ -342,8 +366,7 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_company_create_links_customers_and_operators(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
         $customer = User::factory()->create();
         $customer->assignRole(Role::CUSTOMER);
@@ -376,15 +399,14 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_container_repeater_header_shows_the_container_number(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
-        $billOfLading = BillOfLading::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-        $container = $billOfLading->containers()->firstOrFail();
+        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $container = $export->containers()->firstOrFail();
 
         $this->actingAs($admin);
 
-        $component = Livewire::test(EditBillOfLading::class, ['record' => $billOfLading->getRouteKey()]);
+        $component = Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()]);
 
         // Existing containers show their number in the collapsed item header.
         $this->assertMatchesRegularExpression(
@@ -402,29 +424,38 @@ class AdminPanelSmokeTest extends TestCase
         );
     }
 
-    public function test_company_edit_page_lists_only_the_companys_bill_of_ladings(): void
+    public function test_company_edit_page_lists_only_the_companys_shipments(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
-        $company = Company::query()->whereHas('billOfLadings')->firstOrFail();
-        $own = $company->billOfLadings()->first();
-        $other = BillOfLading::query()->whereKeyNot($company->billOfLadings()->pluck('id'))->firstOrFail();
+        $company = Company::query()->whereHas('exportShipments')->firstOrFail();
+        $ownExport = $company->exportShipments()->first();
+        $otherExport = ExportShipment::query()->whereKeyNot($company->exportShipments()->pluck('id'))->firstOrFail();
 
         $this->actingAs($admin);
 
-        Livewire::test(BillOfLadingsRelationManager::class, [
+        Livewire::test(ExportShipmentsRelationManager::class, [
             'ownerRecord' => $company,
             'pageClass' => EditCompany::class,
         ])
-            ->assertCanSeeTableRecords([$own])
-            ->assertCanNotSeeTableRecords([$other]);
+            ->assertCanSeeTableRecords([$ownExport])
+            ->assertCanNotSeeTableRecords([$otherExport]);
+
+        $importCompany = Company::query()->whereHas('importShipments')->firstOrFail();
+        $ownImport = $importCompany->importShipments()->first();
+        $otherImport = ImportShipment::query()->whereKeyNot($importCompany->importShipments()->pluck('id'))->firstOrFail();
+
+        Livewire::test(ImportShipmentsRelationManager::class, [
+            'ownerRecord' => $importCompany,
+            'pageClass' => EditCompany::class,
+        ])
+            ->assertCanSeeTableRecords([$ownImport])
+            ->assertCanNotSeeTableRecords([$otherImport]);
     }
 
     public function test_user_list_links_company_names_to_their_edit_page(): void
     {
-        $admin = User::factory()->create();
-        $admin->assignRole(Role::ADMIN);
+        $admin = $this->admin();
 
         $user = User::query()->whereHas('companies')->firstOrFail();
         $company = $user->companies()->firstOrFail();

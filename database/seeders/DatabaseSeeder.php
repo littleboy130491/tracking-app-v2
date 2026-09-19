@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             HsCodeSeeder::class,
             DemoCompanySeeder::class,
-            DemoShipmentSeeder::class,
+            DemoExportShipmentSeeder::class,
+            DemoImportShipmentSeeder::class,
         ]);
     }
 }

@@ -2,6 +2,8 @@ Berikut rancangan database untuk **B/L → banyak Container**, workflow Export/I
 
 Ini spesifikasi migration yang netral terhadap framework. **Field bisnis disimpan sebagai kolom tetap**, sementara field tambahan buatan user disimpan melalui definisi field dan nilai dinamis.
 
+> **Status (2026-09-19):** Skema sudah dipecah per proses. `bill_of_ladings` → `export_shipments` + `import_shipments`; `containers` → `export_containers` + `import_containers`; `activity_logs` dan `curator` memakai kolom tautan `export_/import_shipment_id` + `export_/import_container_id`; pivot HS code menjadi dua tabel. Field `package_count`, `package_unit`, `terminal_name`, `loading_date` dan `loading_destination` dihapus. **Lihat `docs/ERD.md` untuk skema terkini** — bagian 4 dan 5 di bawah disimpan sebagai riwayat perencanaan.
+
 ### 1. Konvensi umum
 
 Semua tabel menggunakan:

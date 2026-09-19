@@ -6,8 +6,8 @@
  * What it does:
  * - Exposes CRUD for companies; the form's portal-users select lets portal
  *   users be created, attached and detached directly on create and edit.
- * - The edit page hosts a BillOfLadingsRelationManager listing the company's
- *   shipments.
+ * - The edit page hosts one relation manager per process listing the
+ *   company's export and import shipments.
  * How to use: Admin panel → CRM → Companies.
  * How to extend: Add further relation managers in getRelations().
  */
@@ -17,7 +17,8 @@ namespace App\Filament\Resources\Companies;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
-use App\Filament\Resources\Companies\RelationManagers\BillOfLadingsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\ExportShipmentsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\ImportShipmentsRelationManager;
 use App\Filament\Resources\Companies\Schemas\CompanyForm;
 use App\Filament\Resources\Companies\Tables\CompaniesTable;
 use App\Models\Company;
@@ -53,7 +54,8 @@ class CompanyResource extends Resource
     public static function getRelations(): array
     {
         return [
-            BillOfLadingsRelationManager::class,
+            ExportShipmentsRelationManager::class,
+            ImportShipmentsRelationManager::class,
         ];
     }
 

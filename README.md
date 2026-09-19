@@ -1,26 +1,31 @@
+# SAM Group Logistics Tracking System
+
 <p align="center">
     <img src="assets/logo.png" alt="SAM Group Logistics Tracking System" width="320">
 </p>
 
-# SAM Group Logistics Tracking System
+A shipment tracking system built around **one shipment → many containers**, with an admin dashboard for
+staff and a passwordless customer portal. Export and Import are **separate models** with their own tables,
+forms and menus.
 
-A shipment tracking system built around **one bill of lading (B/L) → many containers**, with an admin
-dashboard for staff and a passwordless customer portal.
-
-Shipment tracking is hardcoded: each B/L type (export/import) walks a fixed milestone sequence
-(`ShipmentMilestone` enum; the SPJM import branch runs only when `billing_response` is SPJM). The
-Progress tab shows the current step with advance/regress buttons, and each milestone's fields sit in
-their own collapsible section — on the B/L and per container — locked until that step is reached.
+Shipment tracking is hardcoded per process: an export shipment walks `ExportMilestone` (booking order →
+pickup → stuffing → gate in → final checking), an import shipment walks `ImportMilestone` (document
+checking → draft PIB → billing/THC/DO → behandle → inspection → gate out → factory → empty return; the
+SPJM branch runs only when `billing_response` is SPJM). Each milestone's fields sit in its own section,
+locked until that step is reached, with a click-to-jump stepper and advance/regress buttons.
 
 ## What it is
 
-- **Admin dashboard** (`/admin`) — CRUD for users, companies, bills of lading, containers and HS codes
-  (containers inline on the B/L form; HS codes are shared master data that the B/L form multi-selects
-  and can create inline), plus a **read-only** activity log recording every change, who made it and when.
-- **Customer portal** (`/portal`) — passwordless sign-in with an emailed one-time code, greeting, filters
-  (company / number / status / year / month) plus a company column on the list, the B/Ls of the companies the
-  user manages, B/L detail with containers opening in a new tab, and draft-PIB confirmation for imports —
-  once a draft is confirmed the confirm and revision actions are no longer offered.
+- **Admin dashboard** (`/admin`) — menus are **Bill of Ladings** (Export, Import) and **Containers**
+  (Export, Import), plus **CRM** (users, companies), **Master data** (HS codes) and **Monitoring**
+  (activity log). Containers are edited inline on the shipment form and also standalone; HS codes are shared
+  master data the shipment form multi-selects and can create inline. The activity log is **read-only** and
+  records every change, who made it and when.
+- **Customer portal** (`/portal`) — passwordless sign-in with an emailed one-time code, greeting, a **Type**
+  dropdown (Export / Import) beside the filters (company / number / status / year / month), the shipments of
+  the companies the user manages, per-process detail pages with containers opening in a new tab, and
+  draft-PIB confirmation for imports — once a draft is confirmed the confirm and revision actions are no
+  longer offered.
 
 ## Tech stack
 
@@ -51,6 +56,7 @@ php artisan key:generate
 touch database/database.sqlite
 
 php artisan migrate:fresh --seed
+php artisan curator:token   # writes CURATOR_GLIDE_TOKEN for the media picker
 
 npm install
 npm run build
@@ -86,6 +92,7 @@ Everything lives in `.env`. The settings that matter day to day:
 | `OTPZ_ATTEMPT_DECAY_MINUTES` | How long the per-IP lockout lasts after too many incorrect codes. Default `10`. |
 | `OTPZ_EXPIRATION` | How long a one-time code stays valid, in minutes. Default `5`. |
 | `CURATOR_DEFAULT_DISK` | Disk Curator stores and serves attachments from. `public` by default; run `php artisan storage:link` once. |
+| `CURATOR_GLIDE_TOKEN` | Signs Curator's image URLs. Generate with `php artisan curator:token`. |
 | `APP_ENV`, `APP_DEBUG` | Standard Laravel flags. |
 
 Portal mail uses whatever `MAIL_MAILER` you configure. In development the code also lands in
@@ -133,35 +140,45 @@ Five companies — **PT Nusantara Ekspor** (`NUS`), **PT Sinar Impor** (`SIN`),
 **CV Borneo Jaya Mandiri** (`BJM`), **PT Sulawesi Nickel Industri** (`SNI`) and
 **PT Java Retail Distribution** (`JRD`).
 
-| Reference | Company | Type | State |
+| Reference | Menu | Company | State |
 | --- | --- | --- | --- |
-| `REF-EXP-0001` | NUS | export | In progress, 2 containers |
-| `REF-EXP-0002` | BJM | export | In progress, 1 container |
-| `REF-IMP-0001` | SIN | import | In progress. `billing_response = SPJM`, on the behandle branch |
-| `REF-EXP-0003` | SNI | export | **Completed** |
-| `REF-IMP-0002` | JRD | import | **Completed** — it ran the whole SPJM → SPPB path |
+| `REF-EXP-0001` | Bill of Ladings → Export | NUS | In progress, 2 containers |
+| `REF-EXP-0002` | Bill of Ladings → Export | BJM | In progress, 1 container |
+| `REF-EXP-0003` | Bill of Ladings → Export | SNI | **Completed** |
+| `REF-IMP-0001` | Bill of Ladings → Import | SIN | In progress. `billing_response = SPJM`, on the behandle branch |
+| `REF-IMP-0002` | Bill of Ladings → Import | JRD | **Completed** — it ran the whole SPJM → SPPB path |
 
-The two completed shipments are seeded with their progress fields filled, so there are finished
-export and import examples to open in the admin panel and the portal.
+The two completed shipments are seeded with their progress fields filled, so there are finished export and
+import examples to open in the admin panel and the portal. The seeders
+(`DemoExportShipmentSeeder`, `DemoImportShipmentSeeder`) are idempotent: re-running never rewinds a live
+shipment.
 
 ## Key routes
 
 | Route | Who | What |
 | --- | --- | --- |
-| `/` | anyone | Redirects to `/portal` for customers, otherwise to `/login`. |
+| `/` | anyone | Redirects to `/portal` for customers, otherwise to `/admin` (guests to `/login`). |
 | `/admin` | admin, operator | Filament admin panel. |
 | `/login` | guests | Portal sign-in (email step). |
-| `/portal` | customers | Shipment dashboard with filters. |
-| `/portal/bill-of-ladings/{id}` | customers | Shipment detail; import draft-PIB confirmation (hidden once confirmed). |
-| `/portal/containers/{id}` | customers | Container detail (facts + location history). |
+| `/portal` | customers | Shipment dashboard with a Type (Export/Import) dropdown and filters. |
+| `/portal/export-shipments/{id}` | customers | Export shipment detail + journey + containers. |
+| `/portal/import-shipments/{id}` | customers | Import shipment detail; draft-PIB confirmation (hidden once confirmed). |
+| `/portal/export-containers/{id}` | customers | Export container detail (facts + journey). |
+| `/portal/import-containers/{id}` | customers | Import container detail (facts + journey). |
 
 ## How shipment tracking works
 
-- The B/L form has three tabs: **Document** (AJU, B/L number, type, customer), **Event** (one collapsible
-  section per tracking step) and **Containers** (a repeater — one collapsible item per container).
-- Which sections appear is driven by `shipment_type`: booking/closing fields for exports; draft PIB,
-  billing, THC, DO release and behandle for imports. The same split applies inside each container item.
-- `status` / `completed_at` are managed manually for now.
+- **Two models**: `ExportShipment` and `ImportShipment` (tables `export_shipments` / `import_shipments`),
+  each with its own form, table, menu, policy and milestone enum. Containers are split the same way
+  (`ExportContainer` / `ImportContainer`).
+- Each shipment form has a **Customer** section above the tabs, then **Shipping Details** (booking/document
+  fields, each locked until its milestone), **Containers** (a repeater — one collapsible item per container),
+  **Notes** and **Activity log**.
+- Shared machinery uses explicit links: activity logs and Curator media carry
+  `export_/import_shipment_id` + `export_/import_container_id`; HS codes link through two pivots; notes are
+  polymorphic. `App\Services\ActivityLogger` and `App\Services\ShipmentTimeline` serve both processes.
+- `status` / `completed_at` are managed manually for now; reaching the last milestone completes the shipment
+  automatically.
 
 ## Testing and code style
 
@@ -177,6 +194,7 @@ php artisan test     # feature tests covering the panel, the seeders and the por
   `AppServiceProvider` installs a v7-shaped generator built from `random_bytes` instead.
 - **npm dev dependencies:** if your shell exports `NODE_ENV=production`, `npm install` skips dev
   dependencies and `npm run build` fails with `vite: not found`. Use `npm install --include=dev`.
+- **Curator token:** the media picker needs `CURATOR_GLIDE_TOKEN`; run `php artisan curator:token` once.
 - **Branding:** `style.md` holds the tone (`#499bff`) and font (Roboto) — defined for the portal in
   `resources/css/app.css` and for the admin panel in `AdminPanelProvider`. The mark lives at
   `assets/logo.png` and is published to `public/images/logo.png` for web serving.

@@ -32,13 +32,14 @@ class ActivityLogsTable
                 TextColumn::make('event')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('billOfLading.reference_number')
-                    ->label('Bill of lading')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('container.container_number')
+                TextColumn::make('shipment_reference')
+                    ->label('Shipment')
+                    ->state(fn (ActivityLog $record): ?string => $record->linkedShipment()?->reference_number)
+                    ->placeholder('—'),
+                TextColumn::make('container_number')
                     ->label('Container')
-                    ->searchable()
+                    ->state(fn (ActivityLog $record): ?string => $record->linkedContainer()?->container_number)
+                    ->placeholder('—')
                     ->toggleable(),
                 TextColumn::make('actor.name')
                     ->label('Actor')

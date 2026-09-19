@@ -9,17 +9,19 @@
  *   /login <-> / redirect loop: the guest middleware sends signed-in users to
  *   "/", so "/" must never send them back to /login.
  * - Serves the passwordless login flow (email form, OTP send, signed verify).
- * - Serves the authenticated portal: dashboard, bill of lading and container
- *   detail pages (Livewire full-page components).
+ * - Serves the authenticated portal: dashboard plus one detail page per
+ *   process for shipments and containers (Livewire full-page components).
  * How to use: `php artisan route:list`.
  * How to extend: add portal pages as Livewire components and register here.
  */
 
 use App\Http\Controllers\Customer\LoginController;
 use App\Http\Controllers\Customer\LogoutController;
-use App\Livewire\Customer\BillOfLadingDetail;
-use App\Livewire\Customer\ContainerDetail;
 use App\Livewire\Customer\Dashboard;
+use App\Livewire\Customer\ExportContainerDetail;
+use App\Livewire\Customer\ExportShipmentDetail;
+use App\Livewire\Customer\ImportContainerDetail;
+use App\Livewire\Customer\ImportShipmentDetail;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +56,14 @@ Route::middleware('auth')->group(function (): void {
     Route::post('/logout', LogoutController::class)->name('customer.logout');
 
     Route::get('/portal', Dashboard::class)->name('customer.dashboard');
-    Route::get('/portal/bill-of-ladings/{billOfLading}', BillOfLadingDetail::class)->name('customer.bill-of-ladings.show');
-    Route::get('/portal/containers/{container}', ContainerDetail::class)->name('customer.containers.show');
+
+    Route::get('/portal/export-shipments/{exportShipment}', ExportShipmentDetail::class)
+        ->name('customer.export-shipments.show');
+    Route::get('/portal/import-shipments/{importShipment}', ImportShipmentDetail::class)
+        ->name('customer.import-shipments.show');
+
+    Route::get('/portal/export-containers/{exportContainer}', ExportContainerDetail::class)
+        ->name('customer.export-containers.show');
+    Route::get('/portal/import-containers/{importContainer}', ImportContainerDetail::class)
+        ->name('customer.import-containers.show');
 });

@@ -14,13 +14,15 @@
 namespace Tests\Feature\Admin;
 
 use App\Filament\Resources\ActivityLogs\Pages\ListActivityLogs;
-use App\Filament\Resources\BillOfLadings\Pages\EditBillOfLading;
-use App\Filament\Resources\BillOfLadings\Pages\ListBillOfLadings;
-use App\Filament\Resources\Containers\Pages\ListContainers;
+use App\Filament\Resources\ExportContainers\Pages\ListExportContainers;
+use App\Filament\Resources\ExportShipments\Pages\EditExportShipment;
+use App\Filament\Resources\ExportShipments\Pages\ListExportShipments;
+use App\Filament\Resources\ImportShipments\Pages\ListImportShipments;
 use App\Models\ActivityLog;
-use App\Models\BillOfLading;
 use App\Models\Company;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
+use App\Models\ImportShipment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -44,41 +46,56 @@ class OperatorRowScopeTest extends TestCase
         $this->admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
     }
 
-    public function test_operator_only_sees_assigned_companies_shipments(): void
+    public function test_operator_only_sees_assigned_companies_export_shipments(): void
     {
         $this->actingAs($this->operator);
 
-        $visible = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->get();
-        $hidden = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->get();
+        $visible = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->get();
+        $hidden = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->get();
 
         $this->assertNotEmpty($visible);
         $this->assertNotEmpty($hidden);
 
-        Livewire::test(ListBillOfLadings::class)
+        Livewire::test(ListExportShipments::class)
             ->assertCanSeeTableRecords($visible)
             ->assertCanNotSeeTableRecords($hidden);
+    }
+
+    public function test_operator_sees_no_import_shipments_when_none_are_assigned(): void
+    {
+        $this->actingAs($this->operator);
+
+        // The seeded imports belong to SIN and JRD; the operator only covers
+        // NUS and SNI.
+        $this->assertNotEmpty(ImportShipment::query()->get());
+
+        Livewire::test(ListImportShipments::class)
+            ->assertCanNotSeeTableRecords(ImportShipment::query()->get());
     }
 
     public function test_admin_sees_every_shipment(): void
     {
         $this->actingAs($this->admin);
 
-        Livewire::test(ListBillOfLadings::class)
-            ->assertCanSeeTableRecords(BillOfLading::query()->get());
+        Livewire::test(ListExportShipments::class)
+            ->assertCanSeeTableRecords(ExportShipment::query()->get());
+
+        Livewire::test(ListImportShipments::class)
+            ->assertCanSeeTableRecords(ImportShipment::query()->get());
     }
 
     public function test_operator_cannot_open_an_unassigned_shipment(): void
     {
-        $hidden = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->firstOrFail();
+        $hidden = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->firstOrFail();
 
         $this->actingAs($this->operator)
-            ->get(EditBillOfLading::getUrl(['record' => $hidden]))
+            ->get(EditExportShipment::getUrl(['record' => $hidden]))
             ->assertNotFound();
 
-        $visible = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->firstOrFail();
+        $visible = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->firstOrFail();
 
         $this->actingAs($this->operator)
-            ->get(EditBillOfLading::getUrl(['record' => $visible]))
+            ->get(EditExportShipment::getUrl(['record' => $visible]))
             ->assertOk();
     }
 
@@ -86,13 +103,13 @@ class OperatorRowScopeTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        $visible = Container::query()->whereHas('billOfLading.company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->get();
-        $hidden = Container::query()->whereHas('billOfLading.company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->get();
+        $visible = ExportContainer::query()->whereHas('shipment.company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->get();
+        $hidden = ExportContainer::query()->whereHas('shipment.company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->get();
 
         $this->assertNotEmpty($visible);
         $this->assertNotEmpty($hidden);
 
-        Livewire::test(ListContainers::class)
+        Livewire::test(ListExportContainers::class)
             ->assertCanSeeTableRecords($visible)
             ->assertCanNotSeeTableRecords($hidden);
     }
@@ -101,20 +118,20 @@ class OperatorRowScopeTest extends TestCase
     {
         $this->actingAs($this->operator);
 
-        $inScope = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->firstOrFail();
-        $outOfScope = BillOfLading::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->firstOrFail();
+        $inScope = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->firstOrFail();
+        $outOfScope = ExportShipment::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->firstOrFail();
 
         $visibleLog = ActivityLog::query()->create([
-            'bill_of_lading_id' => $inScope->getKey(),
+            'export_shipment_id' => $inScope->getKey(),
             'event' => 'milestone_changed',
-            'entity_type' => BillOfLading::class,
+            'entity_type' => ExportShipment::class,
             'entity_id' => $inScope->getKey(),
             'occurred_at' => now(),
         ]);
         $hiddenLog = ActivityLog::query()->create([
-            'bill_of_lading_id' => $outOfScope->getKey(),
+            'export_shipment_id' => $outOfScope->getKey(),
             'event' => 'milestone_changed',
-            'entity_type' => BillOfLading::class,
+            'entity_type' => ExportShipment::class,
             'entity_id' => $outOfScope->getKey(),
             'occurred_at' => now(),
         ]);

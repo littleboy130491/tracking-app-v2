@@ -84,3 +84,51 @@ Blocked: None
 - Chose activity_logs reuse (Option A) over a new events table: no schema change, auditable.
 - ETA renders as the only estimate entry; everything else is actual.
 - Dashboard latest columns are shipment-level (voyage + B/L-wide logs), not per-container max.
+
+---
+
+# Progress - Split Export/Import into separate shipment & container models
+
+Goal: Give Export and Import their own shipment AND container models, tables, menus and permissions; drop five B/L fields.
+Started: 2026-09-19 08:06
+Design: plans/split-export-import.md (v2)
+
+## Plan Checklist
+
+- [x] Step 1: Design freeze - DONE - 08:06 - plans/split-export-import.md v2 (approved)
+- [x] Step 2: Schema & models - DONE - 08:24 - 4 fresh tables, 4 models, 2 traits, 3 enums; migrate:fresh clean; temp test passed (14 assertions)
+- [x] Step 3: Shared services - DONE - 08:30 - ActivityLogger + ShipmentTimeline reworked; ActivityLog/Attachment/HsCode/Company updated; milestone changes audited; temp test passed (6 tests / 29 assertions)
+- [x] Step 4: Admin - DONE - 08:40 - 4 resources (forms/tables/pages/policies), shared builders, menus Export/Import/Master data, company RMs, audit viewer, NotesPanel; old resources deleted; temp test passed (5 tests / 34 assertions)
+- [x] Step 5: Customer portal - DONE - 08:50 - tabs + 4 detail pages + routes; temp test passed (5 tests / 25 assertions)
+- [x] Step 6: Switch-over - DONE - 08:57 - old models/enum/seeder deleted; seeders + tests rewritten; migrate:fresh --seed + full suite green (90 tests / 432 assertions)
+- [x] Step 7: Docs & UAT - DONE - 09:05 - README, ERD, UAT, migration_plan banner, IMPORT.md five fields removed
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Final Summary (2026-09-19 09:05)
+
+- Export and Import are separate shipment + container models, tables, forms, menus, policies and portal pages.
+- Five fields removed everywhere (package_count, package_unit, terminal_name, loading_date, loading_destination).
+- `migrate:fresh --seed` rebuilds the demo data (3 export + 2 import shipments); full test suite green.
+- Manual verification: docs/UAT.md section 1.
+- Post-plan tweak (09:08): Filament navigation regrouped to **Bill of Ladings** (Export, Import) and **Containers** (Export, Import); regression test added.
+- Post-plan tweak (09:11): group order fixed in AdminPanelProvider — Bill of Ladings first, then Containers, CRM, Master data, Monitoring; rendered-sidebar order test added.
+- Post-plan tweak (09:14): portal Export/Import tabs replaced by a **Type** dropdown in the filter row (like Company/Status).
+- Post-plan tweak (09:17): removed the "Here are the shipments…" subtitle from the portal dashboard.
+
+## Notes
+
+- v2: containers split too (ExportContainer/ImportContainer); fresh-app approach — migrations/seeders rewritten, no data migration, `migrate:fresh --seed` is the workflow.
+- Design defaults (unless vetoed): Export/Import menus with Shipments + Containers; explicit FK columns (export_/import_shipment_id, export_/import_container_id) on logs + curator; two milestone enums; portal tabs; HS codes move to a Master data group.
+- Five fields (package_count, package_unit, terminal_name, loading_date, loading_destination) are not carried into the new tables; IMPORT.md gets updated in Step 7.
+- BillOfLadingStatus renamed to ShipmentStatus; audit events become shipment_updated / container_updated.
+- Test suite is red from Step 2 until Step 6 rewrites legacy tests; each phase has targeted checks.
+- Step 2 done: dev DB rebuilt with `php artisan migrate:fresh` (empty, new schema).
+- Step 3 done: ActivityLogger/ShipmentTimeline + ActivityLog/Attachment/HsCode/Company support all four models; moveToMilestone audits.
+- Step 4 done: old admin resources/policies deleted early (kept the panel clean); menus are Export / Import / Master data / CRM / Monitoring.
+- Remaining legacy: old portal Livewire components + views + routes (Step 5), old BillOfLading/Container models, BillOfLadingStatus enum, DemoShipmentSeeder, legacy tests (Step 6).
+- Permissions: PermissionSeeder auto-discovers the four new resources; the dev DB is empty so `migrate:fresh --seed` in Step 6 regenerates everything.

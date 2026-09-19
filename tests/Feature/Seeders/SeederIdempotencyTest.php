@@ -13,11 +13,13 @@
 
 namespace Tests\Feature\Seeders;
 
-use App\Enums\BillOfLadingStatus;
+use App\Enums\ShipmentStatus;
 use App\Models\ActivityLog;
-use App\Models\BillOfLading;
 use App\Models\Company;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
+use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -43,7 +45,7 @@ class SeederIdempotencyTest extends TestCase
 
         $completed = $this->completedShipmentTimestamps();
 
-        $this->assertCount(2, $completed, 'The seeder should produce two completed shipments.');
+        $this->assertCount(2, $completed, 'The seeders should produce two completed shipments.');
 
         $this->seed();
 
@@ -55,13 +57,15 @@ class SeederIdempotencyTest extends TestCase
      */
     private function completedShipmentTimestamps(): array
     {
-        return BillOfLading::query()
-            ->where('status', BillOfLadingStatus::Completed)
-            ->get()
-            ->mapWithKeys(fn (BillOfLading $billOfLading): array => [
-                $billOfLading->reference_number => $billOfLading->completed_at?->toDateTimeString(),
-            ])
-            ->all();
+        $timestamps = [];
+
+        foreach ([ExportShipment::class, ImportShipment::class] as $model) {
+            foreach ($model::query()->where('status', ShipmentStatus::Completed)->get() as $shipment) {
+                $timestamps[$shipment->reference_number] = $shipment->completed_at?->toDateTimeString();
+            }
+        }
+
+        return $timestamps;
     }
 
     /**
@@ -72,10 +76,13 @@ class SeederIdempotencyTest extends TestCase
         return [
             'companies' => Company::query()->count(),
             'users' => User::query()->count(),
-            'shipments' => BillOfLading::query()->count(),
-            'containers' => Container::query()->count(),
+            'export_shipments' => ExportShipment::query()->count(),
+            'import_shipments' => ImportShipment::query()->count(),
+            'export_containers' => ExportContainer::query()->count(),
+            'import_containers' => ImportContainer::query()->count(),
             'activity_logs' => ActivityLog::query()->count(),
-            'completed_shipments' => BillOfLading::query()->where('status', BillOfLadingStatus::Completed)->count(),
+            'completed_shipments' => ExportShipment::query()->where('status', ShipmentStatus::Completed)->count()
+                + ImportShipment::query()->where('status', ShipmentStatus::Completed)->count(),
         ];
     }
 }

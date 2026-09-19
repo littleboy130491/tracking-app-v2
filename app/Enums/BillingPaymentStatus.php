@@ -5,7 +5,7 @@
  * Responsibility: Payment progress shared by billing, THC and behandle flows.
  * What it does:
  * - Tracks not_paid / processing / paid.
- * How to use: BillOfLading casts the three payment status columns to this enum.
+ * How to use: ImportShipment casts the three payment status columns to this enum.
  * How to extend: Add "refunded" or "failed" only with a matching transition rule.
  */
 

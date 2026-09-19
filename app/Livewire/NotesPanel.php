@@ -14,11 +14,15 @@
 
 namespace App\Livewire;
 
-use App\Filament\Resources\BillOfLadings\BillOfLadingResource;
-use App\Filament\Resources\Containers\ContainerResource;
-use App\Models\BillOfLading;
+use App\Filament\Resources\ExportContainers\ExportContainerResource;
+use App\Filament\Resources\ExportShipments\ExportShipmentResource;
+use App\Filament\Resources\ImportContainers\ImportContainerResource;
+use App\Filament\Resources\ImportShipments\ImportShipmentResource;
 use App\Models\Company;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
+use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use App\Models\Note;
 use App\Models\User;
 use App\Services\ActivityLogger;
@@ -32,8 +36,10 @@ class NotesPanel extends Component
 {
     /** Targets notes may attach to; also the whitelist for mount(). */
     public const TYPES = [
-        BillOfLading::class,
-        Container::class,
+        ExportShipment::class,
+        ImportShipment::class,
+        ExportContainer::class,
+        ImportContainer::class,
         Company::class,
         User::class,
     ];
@@ -143,8 +149,10 @@ class NotesPanel extends Component
     private function noteable(): Model
     {
         return match ($this->noteableType) {
-            BillOfLading::class => BillOfLadingResource::getEloquentQuery()->findOrFail($this->noteableId),
-            Container::class => ContainerResource::getEloquentQuery()->findOrFail($this->noteableId),
+            ExportShipment::class => ExportShipmentResource::getEloquentQuery()->findOrFail($this->noteableId),
+            ImportShipment::class => ImportShipmentResource::getEloquentQuery()->findOrFail($this->noteableId),
+            ExportContainer::class => ExportContainerResource::getEloquentQuery()->findOrFail($this->noteableId),
+            ImportContainer::class => ImportContainerResource::getEloquentQuery()->findOrFail($this->noteableId),
             default => $this->noteableType::query()->findOrFail($this->noteableId),
         };
     }

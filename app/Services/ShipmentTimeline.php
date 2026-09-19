@@ -15,47 +15,51 @@
 namespace App\Services;
 
 use App\Models\ActivityLog;
-use App\Models\BillOfLading;
-use App\Models\Container;
+use App\Models\ExportContainer;
+use App\Models\ExportShipment;
+use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 
 class ShipmentTimeline
 {
     /**
      * One container's full journey, oldest first. Shared voyage dates from the
-     * parent B/L are included so a container with no logs yet still shows
+     * parent shipment are included so a container with no logs yet still shows
      * its sailing context.
      *
      * @return list<ShipmentTimelineEntry>
      */
-    public function forContainer(Container $container): array
+    public function forContainer(ExportContainer|ImportContainer $container): array
     {
-        $container->loadMissing('billOfLading');
+        $container->loadMissing('shipment');
 
-        $billOfLading = $container->billOfLading;
+        $shipment = $container->shipment;
         $candidates = [];
 
-        $this->pushContainerDates($candidates, $container, $billOfLading);
+        $stuffingDestination = $shipment instanceof ExportShipment ? $shipment->stuffing_destination : null;
+        $this->pushContainerDates($candidates, $container, $stuffingDestination);
 
-        if ($billOfLading) {
-            $this->pushVoyageDates($candidates, $billOfLading);
-            $this->pushVisibleLogs($candidates, $billOfLading, $container->getKey());
+        if ($shipment) {
+            $this->pushVoyageDates($candidates, $shipment);
+            $this->pushVisibleLogs($candidates, $shipment, $container);
         }
 
         return $this->toEntries($candidates);
     }
 
     /**
-     * The shipment-level journey: voyage dates plus B/L-wide visible logs.
+     * The shipment-level journey: voyage dates plus shipment-wide visible logs.
      *
      * @return list<ShipmentTimelineEntry>
      */
-    public function forBillOfLading(BillOfLading $billOfLading): array
+    public function forShipment(ExportShipment|ImportShipment $shipment): array
     {
         $candidates = [];
 
-        $this->pushVoyageDates($candidates, $billOfLading);
-        $this->pushVisibleLogs($candidates, $billOfLading, null);
+        $this->pushVoyageDates($candidates, $shipment);
+        $this->pushVisibleLogs($candidates, $shipment, null);
 
         return $this->toEntries($candidates);
     }
@@ -63,7 +67,7 @@ class ShipmentTimeline
     /**
      * The container's current position in its journey, if anything is known.
      */
-    public function latestForContainer(Container $container): ?ShipmentTimelineEntry
+    public function latestForContainer(ExportContainer|ImportContainer $container): ?ShipmentTimelineEntry
     {
         $entries = $this->forContainer($container);
 
@@ -74,77 +78,91 @@ class ShipmentTimeline
      * The shipment's current position, for list rows like the reference's
      * Latest Place / Latest Event columns.
      */
-    public function latestForBillOfLading(BillOfLading $billOfLading): ?ShipmentTimelineEntry
+    public function latestForShipment(ExportShipment|ImportShipment $shipment): ?ShipmentTimelineEntry
     {
-        $entries = $this->forBillOfLading($billOfLading);
+        $entries = $this->forShipment($shipment);
 
         return $entries === [] ? null : end($entries);
     }
 
     /**
-     * Container operational dates. Each maps to one reference-style event row.
-     * Stuffing destination lives on the B/L header, so it is read from there
-     * and passed in.
+     * Container operational dates, per process. Each maps to one
+     * reference-style event row; stuffing destination lives on the export
+     * shipment header and is passed in.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
-    private function pushContainerDates(array &$candidates, Container $container, ?BillOfLading $billOfLading = null): void
-    {
-        $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $billOfLading?->stuffing_destination, 'container:stuffing_started_at');
-        $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $billOfLading?->stuffing_destination, 'container:stuffing_finished_at');
+    private function pushContainerDates(
+        array &$candidates,
+        ExportContainer|ImportContainer $container,
+        ?string $stuffingDestination,
+    ): void {
+        if ($container instanceof ExportContainer) {
+            $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $stuffingDestination, 'container:stuffing_started_at');
+            $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $stuffingDestination, 'container:stuffing_finished_at');
+            $this->dated($candidates, $container->gate_in_cy_at, 'Gate in to terminal', $container->gate_in_port_name, 'container:gate_in_cy_at');
+            $this->dated($candidates, $container->final_checked_at, 'Final checking completed', null, 'container:final_checked_at');
+
+            return;
+        }
+
+        $this->dated($candidates, $container->gate_out_cy_at, 'Gate out from terminal for delivery', null, 'container:gate_out_cy_at');
         $this->dated($candidates, $container->inspected_at, 'Container inspected', null, 'container:inspected_at');
         $this->dated($candidates, $container->factory_arrived_at, 'Arrived at factory', null, 'container:factory_arrived_at');
-        $this->dated($candidates, $container->gate_in_cy_at, 'Gate in to terminal', $container->gate_in_port_name, 'container:gate_in_cy_at');
-        $this->dated($candidates, $container->gate_out_cy_at, 'Gate out from terminal for delivery', null, 'container:gate_out_cy_at');
-        $this->dated($candidates, $container->final_checked_at, 'Final checking completed', null, 'container:final_checked_at');
         $this->dated($candidates, $container->empty_returned_at, 'Empty container returned', $container->return_depot_name, 'container:empty_returned_at');
     }
 
     /**
-     * Shared sailing dates from the B/L header: actuals plus the ETA estimate.
+     * Shared sailing dates from the shipment header: actuals plus the ETA
+     * estimate.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
-    private function pushVoyageDates(array &$candidates, BillOfLading $billOfLading): void
+    private function pushVoyageDates(array &$candidates, ExportShipment|ImportShipment $shipment): void
     {
-        $vessel = trim(implode(' ', array_filter([$billOfLading->vessel_name, $billOfLading->voyage_number])));
+        $vessel = trim(implode(' ', array_filter([$shipment->vessel_name, $shipment->voyage_number])));
 
-        $this->dated($candidates, $billOfLading->departure_date, 'Vessel departure from port of loading', $billOfLading->port_of_loading, 'bill_of_lading:departure_date', $vessel ?: null);
-        $this->dated($candidates, $billOfLading->actual_arrival_at, 'Vessel arrival at port of discharge', $billOfLading->port_of_discharge, 'bill_of_lading:actual_arrival_at', $vessel ?: null);
+        $this->dated($candidates, $shipment->departure_date, 'Vessel departure from port of loading', $shipment->port_of_loading, 'shipment:departure_date', $vessel ?: null);
+        $this->dated($candidates, $shipment->actual_arrival_at, 'Vessel arrival at port of discharge', $shipment->port_of_discharge, 'shipment:actual_arrival_at', $vessel ?: null);
 
-        if ($billOfLading->eta_at && ! $billOfLading->actual_arrival_at) {
+        if ($shipment->eta_at && ! $shipment->actual_arrival_at) {
             $candidates[] = [
-                'at' => $billOfLading->eta_at,
+                'at' => $shipment->eta_at,
                 'title' => 'Vessel arrival at port of discharge (estimate)',
-                'location' => $billOfLading->port_of_discharge,
+                'location' => $shipment->port_of_discharge,
                 'detail' => $vessel ?: null,
                 'actual' => false,
-                'source' => 'bill_of_lading:eta_at',
+                'source' => 'shipment:eta_at',
             ];
         }
     }
 
     /**
-     * Customer-visible log rows. For a container this means B/L-wide entries
-     * (milestones, PIB confirmation) plus that container's own entries; other
-     * containers' entries stay out. For a B/L only B/L-wide entries qualify.
+     * Customer-visible log rows. For a container this means shipment-wide
+     * entries (milestones, PIB confirmation) plus that container's own
+     * entries; other containers' entries stay out. For a shipment only
+     * shipment-wide entries qualify.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
-    private function pushVisibleLogs(array &$candidates, BillOfLading $billOfLading, ?int $containerId): void
-    {
+    private function pushVisibleLogs(
+        array &$candidates,
+        ExportShipment|ImportShipment $shipment,
+        ExportContainer|ImportContainer|null $container,
+    ): void {
         $logs = ActivityLog::query()
-            ->where('bill_of_lading_id', $billOfLading->getKey())
-            ->where('is_customer_visible', true)
-            ->when(
-                $containerId === null,
-                fn ($query) => $query->whereNull('container_id'),
-                fn ($query) => $query->where(fn ($inner) => $inner->whereNull('container_id')->orWhere('container_id', $containerId)),
-            )
-            ->orderBy('occurred_at')
-            ->get();
+            ->where($shipment->activityLogShipmentKey(), $shipment->getKey())
+            ->where('is_customer_visible', true);
 
-        foreach ($logs as $log) {
+        if ($container === null) {
+            $this->whereNoContainerLink($logs);
+        } else {
+            $logs->where(fn (Builder $inner) => $inner
+                ->where(fn (Builder $none) => $this->whereNoContainerLink($none))
+                ->orWhere($container->activityLogContainerKey(), $container->getKey()));
+        }
+
+        foreach ($logs->orderBy('occurred_at')->get() as $log) {
             $candidates[] = [
                 'at' => $log->occurred_at,
                 'title' => $log->customer_summary ?: $log->event,
@@ -153,6 +171,16 @@ class ShipmentTimeline
                 'actual' => true,
                 'source' => 'activity_log:'.$log->event,
             ];
+        }
+    }
+
+    /**
+     * Only shipment-wide entries: both container links are empty.
+     */
+    private function whereNoContainerLink(Builder $query): void
+    {
+        foreach (ActivityLog::CONTAINER_KEYS as $column) {
+            $query->whereNull($column);
         }
     }
 
