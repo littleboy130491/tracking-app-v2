@@ -116,7 +116,6 @@ erDiagram
 
     EXPORT_SHIPMENTS {
         int id PK
-        string reference_number UK
         string bl_number
         string shipment_mode "FCL | LCL | Air"
         int company_id FK
@@ -150,7 +149,6 @@ erDiagram
 
     IMPORT_SHIPMENTS {
         int id PK
-        string reference_number UK
         string bl_number
         string shipment_mode "FCL | LCL | Air"
         int company_id FK
@@ -199,9 +197,7 @@ erDiagram
         string tracking_position "latest position text"
         string tracking_position_url
         string stuffing_status
-        timestamp stuffing_started_at
-        timestamp stuffing_finished_at
-        string gate_in_port_name
+        string port_of_loading "defaults from the shipment, overridable"
         timestamp gate_in_cy_at
         decimal vgm_value "always kg"
         bool final_checked

@@ -76,8 +76,8 @@ class ActivityLogResource extends Resource
     {
         $query = parent::getEloquentQuery()
             ->with([
-                'exportShipment:id,reference_number',
-                'importShipment:id,reference_number',
+                'exportShipment:id,bl_number',
+                'importShipment:id,bl_number',
                 'exportContainer:id,container_number',
                 'importContainer:id,container_number',
             ]);

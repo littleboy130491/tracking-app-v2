@@ -19,8 +19,8 @@ locked until that step is reached, with a click-to-jump stepper and advance/regr
 - **Admin dashboard** (`/admin`) — menus are **Bill of Ladings** (Export, Import) and **Containers**
   (Export, Import), plus **CRM** (users, companies), **Master data** (HS codes) and **Monitoring**
   (activity log). Containers are edited inline on the shipment form and also standalone; HS codes are shared
-  master data the shipment form multi-selects and can create inline. The activity log is **read-only** and
-  records every change, who made it and when.
+  master data the import shipment form multi-selects and can create inline. The activity log is **read-only**
+  and records every change, who made it and when.
 - **Customer portal** (`/portal`) — passwordless sign-in with an emailed one-time code, greeting, a **Type**
   dropdown (Export / Import) beside the filters (company / number / status / year / month), the shipments of
   the companies the user manages, per-process detail pages with containers opening in a new tab, and
@@ -140,13 +140,13 @@ Five companies — **PT Nusantara Ekspor** (`NUS`), **PT Sinar Impor** (`SIN`),
 **CV Borneo Jaya Mandiri** (`BJM`), **PT Sulawesi Nickel Industri** (`SNI`) and
 **PT Java Retail Distribution** (`JRD`).
 
-| Reference | Menu | Company | State |
+| B/L number | Menu | Company | State |
 | --- | --- | --- | --- |
-| `REF-EXP-0001` | Bill of Ladings → Export | NUS | In progress, 2 containers |
-| `REF-EXP-0002` | Bill of Ladings → Export | BJM | In progress, 1 container |
-| `REF-EXP-0003` | Bill of Ladings → Export | SNI | **Completed** |
-| `REF-IMP-0001` | Bill of Ladings → Import | SIN | In progress. `billing_response = SPJM`, on the behandle branch |
-| `REF-IMP-0002` | Bill of Ladings → Import | JRD | **Completed** — it ran the whole SPJM → SPPB path |
+| `BL-EXP-0001` | Bill of Ladings → Export | NUS | In progress, 2 containers |
+| `BL-EXP-0002` | Bill of Ladings → Export | BJM | In progress, 1 container |
+| `BL-EXP-0003` | Bill of Ladings → Export | SNI | **Completed** |
+| `BL-IMP-0001` | Bill of Ladings → Import | SIN | In progress. `billing_response = SPJM`, on the behandle branch |
+| `BL-IMP-0002` | Bill of Ladings → Import | JRD | **Completed** — it ran the whole SPJM → SPPB path |
 
 The two completed shipments are seeded with their progress fields filled, so there are finished export and
 import examples to open in the admin panel and the portal. The seeders

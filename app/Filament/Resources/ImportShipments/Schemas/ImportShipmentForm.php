@@ -166,7 +166,6 @@ class ImportShipmentForm
                         ShipmentFields::notesTab(),
                         ShipmentFields::activityLogTab(),
                     ]),
-                ShipmentFields::hiddenReferenceNumber(),
                 ShipmentFields::hiddenCurrentMilestone($enum),
             ]);
     }

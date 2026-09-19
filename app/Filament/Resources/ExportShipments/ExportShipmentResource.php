@@ -42,7 +42,7 @@ class ExportShipmentResource extends Resource
 
     protected static ?string $navigationLabel = 'Export';
 
-    protected static ?string $recordTitleAttribute = 'reference_number';
+    protected static ?string $recordTitleAttribute = 'bl_number';
 
     public static function form(Schema $schema): Schema
     {

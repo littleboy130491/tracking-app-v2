@@ -21,6 +21,7 @@ use App\Models\ExportContainer;
 use App\Models\ExportShipment;
 use App\Models\User;
 use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -37,7 +38,7 @@ class ExportContainerForm
                     ->schema([
                         Select::make('export_shipment_id')
                             ->label('Export shipment')
-                            ->relationship('shipment', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                            ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -49,7 +50,9 @@ class ExportContainerForm
                     ->columns(3)
                     ->schema([
                         ...ContainerFields::driver(),
-                        ...ContainerFields::exportTracking(),
+                        Grid::make(2)
+                            ->columnSpanFull()
+                            ->schema(ContainerFields::exportTracking()),
                     ]),
                 Section::make('Photos')
                     ->description('Named photo slots for this container.')
@@ -69,9 +72,6 @@ class ExportContainerForm
                 Section::make('Final check')
                     ->columns(3)
                     ->schema(ContainerFields::exportFinalCheck()),
-                Section::make('Status')
-                    ->columns(3)
-                    ->schema(ContainerFields::status()),
                 ContainerFields::notesSection(),
             ]);
     }

@@ -34,7 +34,7 @@ class ActivityLogsTable
                     ->searchable(),
                 TextColumn::make('shipment_reference')
                     ->label('Shipment')
-                    ->state(fn (ActivityLog $record): ?string => $record->linkedShipment()?->reference_number)
+                    ->state(fn (ActivityLog $record): ?string => $record->linkedShipment()?->bl_number)
                     ->placeholder('—'),
                 TextColumn::make('container_number')
                     ->label('Container')

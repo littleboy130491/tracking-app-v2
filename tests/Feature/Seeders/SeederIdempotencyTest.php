@@ -61,7 +61,7 @@ class SeederIdempotencyTest extends TestCase
 
         foreach ([ExportShipment::class, ImportShipment::class] as $model) {
             foreach ($model::query()->where('status', ShipmentStatus::Completed)->get() as $shipment) {
-                $timestamps[$shipment->reference_number] = $shipment->completed_at?->toDateTimeString();
+                $timestamps[$shipment->bl_number] = $shipment->completed_at?->toDateTimeString();
             }
         }
 

@@ -21,7 +21,6 @@ return new class extends Migration
     {
         Schema::create('export_shipments', function (Blueprint $table) {
             $table->id();
-            $table->string('reference_number', 100)->unique();
             $table->string('bl_number', 100)->nullable()->index();
             $table->string('shipment_mode', 20)->nullable();
             $table->foreignId('company_id')->constrained()->restrictOnDelete();

@@ -47,7 +47,7 @@ class ActivityLogForm
                     ->schema([
                         TextInput::make('shipment')
                             ->label('Shipment')
-                            ->state(fn (?ActivityLog $record): ?string => $record?->linkedShipment()?->reference_number)
+                            ->state(fn (?ActivityLog $record): ?string => $record?->linkedShipment()?->bl_number)
                             ->disabled(),
                         TextInput::make('container')
                             ->label('Container')

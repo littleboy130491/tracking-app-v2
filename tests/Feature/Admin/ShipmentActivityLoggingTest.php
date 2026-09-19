@@ -54,7 +54,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_locked_fields_name_the_milestone_that_unlocks_them(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->assertSee('Locked until Step 2: Checking booking order')
@@ -62,7 +62,7 @@ class ShipmentActivityLoggingTest extends TestCase
             ->assertDontSee('Current step:')
             ->assertDontSee('Available since');
 
-        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
         $import->update(['current_milestone' => ImportMilestone::DraftPib]);
 
         Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
@@ -72,7 +72,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_shipment_save_records_only_changed_fields_and_actor(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         // AJU/B/L numbers are gated at "Checking booking order"; advance so the
         // form actually dehydrates them and they can be audited.
         $export->update(['current_milestone' => ExportMilestone::CheckingBookingOrder]);
@@ -109,7 +109,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_unchanged_shipment_save_creates_no_activity(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $before = ActivityLog::query()->count();
 
         Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
@@ -121,7 +121,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_shipment_save_records_hs_code_assignments(): void
     {
-        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
         $import->update(['current_milestone' => ImportMilestone::CheckingDocument]);
 
         $newHsCode = HsCode::query()
@@ -152,7 +152,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_shipment_diff_records_nested_container_create_update_and_remove(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $containers = $export->containers()->orderBy('id')->get();
         $this->assertCount(2, $containers);
 
@@ -215,7 +215,7 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_standalone_container_create_records_initial_values(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         Livewire::test(CreateExportContainer::class)
             ->fillForm([
@@ -224,7 +224,6 @@ class ShipmentActivityLoggingTest extends TestCase
                 'size' => '40',
                 'type' => 'HC',
                 'stuffing_status' => 'not_started',
-                'status' => 'pending',
             ])
             ->call('create')
             ->assertHasNoFormErrors();

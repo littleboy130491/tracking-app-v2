@@ -32,7 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'reference_number', 'bl_number', 'shipment_mode', 'company_id', 'company_name_snapshot',
+    'bl_number', 'shipment_mode', 'company_id', 'company_name_snapshot',
     'document_received_date', 'document_received_by',
     'aju_number', 'do_number', 'shipping_line', 'vessel_name',
     'voyage_number', 'port_of_loading', 'port_of_discharge',

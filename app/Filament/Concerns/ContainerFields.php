@@ -100,7 +100,8 @@ class ContainerFields
     }
 
     /**
-     * Container lifecycle status.
+     * Container lifecycle status and completion timestamp. Used by the import
+     * container surfaces; the export container forms omit these fields.
      *
      * @return list<Field>
      */
@@ -116,7 +117,8 @@ class ContainerFields
     }
 
     /**
-     * Export: driver position tracking while on the way to the factory.
+     * Export: driver position tracking while on the way to the factory. The
+     * callers place both fields side by side in a two-column grid.
      *
      * @return list<Field>
      */
@@ -129,8 +131,7 @@ class ContainerFields
             TextInput::make('tracking_position_url')
                 ->label('Tracking position (url)')
                 ->url()
-                ->maxLength(500)
-                ->columnSpanFull(),
+                ->maxLength(500),
         ];
     }
 
@@ -146,24 +147,21 @@ class ContainerFields
                 ->options(StuffingStatus::options())
                 ->default(StuffingStatus::NotStarted->value)
                 ->required(),
-            DateTimePicker::make('stuffing_started_at'),
-            DateTimePicker::make('stuffing_finished_at'),
         ];
     }
 
     /**
-     * Export: gate-in at the terminal. EXPORT.md: the gate-in port starts as
-     * the shipment's port of loading, so the default comes from the caller
-     * (repeater reads the parent state, the standalone form queries the
-     * selected shipment).
+     * Export: the port of loading used at the gate-in step. EXPORT.md: it
+     * defaults to the shipment's port of loading and can be overridden. The
+     * default comes from the caller (the repeater reads the parent form state,
+     * the standalone form queries the selected shipment).
      *
      * @return list<Field>
      */
     public static function exportGateIn(Closure $portDefault): array
     {
         return [
-            TextInput::make('gate_in_port_name')
-                ->label('Gate in port')
+            TextInput::make('port_of_loading')
                 ->maxLength(255)
                 ->default($portDefault),
             DateTimePicker::make('gate_in_cy_at')

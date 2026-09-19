@@ -33,10 +33,6 @@ class ImportShipmentsTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference_number')
-                    ->label('Reference')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('bl_number')
                     ->label('B/L number')
                     ->searchable()

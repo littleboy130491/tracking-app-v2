@@ -47,7 +47,7 @@
 
 | Column | Goes to | Note |
 | :--- | :--- | :--- |
-| `reference_number` | Both | unique per table |
+| `reference_number` | **Removed** | dropped 2026-09-19 — the B/L number is the identifier |
 | `bl_number` | Both | |
 | `shipment_mode` | Both | FCL / LCL / Air |
 | `company_id` | Both | FK companies |
@@ -101,7 +101,7 @@
 
 **`export_containers`** — belongs to `export_shipments` (`export_shipment_id`, unique with `container_number`):
 
-`container_number`, `size`, `type`, `seal_number`, `driver_name`, `license_number`, `driver_license_number`, `tracking_position`, `tracking_position_url`, `stuffing_status`, `stuffing_started_at`, `stuffing_finished_at`, `gate_in_port_name`, `gate_in_cy_at`, `vgm_value`, `final_checked`, `final_checked_at`, `status`, `latest_event`, `latest_event_at`, `completed_at`, `created_by`, `updated_by`, timestamps, `deleted_at`.
+`container_number`, `size`, `type`, `seal_number`, `driver_name`, `license_number`, `driver_license_number`, `tracking_position`, `tracking_position_url`, `stuffing_status`, `port_of_loading`, `gate_in_cy_at`, `vgm_value`, `final_checked`, `final_checked_at`, `status`, `latest_event`, `latest_event_at`, `completed_at`, `created_by`, `updated_by`, timestamps, `deleted_at`.
 
 **`import_containers`** — belongs to `import_shipments` (`import_shipment_id`, unique with `container_number`):
 

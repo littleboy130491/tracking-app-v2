@@ -22,22 +22,23 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Menus**
 
 - [ ] Sidebar shows, top to bottom: **Bill of Ladings** (Export, Import), **Containers** (Export, Import), **CRM** (Companies, Users), **Master data** (HS codes), **Monitoring** (Activity logs).
-- [ ] Bill of Ladings → Export lists only `REF-EXP-0001/0002/0003`; Bill of Ladings → Import lists only `REF-IMP-0001/0002`. Containers → Export / Import list the matching containers.
+- [ ] Bill of Ladings → Export lists only `BL-EXP-0001/0002/0003`; Bill of Ladings → Import lists only `BL-IMP-0001/0002`. Containers → Export / Import list the matching containers.
 
 **Export shipment form**
 
 - [ ] Bill of Ladings → Export → New. Expected: only the **Customer** section (Customer, Document received date/by); no stepper, no tabs.
-- [ ] Open `REF-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Notes | Activity log**.
-- [ ] Shipping Details order: **AJU number, DO number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, B/L number, Goods description, HS codes** — then **Pick up depot, Stuffing date, Stuffing destination**, then the sailing dates. Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**.
+- [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**.
+- [ ] Shipping Details order: **B/L number, DO number, AJU number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description**. **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
+- [ ] **Status** tab (between Containers and Notes). Expected: **Status** dropdown (draft / in progress / completed / cancelled) + **Completed at**, both editable once Step 8 is reached; Save persists them and the Activity log records the change.
 - [ ] At Step 1 the fields show `Locked until Step 2: Checking booking order`. Click **Advance** → they become editable.
-- [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; stuffing fields at "Stuffing at factory / PEB & NPE"; **Gate in port** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** at "Final checking".
+- [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; **Stuffing status** at "Stuffing at factory / PEB & NPE"; **Port of loading** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** at "Final checking".
 
 **Import shipment form**
 
 - [ ] Bill of Ladings → Import → New works the same way (Customer only on create).
-- [ ] Open `REF-IMP-0001` → Edit. Expected: **Draft PIB** group (status/confirmed at/notes) unlocks at Step 3; billing issued at 5; THC at 6; **DO number** + **DO released at** at 7; billing payment at 8; response at 9; behandle at 11 (this shipment is SPJM, so the branch shows).
+- [ ] Open `BL-IMP-0001` → Edit. Expected: **Draft PIB** group (status/confirmed at/notes) unlocks at Step 3; billing issued at 5; THC at 6; **DO number** + **DO released at** at 7; billing payment at 8; response at 9; behandle at 11 (this shipment is SPJM, so the branch shows).
 - [ ] Advance the shipment to "Billing response received" and set **Response** = SPPB. Expected: the stepper drops the SPJM branch (Documents uploaded, Behandle payment, Container inspection, SPPB received) and shortens to 13 steps.
-- [ ] `REF-IMP-0002` (completed, SPPB) shows the same shortened sequence.
+- [ ] `BL-IMP-0002` (completed, SPPB) shows the same shortened sequence.
 - [ ] Containers tab: import container `CMAU7654321` shows identity/photos at Step 2, driver fields at "On the way to consignee", gate-out + weights at "Gate out CY", inspection fields at "Container inspection", factory/return fields at "Arrived at factory".
 
 **Standalone containers**
@@ -48,14 +49,14 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Portal**
 
 - [ ] Log in as `customer@example.com` → portal home has a **Type** dropdown (Export / Import) next to the company/status filters; Export lists NUS/BJM exports; selecting Import lists the SIN import.
-- [ ] Open `REF-EXP-0001` → Export shipment page: facts, journey, containers table (container links open in a new tab).
-- [ ] Open `REF-IMP-0001` → Import shipment page: facts, **Draft PIB confirmation** with Confirm / Request revision, journey, containers.
+- [ ] Open `BL-EXP-0001` → Export shipment page: facts, journey, containers table (container links open in a new tab).
+- [ ] Open `BL-IMP-0001` → Import shipment page: facts, **Draft PIB confirmation** with Confirm / Request revision, journey, containers.
 - [ ] Open an export container page (`MSKU1234567`) and an import container page (`CMAU7654321`). Expected: per-type facts (export: tracking/VGM/final check; import: gate-out/weights/return) + Sailing information + Journey.
-- [ ] `sari@java-retail.test` opens `REF-IMP-0002` (already confirmed): the Confirm and Request revision actions are **not** offered.
+- [ ] `sari@java-retail.test` opens `BL-IMP-0002` (already confirmed): the Confirm and Request revision actions are **not** offered.
 
 **Audit**
 
-- [ ] Monitoring → Activity logs. Expected: the **Shipment** and **Container** columns fill from the new split links (e.g. `REF-EXP-0001`, `MSKU1234567`); operator scope still hides other companies' rows.
+- [ ] Monitoring → Activity logs. Expected: the **Shipment** and **Container** columns fill from the new split links (e.g. `BL-EXP-0001`, `MSKU1234567`); operator scope still hides other companies' rows.
 - [ ] On any shipment edit page → **Activity log** tab. Expected: milestone moves and saved field edits are listed with when/event/actor/summary.
 
 ## 2. Shipment form layout + customer permissions (2026-09-18, updated)
@@ -76,8 +77,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Pickup / stuffing fields live on the export shipment**
 
-- [ ] Open `REF-EXP-0001` → Edit → **Shipping Details**. Expected: **Pick up depot**, **Stuffing date**, **Stuffing destination** appear as shipment-level fields (not inside any container), locked until `Step 3: Pick up empty container at depot`.
-- [ ] Its **Containers** tab items do **not** contain those three fields.
+- [ ] Open `BL-EXP-0001` → Edit → **Containers** tab. Expected: **Pick up depot**, **Stuffing date**, **Stuffing destination** sit **above the container repeater** as shipment-level fields, locked until `Step 3: Pick up empty container at depot`.
+- [ ] The **Shipping Details** tab does **not** show those three fields, and the container items don't contain them either.
 
 **Customer field permissions**
 
@@ -105,10 +106,10 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Container fields (Containers tab → expand a container)**
 
 - [ ] At the pickup step an export container's fields appear in this order: **Container Number**, **Container Size**, **Container Type**, **Seal Number**, **Driver name**, **Vehicle / Truck Number**, **Driver License Number**, then the five photos.
-- [ ] At "Container on the way to factory" the container shows **Tracking position** and **Tracking position (url)**.
+- [ ] At "Container on the way to factory" the container shows **Tracking position** and **Tracking position (url)** side by side on one row (50/50).
 - [ ] The containers area shows five photo pickers — **Photo Door / Photo Floor / Photo Seal / Photo EIR** and **Additional Photos**. Expected: pick or upload into each slot → Save → reopen: the photos stay in their slots.
 - [ ] Remove a photo from a slot and Save. Expected: it detaches from the container (the file stays in the media library).
-- [ ] At "Checking PEB & NPE", a container's **Gate in port** starts as the shipment's **Port of loading** (e.g. `Jakarta (IDJKT)` for REF-EXP-0001) and stays editable.
+- [ ] At "Checking PEB & NPE", a container's **Port of loading** is prefilled from the shipment's **Port of loading** (e.g. `Jakarta (IDJKT)` for BL-EXP-0001) and can be overridden.
 
 **Latest event**
 
@@ -152,7 +153,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Shipping Details + stepper**
 
 - [ ] Same shipment → Edit. Expected: the milestone stepper sits **above the tabs** (not inside Shipping Details); on New it is absent.
-- [ ] **Shipping Details** tab (export). Expected: the first fields are the Step 2 group, in this order — **AJU number**, **DO number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, **B/L number**, then the cargo fields: **Goods description**, **HS codes**.
+- [ ] **Shipping Details** tab (export). Expected: the first fields are the Step 2 group, in this order — **B/L number**, **DO number**, **AJU number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, then **Goods description** (no HS codes field on export).
 - [ ] On a shipment still at Step 1, those fields show `Locked until Step 2: Checking booking order`. Advance to Step 2 → all become editable at once.
 - [ ] Import shipment Step 2 instead groups: **AJU number**, **B/L number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Shipment mode**, **Goods description**, **HS codes** (DO number lives with DO release).
 
@@ -166,8 +167,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Admin portal access**
 
 - [ ] At `/login`, request a code for `admin@example.com`. Expected: code is issued (admins may use the portal login); for `operator@example.com` the same request shows "No active customer account matches that email address."
-- [ ] Log in as `admin@example.com` → portal home. Expected: with **Type = Export** the list shows `REF-EXP-0001/0002/0003`; switching **Type = Import** shows `REF-IMP-0001/0002`; the company filter offers every company.
-- [ ] Open a shipment the admin has no link to (e.g. `REF-IMP-0002` / JRD) and one of its containers. Expected: both pages open normally.
+- [ ] Log in as `admin@example.com` → portal home. Expected: with **Type = Export** the list shows `BL-EXP-0001/0002/0003`; switching **Type = Import** shows `BL-IMP-0001/0002`; the company filter offers every company.
+- [ ] Open a shipment the admin has no link to (e.g. `BL-IMP-0002` / JRD) and one of its containers. Expected: both pages open normally.
 - [ ] Log in as a customer (e.g. `rina@nusantara.test`). Expected: only their companies' shipments appear; guessing another company's shipment URL still 404s.
 
 ## 7. Operator row-level scope (2026-09-17, updated)
@@ -179,10 +180,10 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Shipments**
 
-- [ ] As operator, open **Bill of Ladings → Export**. Expected: only **REF-EXP-0001** (NUS) and **REF-EXP-0003** (SNI) are listed — not the BJM export.
+- [ ] As operator, open **Bill of Ladings → Export**. Expected: only **BL-EXP-0001** (NUS) and **BL-EXP-0003** (SNI) are listed — not the BJM export.
 - [ ] Open **Bill of Ladings → Import**. Expected: empty — the seeded imports belong to SIN and JRD.
 - [ ] Open one of the hidden shipments by pasting its edit URL. Expected: **404** page.
-- [ ] Open REF-EXP-0001 → Edit → Shipping Details. Expected: the page works normally (containers, attachments, activity log tab all scoped to this shipment).
+- [ ] Open BL-EXP-0001 → Edit → Shipping Details. Expected: the page works normally (containers, attachments, activity log tab all scoped to this shipment).
 - [ ] Create a new shipment → **Customer** dropdown. Expected: only **PT Nusantara Ekspor** and **PT Sulawesi Nickel Industri** are offered.
 - [ ] **Containers → Export** → Shipment filter. Expected: only the operator's two shipments appear; container rows match them.
 - [ ] **Monitoring → Activity logs**. Expected: only entries for the operator's shipments/containers; no rows for other companies.
@@ -220,7 +221,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Portal → open a shipment → open a container in a new tab. Expected: a **Sailing information** block shows vessel, line, POL/departure and POD/arrival (actual) or ETA (estimate).
 - [ ] Same page → **Journey** section. Expected: oldest-first rows with time + place; the last row carries a `latest` badge; an ETA-only arrival carries an `estimate` badge.
-- [ ] Open the completed export container `EGHU6677881`. Expected: journey reads stuffing → gate-in → final check → departure → arrival.
+- [ ] Open the completed export container `EGHU6677881`. Expected: journey reads gate-in → final check → departure → arrival.
 - [ ] Open a container with no dates yet. Expected: journey shows "No journey events have been recorded for this shipment yet."
 
 **Shipment page**
@@ -230,7 +231,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Dashboard list**
 
 - [ ] Portal home → shipment table. Expected: **Latest place** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
-- [ ] With **Type = Export**, search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `REF-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
+- [ ] With **Type = Export**, search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `BL-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
 
 ## 10. Shipment Progress milestones & audit (2026-09-16, updated)
 
@@ -255,7 +256,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Each export container item shows five photo pickers at the pickup step. Expected: pick existing files or upload new ones → Save → files stay attached to that container.
 - [ ] Reopen the shipment after saving. Expected: the picked attachments are still shown on the container; remove one and save → it detaches (the file itself remains in the media library).
 - [ ] **Tracking position** is a single text field per export container, unlocked at "Container on the way to factory" (Step 4) — not a repeatable list.
-- [ ] At "Checking PEB & NPE" the container unlocks **Gate in port** + **Gate in CY** date; at "Gate in CY" it unlocks **VGM (kg)** (weight only, no unit selector); at "Final checking" it unlocks **Final checked** + **Final checked at**.
+- [ ] At "Checking PEB & NPE" the container unlocks **Port of loading** + **Gate in CY** date; at "Gate in CY" it unlocks **VGM (kg)** (weight only, no unit selector); at "Final checking" it unlocks **Final checked** + **Final checked at**.
 - [ ] Containers → Export → edit a container directly: the same fields appear, including the photo pickers.
 
 **Activity log**

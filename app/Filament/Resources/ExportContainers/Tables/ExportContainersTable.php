@@ -37,7 +37,7 @@ class ExportContainersTable
                     ->label('Container')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('shipment.reference_number')
+                TextColumn::make('shipment.bl_number')
                     ->label('Shipment')
                     ->searchable()
                     ->sortable(),
@@ -77,7 +77,7 @@ class ExportContainersTable
                 SelectFilter::make('stuffing_status')->options(StuffingStatus::options()),
                 SelectFilter::make('export_shipment_id')
                     ->label('Shipment')
-                    ->relationship('shipment', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                    ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),

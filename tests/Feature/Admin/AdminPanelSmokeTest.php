@@ -121,13 +121,14 @@ class AdminPanelSmokeTest extends TestCase
     {
         $admin = $this->admin();
 
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
-        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
 
         $this->actingAs($admin)
             ->get(ExportShipmentResource::getUrl('edit', ['record' => $export]))
             ->assertOk()
             ->assertSee('Shipping Details')
+            ->assertSee('Status')
             ->assertSee('Advance')
             ->assertSee('jumpToMilestone');
 
@@ -158,7 +159,6 @@ class AdminPanelSmokeTest extends TestCase
             ->assertHasNoFormErrors();
 
         $export = ExportShipment::query()->latest('id')->firstOrFail();
-        $this->assertNotNull($export->reference_number);
         $this->assertSame($company->name, $export->company_name_snapshot);
         $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
@@ -199,7 +199,7 @@ class AdminPanelSmokeTest extends TestCase
 
         // The cargo fields are milestone-gated, so the shipment must have
         // reached "checking document" before HS codes can be attached.
-        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
         $import->update(['current_milestone' => ImportMilestone::CheckingDocument]);
 
         $this->actingAs($admin);
@@ -214,7 +214,7 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_export_milestones_advance_regress_and_complete(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
@@ -240,7 +240,7 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_milestone_stepper_jumps_and_logs_each_change(): void
     {
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         // Jumping forward skips the steps in between.
         $export->moveToMilestone(ExportMilestone::GateInCy);
@@ -266,7 +266,7 @@ class AdminPanelSmokeTest extends TestCase
     {
         $admin = $this->admin();
 
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $this->assertSame(ExportMilestone::DocumentReceived, $export->current_milestone);
 
         $this->actingAs($admin);
@@ -290,12 +290,12 @@ class AdminPanelSmokeTest extends TestCase
 
     public function test_import_milestones_skip_the_spjm_branch_unless_the_response_is_spjm(): void
     {
-        $spjm = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $spjm = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
         $spjm->update(['current_milestone' => ImportMilestone::BillingResponseReceived]);
         $spjm->advanceMilestone();
         $this->assertSame(ImportMilestone::DocumentsUploaded, $spjm->current_milestone);
 
-        $sppb = ImportShipment::query()->where('reference_number', 'REF-IMP-0002')->firstOrFail();
+        $sppb = ImportShipment::query()->where('bl_number', 'BL-IMP-0002')->firstOrFail();
         $sppb->update(['current_milestone' => ImportMilestone::BillingResponseReceived]);
         $sppb->advanceMilestone();
         $this->assertSame(ImportMilestone::GateOutCy, $sppb->current_milestone);
@@ -401,7 +401,7 @@ class AdminPanelSmokeTest extends TestCase
     {
         $admin = $this->admin();
 
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $container = $export->containers()->firstOrFail();
 
         $this->actingAs($admin);

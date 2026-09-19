@@ -549,3 +549,45 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Portal checklist uses the Type dropdown wording |
 | 2026-09-19 09:14 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | README.md | Portal Type dropdown wording |
 | 2026-09-19 09:17 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Removed the greeting subtitle under the portal heading |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Step 2 starts with B/L number, then DO, AJU |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_{export,import}_shipments_table.php | Dropped reference_number; the B/L number is the identifier |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/{ExportShipment,ImportShipment}.php | reference_number removed from fillable |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | hiddenReferenceNumber removed |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/{Export,Import}Shipments/** | Reference column/field removed; record title = B/L number |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/{Export,Import}Containers/** | Shipment pickers, filters and columns use the B/L number |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ActivityLogs/** + Companies/RelationManagers/** | Shipment references show the B/L number |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php + customer views | Portal identifies shipments by B/L number; reference search removed |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/{DemoExportShipmentSeeder,DemoImportShipmentSeeder}.php | Seeders keyed by B/L number |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/** | Fixtures moved from REF-* to BL-* |
+| 2026-09-19 09:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | README.md, docs/{UAT,ERD}.md, plans/split-export-import.md | Reference number removed from the docs |
+| 2026-09-19 09:26 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | HS codes field removed from the export form (import-only) |
+| 2026-09-19 09:26 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md, README.md | HS codes documented as import-only |
+| 2026-09-19 09:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | containersTab accepts header components above the repeater |
+| 2026-09-19 09:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Pick up depot / Stuffing date / destination moved to the Containers tab |
+| 2026-09-19 09:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Pickup/stuffing checks moved to the Containers tab |
+| 2026-09-19 09:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Tracking position + url no longer force a full-width row |
+| 2026-09-19 09:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Tracking fields side by side (50/50) in the container repeater |
+| 2026-09-19 09:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/Schemas/ExportContainerForm.php | Tracking fields side by side on the standalone container form |
+| 2026-09-19 09:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Tracking-field row expectation added |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | Dropped stuffing_started_at and stuffing_finished_at |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportContainer.php | Stuffing timestamps removed from fillable/casts |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Stuffing timestamps removed from the export fields |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Stuffing started/finished journey rows removed |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Stuffing timestamps no longer seeded |
+| 2026-09-19 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/{ERD,UAT}.md, migration_plan.md, plans/split-export-import.md | Stuffing timestamps removed from the docs |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | gate_in_port_name renamed to port_of_loading |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportContainer.php | port_of_loading in fillable |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Checking PEB & NPE field is now Port of loading (default from B/L, overridable) |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Gate-in journey row reads the container port of loading |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Seeds port_of_loading on the completed export container |
+| 2026-09-19 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/{ERD,UAT}.md, plans/split-export-import.md | Port of loading rename documented |
+| 2026-09-19 09:42 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Container Status + Completed at removed from the repeater |
+| 2026-09-19 09:42 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/Schemas/ExportContainerForm.php | Status section removed from the standalone export container form |
+| 2026-09-19 09:42 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | status() documented as import-only |
+| 2026-09-19 09:42 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Container create test no longer fills status |
+| 2026-09-19 09:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Sailing dates + Status/Completed at removed from the export form |
+| 2026-09-19 09:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Export form field list updated |
+| 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | New statusTab() builder (Status + Completed at) |
+| 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Status tab added after Containers |
+| 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Edit page asserts the Status tab |
+| 2026-09-19 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Status tab checklist items added |

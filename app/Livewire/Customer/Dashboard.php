@@ -6,8 +6,8 @@
  * What it does:
  * - Lists the shipments of the companies the signed-in user manages; the
  *   **Type** dropdown switches between the Export and Import lists.
- * - Filters by type, company, number (B/L, reference, container, seal),
- *   status, year and month (spec.md).
+ * - Filters by type, company, number (B/L, container, seal), status, year and
+ *   month (spec.md).
  * - Adds each shipment's latest journey entry so the list shows Latest Place
  *   and Latest Event like the reference tracker.
  * - Privileged staff (admin/super_admin) see every shipment; customers stay
@@ -76,7 +76,6 @@ class Dashboard extends Component
             ->when($this->number !== '', fn (Builder $query) => $query->where(
                 fn (Builder $inner) => $inner
                     ->where('bl_number', 'like', '%'.$this->number.'%')
-                    ->orWhere('reference_number', 'like', '%'.$this->number.'%')
                     ->orWhereHas('containers', fn (Builder $containers) => $containers
                         ->where('container_number', 'like', '%'.$this->number.'%')
                         ->orWhere('seal_number', 'like', '%'.$this->number.'%')),

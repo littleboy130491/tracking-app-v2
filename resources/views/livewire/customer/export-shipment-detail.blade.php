@@ -9,10 +9,7 @@
     </a>
 
     <h1 class="mt-2 text-2xl font-semibold text-slate-900">
-        {{ $shipment->reference_number }}
-        <span class="text-base font-normal text-slate-500">
-            {{ $shipment->bl_number ? '· '.$shipment->bl_number : '' }}
-        </span>
+        {{ $shipment->bl_number ?: 'Shipment' }}
     </h1>
 
     @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Export'])

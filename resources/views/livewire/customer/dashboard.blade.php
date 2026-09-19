@@ -24,7 +24,7 @@
         </div>
 
         <div class="md:col-span-2 lg:col-span-2">
-            <label for="number" class="block text-xs font-medium text-slate-500">B/L, reference, container or seal</label>
+            <label for="number" class="block text-xs font-medium text-slate-500">B/L number, container or seal</label>
             <input
                 id="number"
                 type="text"
@@ -105,7 +105,6 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                    <th class="px-4 py-3">Reference</th>
                     <th class="px-4 py-3">B/L number</th>
                     <th class="px-4 py-3">Company</th>
                     <th class="px-4 py-3">Status</th>
@@ -123,10 +122,9 @@
                                 href="{{ route($routeName, [$routeParam => $shipment->getKey()]) }}"
                                 class="font-medium text-brand-600 underline-offset-2 hover:text-brand-700 hover:underline"
                             >
-                                {{ $shipment->reference_number }}
+                                {{ $shipment->bl_number ?: '—' }}
                             </a>
                         </td>
-                        <td class="px-4 py-3">{{ $shipment->bl_number ?: '—' }}</td>
                         <td class="px-4 py-3">{{ $shipment->company->name }}</td>
                         <td class="px-4 py-3">{{ $shipment->status->label() }}</td>
                         <td class="px-4 py-3">{{ $shipment->containers->count() }}</td>
@@ -142,7 +140,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-4 py-8 text-center text-slate-500">
+                        <td colspan="7" class="px-4 py-8 text-center text-slate-500">
                             No shipments match your filters.
                         </td>
                     </tr>

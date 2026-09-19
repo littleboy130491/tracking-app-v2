@@ -8,7 +8,7 @@
         href="{{ route('customer.export-shipments.show', ['exportShipment' => $container->export_shipment_id]) }}"
         class="text-sm text-slate-500 transition hover:text-brand-600"
     >
-        &larr; Back to shipment {{ $container->shipment->reference_number }}
+        &larr; Back to shipment{{ $container->shipment->bl_number ? ' '.$container->shipment->bl_number : '' }}
     </a>
 
     <h1 class="mt-2 text-2xl font-semibold text-slate-900">{{ $container->container_number }}</h1>

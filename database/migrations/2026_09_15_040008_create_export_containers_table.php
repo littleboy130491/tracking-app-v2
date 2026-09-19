@@ -39,10 +39,8 @@ return new class extends Migration
             $table->string('tracking_position_url', 500)->nullable();
 
             $table->string('stuffing_status', 30)->default('not_started');
-            $table->timestamp('stuffing_started_at')->nullable();
-            $table->timestamp('stuffing_finished_at')->nullable();
 
-            $table->string('gate_in_port_name')->nullable();
+            $table->string('port_of_loading')->nullable();
             $table->timestamp('gate_in_cy_at')->nullable();
             // VGM is recorded in kilograms per the export spec; no unit column.
             $table->decimal('vgm_value', 15, 3)->nullable();

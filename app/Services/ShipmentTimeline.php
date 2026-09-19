@@ -38,8 +38,7 @@ class ShipmentTimeline
         $shipment = $container->shipment;
         $candidates = [];
 
-        $stuffingDestination = $shipment instanceof ExportShipment ? $shipment->stuffing_destination : null;
-        $this->pushContainerDates($candidates, $container, $stuffingDestination);
+        $this->pushContainerDates($candidates, $container);
 
         if ($shipment) {
             $this->pushVoyageDates($candidates, $shipment);
@@ -87,20 +86,16 @@ class ShipmentTimeline
 
     /**
      * Container operational dates, per process. Each maps to one
-     * reference-style event row; stuffing destination lives on the export
-     * shipment header and is passed in.
+     * reference-style event row.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
     private function pushContainerDates(
         array &$candidates,
         ExportContainer|ImportContainer $container,
-        ?string $stuffingDestination,
     ): void {
         if ($container instanceof ExportContainer) {
-            $this->dated($candidates, $container->stuffing_started_at, 'Stuffing started', $stuffingDestination, 'container:stuffing_started_at');
-            $this->dated($candidates, $container->stuffing_finished_at, 'Stuffing finished', $stuffingDestination, 'container:stuffing_finished_at');
-            $this->dated($candidates, $container->gate_in_cy_at, 'Gate in to terminal', $container->gate_in_port_name, 'container:gate_in_cy_at');
+            $this->dated($candidates, $container->gate_in_cy_at, 'Gate in to terminal', $container->port_of_loading, 'container:gate_in_cy_at');
             $this->dated($candidates, $container->final_checked_at, 'Final checking completed', null, 'container:final_checked_at');
 
             return;

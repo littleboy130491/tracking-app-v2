@@ -49,7 +49,7 @@ class NotesPanelTest extends TestCase
 
     public function test_a_note_is_created_with_author_and_logged(): void
     {
-        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         $this->actingAs($this->admin);
 
@@ -72,7 +72,7 @@ class NotesPanelTest extends TestCase
 
     public function test_everyone_reads_all_notes_but_only_the_author_edits(): void
     {
-        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         $adminNote = $shipment->notes()->create(['body' => 'Admin note', 'author_id' => $this->admin->getKey()]);
 
@@ -87,7 +87,7 @@ class NotesPanelTest extends TestCase
 
     public function test_the_author_can_edit_and_delete_their_note(): void
     {
-        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
 
         $this->actingAs($this->admin);
 
@@ -168,7 +168,7 @@ class NotesPanelTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $shipment = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $shipment = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $container = $shipment->containers()->firstOrFail();
         $company = $shipment->company;
         $user = User::query()->where('email', 'customer@example.com')->firstOrFail();

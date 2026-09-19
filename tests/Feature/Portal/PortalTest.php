@@ -217,8 +217,8 @@ class PortalTest extends TestCase
         $this->actingAs($dewi)
             ->get(route('customer.dashboard'))
             ->assertOk()
-            ->assertSee('REF-EXP-0001')  // PT Nusantara Ekspor
-            ->assertSee('REF-EXP-0002'); // CV Borneo Jaya Mandiri
+            ->assertSee('BL-EXP-0001')  // PT Nusantara Ekspor
+            ->assertSee('BL-EXP-0002'); // CV Borneo Jaya Mandiri
     }
 
     public function test_the_dashboard_type_filter_switches_between_export_and_import(): void
@@ -230,11 +230,11 @@ class PortalTest extends TestCase
         Livewire::test(Dashboard::class)
             ->assertSee('Type')
             ->assertSet('type', 'export')
-            ->assertSee('REF-EXP-0001')
-            ->assertDontSee('REF-IMP-0001')
+            ->assertSee('BL-EXP-0001')
+            ->assertDontSee('BL-IMP-0001')
             ->set('type', 'import')
-            ->assertSee('REF-IMP-0001')  // PT Sinar Impor
-            ->assertDontSee('REF-EXP-0001');
+            ->assertSee('BL-IMP-0001')  // PT Sinar Impor
+            ->assertDontSee('BL-EXP-0001');
     }
 
     public function test_a_user_only_sees_shipments_of_the_companies_they_manage(): void
@@ -245,11 +245,11 @@ class PortalTest extends TestCase
         $this->actingAs($rina);
 
         Livewire::test(Dashboard::class)
-            ->assertSee('REF-EXP-0001')
-            ->assertDontSee('REF-EXP-0002')
+            ->assertSee('BL-EXP-0001')
+            ->assertDontSee('BL-EXP-0002')
             ->set('type', 'import')
-            ->assertSee('REF-IMP-0002')  // JRD
-            ->assertDontSee('REF-IMP-0001'); // SIN
+            ->assertSee('BL-IMP-0002')  // JRD
+            ->assertDontSee('BL-IMP-0001'); // SIN
     }
 
     public function test_the_dashboard_lists_the_company_of_each_shipment(): void
@@ -263,7 +263,7 @@ class PortalTest extends TestCase
             ->assertOk()
             ->assertSee('PT Nusantara Ekspor')
             ->assertSee('CV Borneo Jaya Mandiri')
-            ->assertSee('REF-EXP-0002')
+            ->assertSee('BL-EXP-0002')
             ->set('type', 'import')
             ->assertSee('PT Sinar Impor');
     }
@@ -278,21 +278,21 @@ class PortalTest extends TestCase
         Livewire::test(Dashboard::class)
             ->set('type', 'import')
             ->set('company', (string) $sinar->getKey())
-            ->assertSee('REF-IMP-0001')
-            ->assertDontSee('REF-IMP-0002');
+            ->assertSee('BL-IMP-0001')
+            ->assertDontSee('BL-IMP-0002');
     }
 
     public function test_the_number_search_matches_containers_and_shows_the_latest_journey(): void
     {
-        // Agus manages SNI, which owns the completed export REF-EXP-0003.
+        // Agus manages SNI, which owns the completed export BL-EXP-0003.
         $agus = User::query()->where('email', 'agus@borneo.test')->firstOrFail();
 
         $this->actingAs($agus);
 
         Livewire::test(Dashboard::class)
             ->set('number', 'EGHU6677881')
-            ->assertSee('REF-EXP-0003')
-            ->assertDontSee('REF-EXP-0001')
+            ->assertSee('BL-EXP-0003')
+            ->assertDontSee('BL-EXP-0001')
             ->assertSee('Latest place')
             ->assertSee('Vessel arrival at port of discharge');
     }
@@ -308,7 +308,7 @@ class PortalTest extends TestCase
         Livewire::test(Dashboard::class)
             ->set('type', 'import')
             ->set('company', (string) $sinar->getKey())
-            ->assertDontSee('REF-IMP-0001')
+            ->assertDontSee('BL-IMP-0001')
             ->assertSee('No shipments match your filters');
     }
 
@@ -321,10 +321,10 @@ class PortalTest extends TestCase
 
         Livewire::test(Dashboard::class)
             ->set('company', (string) $borneo->getKey())
-            ->assertDontSee('REF-EXP-0001')
+            ->assertDontSee('BL-EXP-0001')
             ->call('clearFilters')
             ->assertSet('company', '')
-            ->assertSee('REF-EXP-0001');
+            ->assertSee('BL-EXP-0001');
     }
 
     public function test_an_admin_sees_every_shipment_in_the_portal(): void
@@ -334,31 +334,31 @@ class PortalTest extends TestCase
         $this->actingAs($admin);
 
         Livewire::test(Dashboard::class)
-            ->assertSee('REF-EXP-0001')
-            ->assertSee('REF-EXP-0002')
-            ->assertSee('REF-EXP-0003')
+            ->assertSee('BL-EXP-0001')
+            ->assertSee('BL-EXP-0002')
+            ->assertSee('BL-EXP-0003')
             ->set('type', 'import')
-            ->assertSee('REF-IMP-0001')
-            ->assertSee('REF-IMP-0002');
+            ->assertSee('BL-IMP-0001')
+            ->assertSee('BL-IMP-0002');
     }
 
     public function test_an_admin_may_open_any_customers_shipment_and_container(): void
     {
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
-        $export = ExportShipment::query()->where('reference_number', 'REF-EXP-0001')->firstOrFail();
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
         $exportContainer = $export->containers()->firstOrFail();
-        $import = ImportShipment::query()->where('reference_number', 'REF-IMP-0001')->firstOrFail();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
         $importContainer = $import->containers()->firstOrFail();
 
         $this->actingAs($admin)
             ->get(route('customer.export-shipments.show', ['exportShipment' => $export]))
             ->assertOk()
-            ->assertSee('REF-EXP-0001');
+            ->assertSee('BL-EXP-0001');
 
         $this->actingAs($admin)
             ->get(route('customer.import-shipments.show', ['importShipment' => $import]))
             ->assertOk()
-            ->assertSee('REF-IMP-0001');
+            ->assertSee('BL-IMP-0001');
 
         $this->actingAs($admin)
             ->get(route('customer.export-containers.show', ['exportContainer' => $exportContainer]))
@@ -376,14 +376,14 @@ class PortalTest extends TestCase
         $mine = $this->portalUser();
         $theirs = $this->portalUser('other@example.com', 'Other Trading');
 
-        $ownShipment = $this->exportShipmentFor($mine->companies()->first(), 'REF-MINE-1');
-        $otherShipment = $this->exportShipmentFor($theirs->companies()->first(), 'REF-THEIRS-1');
+        $ownShipment = $this->exportShipmentFor($mine->companies()->first(), 'BL-MINE-1');
+        $otherShipment = $this->exportShipmentFor($theirs->companies()->first(), 'BL-THEIRS-1');
 
         $this->actingAs($mine)
             ->get(route('customer.dashboard'))
             ->assertOk()
-            ->assertSee('REF-MINE-1')
-            ->assertDontSee('REF-THEIRS-1');
+            ->assertSee('BL-MINE-1')
+            ->assertDontSee('BL-THEIRS-1');
 
         // Guessing another company's shipment id must 404.
         $this->actingAs($mine)
@@ -400,8 +400,8 @@ class PortalTest extends TestCase
         $mine = $this->portalUser();
         $theirs = $this->portalUser('other@example.com', 'Other Trading');
 
-        $ownShipment = $this->exportShipmentFor($mine->companies()->first(), 'REF-MINE-2');
-        $otherShipment = $this->exportShipmentFor($theirs->companies()->first(), 'REF-THEIRS-2');
+        $ownShipment = $this->exportShipmentFor($mine->companies()->first(), 'BL-MINE-2');
+        $otherShipment = $this->exportShipmentFor($theirs->companies()->first(), 'BL-THEIRS-2');
 
         $ownContainer = $ownShipment->containers()->firstOrFail();
         $otherContainer = $otherShipment->containers()->firstOrFail();
@@ -419,7 +419,7 @@ class PortalTest extends TestCase
     public function test_a_customer_can_confirm_an_import_draft_pib(): void
     {
         $user = $this->portalUser();
-        $shipment = $this->importShipmentFor($user->companies()->first(), 'REF-IMP-CONFIRM');
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-CONFIRM');
 
         $this->actingAs($user);
 
@@ -442,7 +442,7 @@ class PortalTest extends TestCase
     public function test_an_export_shipment_page_offers_no_draft_pib_actions(): void
     {
         $user = $this->portalUser();
-        $shipment = $this->exportShipmentFor($user->companies()->first(), 'REF-EXP-NOPIB');
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-NOPIB');
 
         $this->actingAs($user);
 
@@ -470,7 +470,7 @@ class PortalTest extends TestCase
     public function test_a_pending_draft_pib_is_still_pending_and_actionable(): void
     {
         $user = $this->portalUser();
-        $shipment = $this->importShipmentFor($user->companies()->first(), 'REF-IMP-PENDING');
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-PENDING');
 
         $this->actingAs($user);
 
@@ -578,8 +578,7 @@ class PortalTest extends TestCase
     private function exportShipmentFor(Company $company, string $reference): ExportShipment
     {
         $shipment = ExportShipment::query()->create([
-            'reference_number' => $reference,
-            'bl_number' => 'BL-'.$reference,
+            'bl_number' => $reference,
             'company_id' => $company->getKey(),
             'company_name_snapshot' => $company->name,
             'current_milestone' => ExportMilestone::DocumentReceived,
@@ -595,8 +594,7 @@ class PortalTest extends TestCase
     private function importShipmentFor(Company $company, string $reference): ImportShipment
     {
         $shipment = ImportShipment::query()->create([
-            'reference_number' => $reference,
-            'bl_number' => 'BL-'.$reference,
+            'bl_number' => $reference,
             'company_id' => $company->getKey(),
             'company_name_snapshot' => $company->name,
             'current_milestone' => ImportMilestone::DocumentReceived,

@@ -28,8 +28,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'export_shipment_id', 'container_number', 'size', 'type', 'seal_number',
     'driver_name', 'license_number', 'driver_license_number',
     'tracking_position', 'tracking_position_url',
-    'stuffing_status', 'stuffing_started_at', 'stuffing_finished_at',
-    'gate_in_port_name', 'gate_in_cy_at', 'vgm_value',
+    'stuffing_status',
+    'port_of_loading', 'gate_in_cy_at', 'vgm_value',
     'final_checked', 'final_checked_at',
     'status', 'latest_event', 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
 ])]
@@ -67,8 +67,6 @@ class ExportContainer extends Model
         return [
             'stuffing_status' => StuffingStatus::class,
             'status' => ContainerStatus::class,
-            'stuffing_started_at' => 'datetime',
-            'stuffing_finished_at' => 'datetime',
             'vgm_value' => 'decimal:3',
             'gate_in_cy_at' => 'datetime',
             'final_checked' => 'boolean',

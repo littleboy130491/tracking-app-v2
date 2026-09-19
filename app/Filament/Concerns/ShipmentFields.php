@@ -17,6 +17,7 @@
 namespace App\Filament\Concerns;
 
 use App\Enums\BillingResponse;
+use App\Enums\ShipmentStatus;
 use App\Livewire\NotesPanel;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
@@ -25,6 +26,7 @@ use App\Models\User;
 use BackedEnum;
 use Closure;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\LivewireField;
@@ -36,13 +38,13 @@ use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Str;
 
 class ShipmentFields
 {
@@ -186,20 +188,24 @@ class ShipmentFields
     }
 
     /**
-     * The containers tab: a repeater whose items stay open to distinguish
-     * individual container records.
+     * The containers tab: optional shipment-level header components (e.g. the
+     * export pickup/stuffing fields) above a repeater whose items stay open to
+     * distinguish individual container records.
      *
      * @param  list<Field>  $itemFields
+     * @param  list<Component>  $headerComponents
      */
     public static function containersTab(
         string $milestoneEnum,
         string $containerModel,
         array $itemFields,
         BackedEnum $unlockedAt,
+        array $headerComponents = [],
     ): Tab {
         return Tab::make('Containers')
             ->visibleOn('edit')
             ->schema([
+                ...$headerComponents,
                 self::gate(
                     Repeater::make('containers')
                         ->relationship()
@@ -226,6 +232,26 @@ class ShipmentFields
     }
 
     /**
+     * The status tab: the shipment lifecycle fields, kept out of the process
+     * tabs and shown after Containers. Gated at the last milestone like the
+     * rest of the form; the milestone engine maintains the same values.
+     */
+    public static function statusTab(string $milestoneEnum, BackedEnum $unlockedAt): Tab
+    {
+        return Tab::make('Status')
+            ->visibleOn('edit')
+            ->schema([
+                ...self::gated([
+                    Select::make('status')
+                        ->options(ShipmentStatus::options())
+                        ->default(ShipmentStatus::Draft),
+                    DateTimePicker::make('completed_at')
+                        ->label('Completed at'),
+                ], $milestoneEnum, $unlockedAt),
+            ]);
+    }
+
+    /**
      * The HS-code multi-select with inline create; identical for both forms.
      */
     public static function hsCodesField(): Select
@@ -247,16 +273,6 @@ class ShipmentFields
                     ->rows(3),
             ])
             ->columnSpanFull();
-    }
-
-    /**
-     * The hidden reference number: unique internal id generated on create.
-     */
-    public static function hiddenReferenceNumber(): Hidden
-    {
-        return Hidden::make('reference_number')
-            ->default(fn (): string => 'BL-'.Str::upper(Str::random(8)))
-            ->unique(ignoreRecord: true);
     }
 
     /**

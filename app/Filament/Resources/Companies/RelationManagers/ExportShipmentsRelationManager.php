@@ -31,12 +31,8 @@ class ExportShipmentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('reference_number')
+            ->recordTitleAttribute('bl_number')
             ->columns([
-                TextColumn::make('reference_number')
-                    ->label('Reference')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('bl_number')
                     ->label('B/L number')
                     ->searchable()

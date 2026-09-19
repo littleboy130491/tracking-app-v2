@@ -36,7 +36,7 @@ class ImportContainersTable
                     ->label('Container')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('shipment.reference_number')
+                TextColumn::make('shipment.bl_number')
                     ->label('Shipment')
                     ->searchable()
                     ->sortable(),
@@ -77,7 +77,7 @@ class ImportContainersTable
                 SelectFilter::make('inspection_status')->options(InspectionStatus::options()),
                 SelectFilter::make('import_shipment_id')
                     ->label('Shipment')
-                    ->relationship('shipment', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                    ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),

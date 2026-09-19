@@ -45,7 +45,6 @@ class DemoImportShipmentSeeder extends Seeder
     private function seedInProgressShipment(): void
     {
         $sinar = $this->shipment('SIN', [
-            'reference_number' => 'REF-IMP-0001',
             'bl_number' => 'BL-IMP-0001',
             'shipment_mode' => ShipmentMode::Lcl,
             'aju_number' => 'AJU-0001',
@@ -78,7 +77,6 @@ class DemoImportShipmentSeeder extends Seeder
     private function seedCompletedShipment(): void
     {
         $imported = $this->shipment('JRD', [
-            'reference_number' => 'REF-IMP-0002',
             'bl_number' => 'BL-IMP-0002',
             'shipment_mode' => ShipmentMode::Air,
             'aju_number' => 'AJU-0002',
@@ -130,7 +128,7 @@ class DemoImportShipmentSeeder extends Seeder
     {
         $company = Company::query()->where('code', $companyCode)->firstOrFail();
 
-        $shipment = ImportShipment::query()->firstOrNew(['reference_number' => $attributes['reference_number']]);
+        $shipment = ImportShipment::query()->firstOrNew(['bl_number' => $attributes['bl_number']]);
 
         $shipment->fill($attributes + [
             'company_id' => $company->getKey(),

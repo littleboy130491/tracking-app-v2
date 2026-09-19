@@ -42,7 +42,6 @@ class DemoExportShipmentSeeder extends Seeder
     private function seedInProgressShipments(): void
     {
         $nusantara = $this->shipment('NUS', [
-            'reference_number' => 'REF-EXP-0001',
             'bl_number' => 'BL-EXP-0001',
             'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'Maersk',
@@ -60,7 +59,6 @@ class DemoExportShipmentSeeder extends Seeder
         $this->container($nusantara, 'MSKU1234568', '40', 'GP', 'SL-0002');
 
         $borneo = $this->shipment('BJM', [
-            'reference_number' => 'REF-EXP-0002',
             'bl_number' => 'BL-EXP-0002',
             'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'PIL',
@@ -83,7 +81,6 @@ class DemoExportShipmentSeeder extends Seeder
     private function seedCompletedShipment(): void
     {
         $exported = $this->shipment('SNI', [
-            'reference_number' => 'REF-EXP-0003',
             'bl_number' => 'BL-EXP-0003',
             'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'Evergreen',
@@ -112,9 +109,7 @@ class DemoExportShipmentSeeder extends Seeder
             'license_number' => 'DD 8123 KK',
             'tracking_position' => 'Passed Maros checkpoint',
             'stuffing_status' => StuffingStatus::Finished,
-            'stuffing_started_at' => now()->subDays(24),
-            'stuffing_finished_at' => now()->subDays(23)->subHours(8),
-            'gate_in_port_name' => 'Makassar New Port',
+            'port_of_loading' => 'Makassar New Port',
             'gate_in_cy_at' => now()->subDays(23),
             'vgm_value' => 30250,
             'final_checked' => true,
@@ -136,7 +131,7 @@ class DemoExportShipmentSeeder extends Seeder
     {
         $company = Company::query()->where('code', $companyCode)->firstOrFail();
 
-        $shipment = ExportShipment::query()->firstOrNew(['reference_number' => $attributes['reference_number']]);
+        $shipment = ExportShipment::query()->firstOrNew(['bl_number' => $attributes['bl_number']]);
 
         $shipment->fill($attributes + [
             'company_id' => $company->getKey(),

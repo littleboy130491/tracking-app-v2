@@ -35,7 +35,7 @@ class ImportContainerForm
                     ->schema([
                         Select::make('import_shipment_id')
                             ->label('Import shipment')
-                            ->relationship('shipment', 'reference_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                            ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                             ->searchable()
                             ->preload()
                             ->required(),

@@ -119,6 +119,15 @@ Blocked: None
 - Post-plan tweak (09:11): group order fixed in AdminPanelProvider — Bill of Ladings first, then Containers, CRM, Master data, Monitoring; rendered-sidebar order test added.
 - Post-plan tweak (09:14): portal Export/Import tabs replaced by a **Type** dropdown in the filter row (like Company/Status).
 - Post-plan tweak (09:17): removed the "Here are the shipments…" subtitle from the portal dashboard.
+- Post-plan tweak (09:24): export Step 2 starts with B/L number → DO → AJU; the reference number was removed completely (schema, models, seeders, admin, portal, tests, docs) — the B/L number is now the shipment identifier.
+- Post-plan tweak (09:26): HS codes field hidden on the export shipment form (import-only); export pivot kept for future use.
+- Post-plan tweak (09:29): Pick up depot / Stuffing date / Stuffing destination moved from Shipping Details to the Containers tab, above the repeater (still shipment-level, still gated at Step 3).
+- Post-plan tweak (09:32): Tracking position and Tracking position (url) laid out side by side (50/50) in the repeater and the standalone export container form.
+- Post-plan tweak (09:36): removed Stuffing started at / Stuffing finished at from export (columns dropped, model/form/timeline/seeder/docs updated); stuffing_status stays.
+- Post-plan tweak (09:39): Checking PEB & NPE field renamed Gate in port → **Port of loading** (column `gate_in_port_name` → `port_of_loading`); still defaults from the B/L and stays overridable.
+- Post-plan tweak (09:42): export container **Status** + **Completed at** fields removed (repeater + standalone form); columns kept for the list/portal, import container forms keep the fields.
+- Post-plan tweak (09:45): export shipment form drops **Departure date / ETA / Actual arrival / Status / Completed at** (columns kept — the engine still completes shipments and the portal still reads the sailing dates).
+- Post-plan tweak (09:47): new **Status** tab on the export shipment form (after Containers) holding Status + Completed at; shared `ShipmentFields::statusTab()` builder so the import form can adopt it later.
 
 ## Notes
 
