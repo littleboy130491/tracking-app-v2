@@ -5,11 +5,13 @@
  * Responsibility: Creates the application roles and their permissions.
  * What it does:
  * - Creates super_admin, admin, operator and customer with the internal flag.
- * - Grants all permissions to super_admin and admin. Operators get everything
- *   except company, user and role administration and the delete lifecycle
- *   (delete, restore, force delete). Shield permissions only exist after
- *   `php artisan shield:generate`, so the grants are skipped (and can be re-run)
- *   on a database that has none yet.
+ * - super_admin holds every permission (and also bypasses every gate via
+ *   Shield). admin holds everything except the permanent-delete permissions
+ *   (`ForceDelete*`): an admin soft-deletes and restores, but never purges.
+ * - Operators work shipments only: no company/user/role administration and
+ *   no delete lifecycle at all. Customers are portal-only.
+ * - Shield permissions only exist after `php artisan shield:generate`, so the
+ *   grants are skipped (and can be re-run) on a database that has none yet.
  * How to use: `php artisan db:seed --class=RoleSeeder` (safe to re-run).
  * How to extend: Add a role name constant to App\Models\Role and a row here.
  */
@@ -54,14 +56,19 @@ class RoleSeeder extends Seeder
 
         // super_admin additionally bypasses every gate (Shield), but holding the
         // permissions too keeps the role screen readable.
-        $allIds = $permissions->pluck('id');
+        $this->role(Role::SUPER_ADMIN)?->permissions()->sync($permissions->pluck('id'));
 
-        foreach ([Role::SUPER_ADMIN, Role::ADMIN] as $name) {
-            $this->role($name)?->permissions()->sync($allIds);
-        }
+        // Admin may soft-delete and restore, but permanent deletion
+        // (ForceDelete / ForceDeleteAny) is reserved for super_admin.
+        $adminIds = $permissions
+            ->reject(fn (Permission $permission): bool => str_starts_with($permission->name, 'ForceDelete'))
+            ->pluck('id');
+
+        $this->role(Role::ADMIN)?->permissions()->sync($adminIds);
 
         // Operators work shipments only: companies and users are admin
-        // territory, and the delete/restore/force-delete lifecycle too.
+        // territory, and the whole delete lifecycle (delete, restore, force
+        // delete) is out of reach.
         $operatorIds = $permissions
             ->reject(fn (Permission $permission): bool => str_contains($permission->name, 'User')
                 || str_contains($permission->name, 'Role')

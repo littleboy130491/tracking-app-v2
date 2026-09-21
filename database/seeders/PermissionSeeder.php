@@ -35,6 +35,15 @@ class PermissionSeeder extends Seeder
             ]);
         }
 
+        // Non-resource capability: permanent deletion of records older than the
+        // retention window (see App\Services\Prune\OldDataPruner). Shield cannot
+        // discover it, so it is declared here. Admin/super_admin receive it via
+        // RoleSeeder's "all permissions" sync; operators are excluded there.
+        Permission::query()->firstOrCreate([
+            'name' => 'Prune:LegacyData',
+            'guard_name' => 'web',
+        ]);
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

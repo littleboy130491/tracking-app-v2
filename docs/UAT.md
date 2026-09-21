@@ -11,6 +11,96 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Table CSV export & prune old data (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel: log in as `admin@example.com` / `password`.
+- Seeded data (`php artisan migrate:fresh --seed`).
+- To test the prune action with real data, an admin must first age some rows
+  (there is no UI to back-date `created_at`); otherwise the confirm dialog
+  will report `0` rows.
+
+**CSV export**
+
+- [ ] Open **Bill of Ladings → Export**. Expected: an **Export** button (download icon) appears in the table header, above the rows.
+- [ ] Click **Export** → confirm. Expected: a `.csv` file downloads.
+- [ ] Open the file. Expected: it contains **every stored field** (B/L number, DO number, AJU, dates, milestone, status, created/updated/deleted) **plus relationship columns** — company name, document received by, created by, updated by, container numbers, container sizes and HS codes.
+- [ ] Repeat on **Bill of Ladings → Import**, **Containers → Export**, **Containers → Import**, **CRM → Companies**, **Users** and **Master data → HS codes**. Expected: each table exports its own full field set; Companies/Users/HS codes include their related users/companies/roles and shipment counts.
+- [ ] Open the **Users** export. Expected: **no password** column is present.
+
+**Visibility / permissions**
+
+- [ ] Log in as an operator (seeded operator account). Expected: the **Export** button is **not** shown on any of those tables; the **Prune old data** button is not shown either.
+- [ ] As operator, open **CRM → Companies** and **Users** directly by URL. Expected: access is denied (admin-only resources).
+
+**Prune old data**
+
+- [ ] As admin, open any of the seven tables. Expected: a red **Prune old data** button appears next to **Export**.
+- [ ] Click it. Expected: a confirmation dialog says how many records would be permanently deleted and states the cutoff (3 years ago), with a **Delete permanently** button.
+- [ ] Confirm. Expected: a green notification reports how many records were deleted; the table refreshes.
+- [ ] Age a shipment (`created_at` older than 3 years) and prune. Expected: that shipment **and its containers** are removed for good (including soft-deleted rows).
+- [ ] Prune again with no old data. Expected: the notification reports `Deleted 0 …` and nothing else changes.
+
+## 0. Empty editable fields highlighted (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel: log in as `admin@example.com` / `password`.
+- Seeded data (`php artisan migrate:fresh --seed`).
+
+- [ ] Open `BL-EXP-0001` → Edit (it sits at Step 3). Expected: the still-empty Step 2 inputs — **DO number**, **Closing time at depot**, **Closing time at CY** — show a green **border** (no background fill); filled fields (B/L number, shipping line, vessel, ports, shipment mode, goods) look normal.
+- [ ] Focus a green-bordered field. Expected: the normal blue focus ring shows while typing; validation errors still show red.
+- [ ] Fields locked by the milestone (disabled, showing `Locked until Step N`) are **never** tinted.
+- [ ] Click **Advance** (or jump a step). Expected: newly unlocked fields that are still empty become tinted, and the stepper/other fields behave as before.
+- [ ] Fill a tinted field and **Save**. Expected: after saving, that field is no longer tinted.
+- [ ] Open `BL-IMP-0001` → Edit → **Containers** tab. Expected: the same highlight on import fields and on container repeater fields.
+
+## 0. Clickable containers on the B/L table (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel: log in as `admin@example.com` / `password`.
+- Seeded data (`php artisan migrate:fresh --seed`) or any shipment that has containers.
+
+- [ ] Bill of Ladings → Export. Expected: the **Containers** column shows each container number (e.g. `MSKU1234567`) as a badge, not a count. A shipment with no containers shows **—**.
+- [ ] Click a container badge. Expected: you land on that container's **Edit** page (Containers → Export).
+- [ ] Bill of Ladings → Import. Expected: the same — numbers visible, click opens Containers → Import edit.
+- [ ] CRM → Companies → open a company that has shipments. Expected: the Export/Import shipment tables on that page also list clickable container numbers.
+
+## 0. Container list with no B/L number (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel: log in as `admin@example.com` / `password`.
+- A shipment whose **B/L number** is empty (create a new export/import shipment and stop at Customer, or clear B/L on an existing one).
+
+- [ ] Containers → Export. Expected: the list loads (no error). The **Shipment** filter includes the empty-B/L shipment as `No B/L yet (#id)`.
+- [ ] Containers → Export → New. Expected: the **Export shipment** dropdown also lists that shipment with the same caption; picking it and saving a container works.
+- [ ] Containers → Import (and Import → New). Expected: the same fallback caption, no error.
+
+## 0. Curator media picker styling (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel: log in as `admin@example.com` / `password`.
+- A shipment whose photo pickers are unlocked (e.g. `BL-EXP-0001` at Step 3+, or `php artisan migrate:fresh --seed`).
+
+**Media picker modal**
+
+- [ ] Open `BL-EXP-0001` → Edit → Containers tab → expand a container → click any **Photo** picker → **Add media**. Expected: the modal is fully styled — toolbar (search + close) sits in a grey bar, the media grid is a proper card grid, the upload dropzone is a bordered panel, not a plain stacked list.
+- [ ] Upload or pick a file in the modal. Expected: selection controls (insert / deselect) render as styled buttons, and the picked image appears in the form field.
+- [ ] Picked-photo layout (Photo Door etc.). Expected: each picked photo shows as **one full-width card** in its field (not a narrow 1/3-width tile), with the image filling the card edge to edge.
+- [ ] One photo per slot. Expected: once a photo is picked, that field's **Add media** button disappears; removing the photo brings it back. Saving with a second photo in one slot is blocked (validation error).
+- [ ] Check the rest of the admin panel still looks unchanged (sidebar, tables, forms). Expected: identical to before — the custom theme only adds Curator styles on top of the default look.
+
+**Container repeater headers (export + import)**
+
+- [ ] Open `BL-EXP-0001` → Edit → **Containers** tab. Expected: each container item (e.g. `MSKU1234567`) has a **light blue header band** with a darker blue, bold container number — clearly visible whether the item is collapsed or expanded.
+- [ ] Collapse and expand the item. Expected: the coloured band keeps smooth rounded corners in both states (fully rounded when collapsed, top-rounded when expanded).
+- [ ] Open an import shipment (e.g. `BL-IMP-0001`) → Containers tab. Expected: the same coloured headers on its container items.
+- [ ] Toggle dark mode (if enabled). Expected: header band shifts to a darker blue tint with a lighter blue label, still readable.
+
 ## 1. Split Export/Import models (2026-09-19)
 
 **Prerequisites**
@@ -22,24 +112,29 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Menus**
 
 - [ ] Sidebar shows, top to bottom: **Bill of Ladings** (Export, Import), **Containers** (Export, Import), **CRM** (Companies, Users), **Master data** (HS codes), **Monitoring** (Activity logs).
-- [ ] Bill of Ladings → Export lists only `BL-EXP-0001/0002/0003`; Bill of Ladings → Import lists only `BL-IMP-0001/0002`. Containers → Export / Import list the matching containers.
+- [ ] Bill of Ladings → Export lists only `BL-EXP-0001/0002/0003`; Bill of Ladings → Import lists only `BL-IMP-0001/0002`. The **Containers** column shows each container number as a clickable badge. Containers → Export / Import list the matching containers.
 
 **Export shipment form**
 
 - [ ] Bill of Ladings → Export → New. Expected: only the **Customer** section (Customer, Document received date/by); no stepper, no tabs.
-- [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**.
-- [ ] Shipping Details order: **B/L number, DO number, AJU number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description**. **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
+- [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**. The header shows a **New export B/L** action (plus Regress / Advance / Save); clicking it opens the create form.
+- [ ] Shipping Details order: **B/L number, DO number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description** (no AJU number here — it lives on the Containers tab, unlocked at Step 5). **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
 - [ ] **Status** tab (between Containers and Notes). Expected: **Status** dropdown (draft / in progress / completed / cancelled) + **Completed at**, both editable once Step 8 is reached; Save persists them and the Activity log records the change.
 - [ ] At Step 1 the fields show `Locked until Step 2: Checking booking order`. Click **Advance** → they become editable.
 - [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; **Stuffing status at Factory** (On Process / Finished, defaulting to On Process) at "Stuffing at factory / PEB & NPE"; **Port of loading** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** (toggle) at "Final checking".
+- [ ] Containers tab, above the repeater. Expected: **AJU number** appears under the pickup/stuffing fields, locked until `Step 5: Stuffing at factory / PEB & NPE`; advancing to Step 5 makes it editable and the Activity log records changes to it.
 
-**Import shipment form**
+**Import shipment form (IMPORT.md spec)**
 
 - [ ] Bill of Ladings → Import → New works the same way (Customer only on create).
-- [ ] Open `BL-IMP-0001` → Edit. Expected: **Draft PIB** group (status/confirmed at/notes) unlocks at Step 3; billing issued at 5; THC at 6; **DO number** + **DO released at** at 7; billing payment at 8; response at 9; behandle at 11 (this shipment is SPJM, so the branch shows).
-- [ ] Advance the shipment to "Billing response received" and set **Response** = SPPB. Expected: the stepper drops the SPJM branch (Documents uploaded, Behandle payment, Container inspection, SPPB received) and shortens to 13 steps.
+- [ ] Open `BL-IMP-0001` → Edit. Expected: the stepper shows the SPJM branch (21 steps) in three rows — row 1: the 10 steps up to **Payment billing**; row 2: **Response billing** followed by the **five SPJM-only steps in red** (Upload all document, Waiting process bahandle, Payment bahandle, Container inspection, Waiting change status SPJM to SPPB); row 3: the remaining 5 steps. The header shows a **New import B/L** action that opens the create form. Shipping Details unlocks in this order: **B/L number** at `Step 2: Checking document`; **Shipping line** at `Step 3: Draft PIB`; **Vessel name** at `Step 4: Checking draft PIB to importir`; **Confirmation checklist** toggle at `Step 5: Waiting confirmation from customer`; **AJU number**, **Voyage** and **Status billing** at `Step 6: Final sending PIB to custom (issuing billing)`; **Port of loading** at `Step 7: Process payment THC`; **Departure date** at `Step 8: Waiting release DO`; **Port of discharge** at `Step 9: DO release`; **Arrival time / ETA** at `Step 10: Payment billing`; **Response billing** at `Step 11: Response billing`; **Goods description** at `Step 12: Upload all document`; **HS codes** at `Step 13: Waiting process bahandle`.
+- [ ] SPJM notice: on `BL-IMP-0001` (**Response billing = SPJM**) an info box **Tambahan step SPJM** appears right below the response field, listing the extra steps; on `BL-IMP-0002` (**SPPB**) it is absent. Tambahan step SPJM is **not** a step on the stepper.
+- [ ] Set **Response billing** = SPPB on a shipment at Step 11. Expected: the stepper drops the red SPJM block (row 2 becomes Response billing + the normal steps, 16 steps total) and the next step is **Container shipping schedule**.
 - [ ] `BL-IMP-0002` (completed, SPPB) shows the same shortened sequence.
-- [ ] Containers tab: import container `CMAU7654321` shows identity/photos at Step 2, driver fields at "On the way to consignee", gate-out + weights at "Gate out CY", inspection fields at "Container inspection", factory/return fields at "Arrived at factory".
+- [ ] SPJM demo data: `BL-IMP-0003` (completed SPJM, SIN) shows the whole red block done and the shipment completed; `BL-IMP-0004` (BJM) sits at **Response billing** with the red block upcoming and its containers carrying only the number (no size yet).
+- [ ] **Status** tab (after Containers): Status + Completed at, editable once the last step is reached.
+- [ ] Containers tab (repeater unlocks at `Step 11: Response billing`): expand `CMAU7654321`. Expected: container number at Step 11; **Size** at `Upload all document`; photos at Step 11; **Gate out CY** + **Driver name** + **No. License** at `Gate out from inbound terminal`; **Tracking position driver** + **Tracking position input (manual)** at `Container on the way factory`; **Gross weight** at `Payment bahandle`; **CBM / measurement** at `Waiting change status SPJM to SPPB`; **Loading in factory** + status at `Container arrived in factory`; **Return depot name** + **Return date** at `Empty container returned`.
+- [ ] Removed per IMPORT.md: no DO number, no payment status/timestamps, no draft-PIB status/notes fields, no inspection fields, no container Type/Seal on import.
 
 **Standalone containers**
 
@@ -126,7 +221,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Adding and reading**
 
-- [ ] Open a shipment → Edit → **Notes** tab. Expected: a textarea + **Add note** button; empty state reads "No notes yet."
+- [ ] Open a shipment → Edit → **Notes** tab. Expected: a tall textarea with padding, then **Add note** below it (not overlapping the field); empty state reads "No notes yet."
 - [ ] Add a note. Expected: it appears immediately (no form Save needed) with your name and "just now".
 - [ ] Open the same shipment as `operator@example.com`. Expected: you see the admin's note, but it has no Edit/Delete links.
 - [ ] As the operator, add your own note. Expected: yours shows Edit and Delete links; the admin's still does not.
@@ -154,7 +249,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Shipping Details + stepper**
 
 - [ ] Same shipment → Edit. Expected: the milestone stepper sits **above the tabs** (not inside Shipping Details); on New it is absent.
-- [ ] **Shipping Details** tab (export). Expected: the first fields are the Step 2 group, in this order — **B/L number**, **DO number**, **AJU number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, then **Goods description** (no HS codes field on export).
+- [ ] **Shipping Details** tab (export). Expected: the first fields are the Step 2 group, in this order — **B/L number**, **DO number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Closing time at depot**, **Closing time at CY**, **Shipment mode**, then **Goods description** (no AJU number here — it lives on the Containers tab at Step 5; no HS codes field on export).
 - [ ] On a shipment still at Step 1, those fields show `Locked until Step 2: Checking booking order`. Advance to Step 2 → all become editable at once.
 - [ ] Import shipment Step 2 instead groups: **AJU number**, **B/L number**, **Shipping line**, **Vessel name**, **Voyage**, **Port of loading**, **Port of discharge**, **Shipment mode**, **Goods description**, **HS codes** (DO number lives with DO release).
 
@@ -245,7 +340,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Bill of Ladings → Export → New: the form shows only the **Customer** section; **Shipping Details** and **Activity log** are absent.
 - [ ] Create a shipment, then open its Edit → **Shipping Details**. Expected: fields are laid out continuously; no card boxes or collapse controls.
-- [ ] The horizontal milestone stepper appears at the top; completed steps are green, the current step is highlighted, later steps are grey.
+- [ ] The horizontal milestone stepper appears at the top with comfortable vertical padding; completed steps are green, the current step is highlighted, later steps are grey.
 - [ ] A field belonging to a not-yet-reached step is disabled and shows `Locked until Step X: {step name}` underneath; fields at or before the current step are editable and show no milestone text.
 - [ ] Click a future step more than one ahead. Expected: it is not clickable. Click the next step and confirm the Filament modal. Expected: progress advances one step and the newly unlocked fields become editable.
 - [ ] Click an earlier step and confirm. Expected: progress moves back and its fields remain editable.

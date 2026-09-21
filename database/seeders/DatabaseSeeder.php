@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             DemoCompanySeeder::class,
             DemoExportShipmentSeeder::class,
             DemoImportShipmentSeeder::class,
+            DemoSpjmShipmentSeeder::class,
         ]);
     }
 }

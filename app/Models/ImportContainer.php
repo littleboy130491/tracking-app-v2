@@ -4,7 +4,8 @@
  * File: app/Models/ImportContainer.php
  * Responsibility: A container belonging to one import shipment.
  * What it does:
- * - Tracks gate-out, weights, inspection, factory loading and depot return data.
+ * - Tracks the IMPORT.md container data: identity, gate-out, driver tracking,
+ *   weights, factory loading and depot return.
  * - Owns its attachments; the photo pickers write through syncAttachments().
  * How to use: `$container->shipment`, `$container->attachments`.
  * How to extend: Add import container fields as columns and expose them in the
@@ -15,7 +16,6 @@ namespace App\Models;
 
 use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
-use App\Enums\InspectionStatus;
 use App\Models\Concerns\ActsAsContainer;
 use App\Models\Concerns\HasNotes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,12 +26,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'import_shipment_id', 'container_number', 'size', 'type', 'seal_number',
-    'driver_name', 'license_number', 'driver_license_number',
-    'gate_out_cy_at', 'gross_weight', 'gross_weight_unit', 'cbm',
-    'inspection_status', 'inspected_at', 'inspection_notes',
-    'factory_arrived_at', 'factory_loading_status', 'factory_loading_started_at',
-    'factory_loading_finished_at', 'return_depot_name', 'empty_returned_at',
+    'import_shipment_id', 'container_number', 'size',
+    'driver_name', 'license_number', 'gate_out_cy_at',
+    'tracking_position', 'tracking_position_input',
+    'gross_weight', 'gross_weight_unit', 'cbm',
+    'factory_loading_at', 'factory_loading_status',
+    'return_depot_name', 'empty_returned_at',
     'status', 'latest_event', 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
 ])]
 class ImportContainer extends Model
@@ -66,16 +66,12 @@ class ImportContainer extends Model
     protected function casts(): array
     {
         return [
-            'inspection_status' => InspectionStatus::class,
             'factory_loading_status' => FactoryLoadingStatus::class,
             'status' => ContainerStatus::class,
             'gate_out_cy_at' => 'datetime',
             'gross_weight' => 'decimal:3',
             'cbm' => 'decimal:3',
-            'inspected_at' => 'datetime',
-            'factory_arrived_at' => 'datetime',
-            'factory_loading_started_at' => 'datetime',
-            'factory_loading_finished_at' => 'datetime',
+            'factory_loading_at' => 'datetime',
             'empty_returned_at' => 'datetime',
             'latest_event_at' => 'datetime',
             'completed_at' => 'datetime',

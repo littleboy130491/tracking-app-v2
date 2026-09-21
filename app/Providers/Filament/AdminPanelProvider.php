@@ -42,6 +42,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->login()
             // Brand: colour and font come from style.md, the mark from assets/logo.png
             // (published to public/images/logo.png). See resources/css/app.css for

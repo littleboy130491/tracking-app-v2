@@ -612,3 +612,128 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-19 10:03 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Draft visibility rule documented |
 | 2026-09-19 10:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Final checked is a toggle now |
 | 2026-09-19 10:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Final checked noted as a toggle |
+| 2026-09-21 16:20 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | AJU number field removed from the export form |
+| 2026-09-21 16:20 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Audit test no longer fills/asserts aju_number |
+| 2026-09-21 16:25 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Export Shipping Details checklists drop AJU number |
+| 2026-09-21 13:40 | Devin (GLM-5.3 Flash Max) | CREATE | resources/css/filament/admin/theme.css | Custom admin theme; imports Curator picker styles |
+| 2026-09-21 13:40 | Devin (GLM-5.3 Flash Max) | UPDATE | vite.config.js | Theme CSS added to the Vite inputs |
+| 2026-09-21 13:40 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Providers/Filament/AdminPanelProvider.php | Panel registers the custom theme via viteTheme |
+| 2026-09-21 13:40 | Devin (GLM-5.3 Flash Max) | UPDATE | package.json | tailwindcss bumped to ^4.3.3 by make:filament-theme |
+| 2026-09-21 13:55 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Containers repeater tagged with bl-containers class |
+| 2026-09-21 13:55 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/css/filament/admin/theme.css | Container repeater item headers tinted brand blue |
+| 2026-09-21 14:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/css/filament/admin/theme.css | Curator picker cards full-width with filled previews |
+| 2026-09-21 13:57 | Grok (Grok 4.6) | UPDATE | resources/views/livewire/notes-panel.blade.php | Real textarea + roomier composer field and button |
+| 2026-09-21 13:57 | Grok (Grok 4.6) | UPDATE | resources/css/filament/admin/theme.css | Notes composer spacing; scan livewire views |
+| 2026-09-21 13:57 | Grok (Grok 4.6) | UPDATE | docs/UAT.md | Notes tab expects a tall textarea above Add note |
+| 2026-09-21 13:57 | Grok (Grok 4.6) | UPDATE | plans/_progress.md | Notes composer spacing tweak recorded |
+| 2026-09-21 14:20 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Photo pickers limited to one photo per slot |
+| 2026-09-21 14:20 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Picker sync test picks a single photo |
+| 2026-09-21 14:35 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | AJU number field returns, gated at Step 5 above the repeater |
+| 2026-09-21 14:05 | Grok (Grok 4.6) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | More vertical padding on the milestone stepper |
+| 2026-09-21 14:05 | Grok (Grok 4.6) | UPDATE | docs/UAT.md | Stepper checklist notes the extra vertical padding |
+| 2026-09-21 14:05 | Grok (Grok 4.6) | UPDATE | plans/_progress.md | Milestone stepper padding tweak recorded |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | app/Models/Concerns/ActsAsShipment.php | pickerLabel() fallback when B/L number is empty |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Shipment filter uses pickerLabel() |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ExportContainers/Schemas/ExportContainerForm.php | Shipment select uses pickerLabel() |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Shipment filter uses pickerLabel() |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php | Shipment select uses pickerLabel() |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Container lists with a null B/L number |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | docs/UAT.md | Checklist for container lists without a B/L |
+| 2026-09-21 14:26 | Grok (Grok 4.6) | UPDATE | plans/_progress.md | Null B/L picker fix recorded |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Enums/ImportMilestone.php | Rebuilt to the 22-step IMPORT.md sequence |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Spec columns only; confirmation_checklist added |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | Tracking columns added; type/seal/inspection dropped |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/ImportShipment.php | Fillable/casts follow the spec schema |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/ImportContainer.php | Fillable/casts follow the spec schema |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Enums/FactoryLoadingStatus.php | Reduced to On Process / Finished |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | DELETE | app/Enums/InspectionStatus.php | Inspection fields dropped from import |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | DELETE | app/Enums/BillingPaymentStatus.php | Payment status fields dropped from import |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | DELETE | app/Enums/DraftPibConfirmationStatus.php | Replaced by the confirmation checklist boolean |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Fields re-gated to IMPORT.md steps; Status tab added |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Import groups split per spec; tracking fields added |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php | Standalone form follows the new groups |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Type/seal/inspection columns and filter removed |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Draft PIB confirm uses the confirmation checklist |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Checklist state shown; notes block removed |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/livewire/customer/import-container-detail.blade.php | Seal block becomes Driver |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Seal column hides when no container has one |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Seal search only on export containers |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Import journey rows follow the new fields |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Seeder rebuilt for the spec schema |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | SPJM branch + HS code steps follow the new sequence |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Locked-step text and HS code milestone updated |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Draft PIB tests use the confirmation checklist |
+| 2026-09-21 15:10 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Import checklist follows IMPORT.md |
+| 2026-09-21 15:30 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Milestones reflect seeded data (Step 3 / final step) |
+| 2026-09-21 15:30 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Milestones reflect seeded data (bahandle / final step) |
+| 2026-09-21 15:30 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Milestone-walk tests rewind the seeded shipment |
+| 2026-09-21 15:30 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Locked-step test rewinds the seeded shipment |
+| 2026-09-21 15:40 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Completed export seeds its AJU number (AJU-EXP-0003) |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Container numbers listed as clickable badges |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Container numbers listed as clickable badges |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Company B/L table links container numbers |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Company B/L table links container numbers |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Asserts B/L tables link container numbers |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | docs/UAT.md | Clickable container badges on the B/L table |
+| 2026-09-21 15:14 | Grok (Grok 4.6) | UPDATE | plans/_progress.md | Clickable B/L container column recorded |
+| 2026-09-21 16:00 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Empty unlocked inputs marked with bl-empty-field |
+| 2026-09-21 16:00 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/css/filament/admin/theme.css | Amber tint for empty editable fields |
+| 2026-09-21 16:00 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Marker appears only for unlocked empty fields |
+| 2026-09-21 16:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/css/filament/admin/theme.css | Empty-field highlight switched from amber to green |
+| 2026-09-21 16:20 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/css/filament/admin/theme.css | Empty-field highlight is border-only (green ring) |
+| 2026-09-21 16:30 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Pages/EditExportShipment.php | Header action New export B/L |
+| 2026-09-21 16:30 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Pages/EditImportShipment.php | Header action New import B/L |
+| 2026-09-21 16:30 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Header create action exists with the right URL |
+| 2026-09-21 16:30 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | New B/L header action documented on both edit forms |
+| 2026-09-21 16:40 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Containers tab moved before Status |
+| 2026-09-21 16:55 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Enums/ImportMilestone.php | Tambahan step SPJM is no longer a milestone step |
+| 2026-09-21 16:55 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Conditional SPJM info notice; size gated at Upload all document |
+| 2026-09-21 16:55 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Stepper wraps at max 10 steps per row |
+| 2026-09-21 16:55 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | SPJM branch + notice tests follow the new sequence |
+| 2026-09-21 16:55 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Import checklist: 21 steps, SPJM notice, size gate |
+| 2026-09-21 17:10 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Stepper renders hard rows of max 10 steps |
+| 2026-09-21 17:10 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Stepper rows hold at most ten steps |
+| 2026-09-21 17:30 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | SPJM steps red on their own row with response billing |
+| 2026-09-21 17:30 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Stepper row layout + red SPJM block asserted |
+| 2026-09-21 17:50 | Devin (GLM-5.3 Flash Max) | CREATE | database/seeders/DemoSpjmShipmentSeeder.php | SPJM demo shipments (completed + fresh response) |
+| 2026-09-21 17:50 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DatabaseSeeder.php | Registers the SPJM demo seeder |
+| 2026-09-21 17:50 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Asserts the SPJM demo shipments |
+| 2026-09-21 17:50 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Seeders/SeederIdempotencyTest.php | Three completed shipments now |
+| 2026-09-21 17:50 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | SPJM demo data checklist |
+| 2026-09-21 18:00 | Devin (deepseek-v4.1-flash) | UPDATE | app/Enums/BillingResponse.php | Response column colors: SPJM red, AP/SPJK yellow, SPPB green |
+| 2026-09-21 18:00 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Response badge uses BillingResponse::color() |
+| 2026-09-21 18:05 | Devin (deepseek-v4.1-flash) | CREATE | database/migrations/2026_09_21_180000_add_soft_deletes_to_companies_table.php | Add deleted_at to companies |
+| 2026-09-21 18:05 | Devin (deepseek-v4.1-flash) | CREATE | database/migrations/2026_09_21_180100_add_soft_deletes_to_users_table.php | Add deleted_at to users |
+| 2026-09-21 18:05 | Devin (deepseek-v4.1-flash) | CREATE | database/migrations/2026_09_21_180200_add_soft_deletes_to_hs_codes_table.php | Add deleted_at to hs_codes |
+| 2026-09-21 18:20 | Devin (deepseek-v4.1-flash) | UPDATE | database/migrations/2026_09_15_040001_create_companies_table.php | Add softDeletes to companies create table |
+| 2026-09-21 18:20 | Devin (deepseek-v4.1-flash) | UPDATE | database/migrations/0001_01_01_000000_create_users_table.php | Add softDeletes to users create table |
+| 2026-09-21 18:20 | Devin (deepseek-v4.1-flash) | UPDATE | database/migrations/2026_09_15_040007_create_hs_codes_table.php | Add softDeletes to hs_codes create table |
+| 2026-09-21 18:20 | Devin (deepseek-v4.1-flash) | DELETE | database/migrations/2026_09_21_180*_add_soft_deletes_to_*_table.php | Replaced by edits to the original create tables |
+| 2026-09-21 18:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/Company.php | Add SoftDeletes trait |
+| 2026-09-21 18:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/HsCode.php | Add SoftDeletes trait |
+| 2026-09-21 18:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/User.php | Add SoftDeletes; block trashed users from the panel |
+| 2026-09-21 18:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Support/Otp/RegisteredUserResolver.php | Reject soft-deleted users on OTP login |
+| 2026-09-21 18:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Http/Controllers/Customer/LoginController.php | Reject soft-deleted users after OTP verify |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | composer.json | Added pxlrbt/filament-excel for CSV export |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | CREATE | app/Filament/Concerns/TableExportColumns.php | Full-field CSV columns incl. relationships |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | CREATE | app/Filament/Concerns/PrunableTableHeaderAction.php | Admin-only prune-old-data header action |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | CREATE | app/Services/Prune/OldDataPruner.php | Deletes records older than 3 years |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/User.php | canExportTables() and canPruneOldData() guards |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | database/seeders/PermissionSeeder.php | Baseline Prune:LegacyData permission |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/Tables/CompaniesTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/HsCodes/Tables/HsCodesTable.php | CSV export + prune header actions |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | CREATE | tests/Feature/Admin/TableExportAndPruneTest.php | Covers export/prune actions and column sets |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/Tables/CompaniesTable.php | Add trashed filter + restore/force-delete bulk actions |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | Add trashed filter + restore/force-delete bulk actions |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/HsCodes/Tables/HsCodesTable.php | Add trashed filter + restore/force-delete bulk actions |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/CompanyResource.php | Allow edit route binding for trashed companies |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Users/UserResource.php | Allow edit route binding for trashed users |
+| 2026-09-21 18:55 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/HsCodes/HsCodeResource.php | Allow edit route binding for trashed HS codes |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | database/seeders/RoleSeeder.php | Super admin only gets ForceDelete; admin gets soft delete + restore |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/User.php | canPruneOldData now super_admin only |
+| 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Concerns/PrunableTableHeaderAction.php | Wording: prune restricted to super admin |

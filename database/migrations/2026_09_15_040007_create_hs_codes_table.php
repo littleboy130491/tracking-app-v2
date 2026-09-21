@@ -7,6 +7,8 @@
  * - HS codes are shared master data (one row per code) so the same code can
  *   be reused across shipments; two pivots link them to export and import
  *   shipments.
+ * - Soft-deletable: retiring a code keeps the shipment links intact; admin
+ *   may restore, only super_admin may permanently delete.
  * How to use: App\Models\HsCode belongsToMany ExportShipment / ImportShipment.
  * How to extend: Add quantity/unit columns on a pivot if per-shipment volumes
  *   are needed.
@@ -25,6 +27,7 @@ return new class extends Migration
             $table->string('code', 30)->unique();
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('export_shipment_hs_code', function (Blueprint $table) {

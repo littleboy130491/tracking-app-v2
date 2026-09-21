@@ -45,7 +45,7 @@ class SeederIdempotencyTest extends TestCase
 
         $completed = $this->completedShipmentTimestamps();
 
-        $this->assertCount(2, $completed, 'The seeders should produce two completed shipments.');
+        $this->assertCount(3, $completed, 'The seeders should produce three completed shipments.');
 
         $this->seed();
 

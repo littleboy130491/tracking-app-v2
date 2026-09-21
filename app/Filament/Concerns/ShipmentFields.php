@@ -110,13 +110,21 @@ class ShipmentFields
 
     /**
      * Applies the milestone gate to one field: disabled until its milestone is
-     * reached, with a helper text naming the step that unlocks it.
+     * reached, with a helper text naming the step that unlocks it. Editable
+     * input fields that are still empty carry the `bl-empty-field` marker so
+     * the panel theme can tint them.
      */
     public static function gate(Field $field, string $milestoneEnum, BackedEnum $required, string $prefix = ''): Field
     {
-        return $field
+        $field = $field
             ->disabled(self::locked($milestoneEnum, $required, $prefix))
             ->helperText(self::lockedHelperText($milestoneEnum, $required, $prefix));
+
+        if ($field instanceof TextInput || $field instanceof Textarea || $field instanceof Select || $field instanceof DateTimePicker) {
+            $field->extraFieldWrapperAttributes(self::emptyMarker($milestoneEnum, $required, $prefix));
+        }
+
+        return $field;
     }
 
     /**
@@ -190,7 +198,8 @@ class ShipmentFields
     /**
      * The containers tab: optional shipment-level header components (e.g. the
      * export pickup/stuffing fields) above a repeater whose items stay open to
-     * distinguish individual container records.
+     * distinguish individual container records. The repeater carries the
+     * `bl-containers` class so the panel theme can tint each item header.
      *
      * @param  list<Field>  $itemFields
      * @param  list<Component>  $headerComponents
@@ -210,6 +219,7 @@ class ShipmentFields
                     Repeater::make('containers')
                         ->relationship()
                         ->defaultItems(0)
+                        ->extraAttributes(['class' => 'bl-containers'])
                         ->itemLabel(function ($container): string {
                             // Read the raw item state: the dehydrated snapshot Filament
                             // passes as $state drops every form-field key, so it would be empty.
@@ -342,6 +352,24 @@ class ShipmentFields
                 self::enumValue($get($prefix.'current_milestone'), $milestoneEnum),
                 $required,
             );
+        };
+    }
+
+    /**
+     * Marks an unlocked input that has no value yet, so the admin can spot
+     * missing process data at a glance. The class lands on the field wrapper;
+     * the panel theme (resources/css/filament/admin/theme.css) tints it.
+     */
+    private static function emptyMarker(string $milestoneEnum, BackedEnum $required, string $prefix = ''): Closure
+    {
+        $locked = self::locked($milestoneEnum, $required, $prefix);
+
+        return function (Get $get, mixed $state) use ($locked): array {
+            if ($locked($get) || ! blank($state)) {
+                return [];
+            }
+
+            return ['class' => 'bl-empty-field'];
         };
     }
 

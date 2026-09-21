@@ -3,23 +3,23 @@
      What it does: shows author and time per note; edit/delete only on your own.
      How to use: rendered by App\Livewire\NotesPanel.
      How to extend: keep markup in sync with the NotesPanel properties. --}}
-<div class="space-y-4">
+<div class="notes-panel">
     @if ($editingId === null)
-        <div class="space-y-2">
+        <div class="notes-panel-composer">
             <x-filament::input.wrapper>
-                <x-filament::input
-                    type="textarea"
-                    rows="3"
+                <textarea
+                    class="fi-input notes-panel-textarea"
+                    rows="4"
                     wire:model="body"
                     placeholder="Add a note for your team…"
-                />
+                ></textarea>
             </x-filament::input.wrapper>
 
             @error('body')
                 <p class="text-sm text-danger-600 dark:text-danger-400">{{ $message }}</p>
             @enderror
 
-            <x-filament::button size="sm" wire:click="addNote">
+            <x-filament::button wire:click="addNote">
                 Add note
             </x-filament::button>
         </div>
@@ -32,13 +32,13 @@
                 class="rounded-lg border border-gray-200 p-3 dark:border-white/10"
             >
                 @if ($editingId === $note->id)
-                    <div class="space-y-2">
+                    <div class="notes-panel-composer">
                         <x-filament::input.wrapper>
-                            <x-filament::input
-                                type="textarea"
-                                rows="3"
+                            <textarea
+                                class="fi-input notes-panel-textarea"
+                                rows="4"
                                 wire:model="editingBody"
-                            />
+                            ></textarea>
                         </x-filament::input.wrapper>
 
                         @error('editingBody')
@@ -46,10 +46,10 @@
                         @enderror
 
                         <div class="flex gap-2">
-                            <x-filament::button size="sm" wire:click="saveEdit">
+                            <x-filament::button wire:click="saveEdit">
                                 Save
                             </x-filament::button>
-                            <x-filament::button size="sm" color="gray" wire:click="cancelEditing">
+                            <x-filament::button color="gray" wire:click="cancelEditing">
                                 Cancel
                             </x-filament::button>
                         </div>

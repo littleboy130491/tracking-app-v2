@@ -6,6 +6,7 @@
  * What it does:
  * - Creates one in-progress import shipment on the SPJM response (so that
  *   branch is demonstrable) and one completed example that settled on SPPB.
+ *   Each shipment's milestone reflects the data seeded for it.
  * - Finds companies by code, so it depends on DemoCompanySeeder running first
  *   and must not assume how many companies exist.
  * - Idempotent: reference numbers are unique and progress fields are only
@@ -18,11 +19,9 @@
 namespace Database\Seeders;
 
 use App\Enums\BillingIssuanceStatus;
-use App\Enums\BillingPaymentStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ContainerStatus;
-use App\Enums\DraftPibConfirmationStatus;
-use App\Enums\ShipmentMode;
+use App\Enums\ImportMilestone;
 use App\Enums\ShipmentStatus;
 use App\Models\Company;
 use App\Models\HsCode;
@@ -40,13 +39,14 @@ class DemoImportShipmentSeeder extends Seeder
     }
 
     /**
-     * An import shipment left on the SPJM branch, so the admin has live work.
+     * An import shipment left on the SPJM branch, so the admin has live work:
+     * its documents, billing response and HS codes are filled, which lands it
+     * at "waiting process bahandle".
      */
     private function seedInProgressShipment(): void
     {
         $sinar = $this->shipment('SIN', [
             'bl_number' => 'BL-IMP-0001',
-            'shipment_mode' => ShipmentMode::Lcl,
             'aju_number' => 'AJU-0001',
             'shipping_line' => 'CMA CGM',
             'vessel_name' => 'MV Southern Cross',
@@ -56,31 +56,28 @@ class DemoImportShipmentSeeder extends Seeder
             'eta_at' => now()->addDays(5),
             'goods_description' => 'Electronic components',
             'billing_issuance_status' => BillingIssuanceStatus::Issued,
-            'billing_issued_at' => now()->subDays(2),
-            'billing_payment_status' => BillingPaymentStatus::Paid,
-            'billing_paid_at' => now()->subDay(),
             // SPJM keeps this shipment on the behandle branch.
             'billing_response' => BillingResponse::Spjm,
-            'billing_response_at' => now()->subDay(),
+        ], [
+            'current_milestone' => ImportMilestone::WaitingProcessBehandle,
         ]);
 
         $this->hsCodes($sinar, '8542.31');
 
-        $this->container($sinar, 'CMAU7654321', '20', 'GP', 'SL-0003');
-        $this->container($sinar, 'CMAU7654322', '20', 'GP', 'SL-0004');
+        $this->container($sinar, 'CMAU7654321', '20');
+        $this->container($sinar, 'CMAU7654322', '20');
     }
 
     /**
      * One import shipment whose data is already filled end to end: it came
-     * through the SPJM branch and settled on SPPB.
+     * through the SPJM branch and settled on SPPB, and sits on the final step,
+     * which is what completes a shipment.
      */
     private function seedCompletedShipment(): void
     {
         $imported = $this->shipment('JRD', [
             'bl_number' => 'BL-IMP-0002',
-            'shipment_mode' => ShipmentMode::Air,
             'aju_number' => 'AJU-0002',
-            'do_number' => 'DO-0002',
             'shipping_line' => 'ONE',
             'vessel_name' => 'MV One Meridian',
             'voyage_number' => 'V-204',
@@ -88,28 +85,27 @@ class DemoImportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'departure_date' => now()->subDays(18)->toDateString(),
             'eta_at' => now()->subDays(4),
-            'actual_arrival_at' => now()->subDays(4),
             'goods_description' => 'Household appliances',
             'billing_issuance_status' => BillingIssuanceStatus::Issued,
-            'billing_issued_at' => now()->subDays(11),
-            'billing_payment_status' => BillingPaymentStatus::Paid,
-            'billing_paid_at' => now()->subDays(10),
-            'do_released_at' => now()->subDays(8),
             // The customer confirmed the draft PIB during the process.
-            'draft_pib_confirmation_status' => DraftPibConfirmationStatus::Confirmed,
-            'draft_pib_confirmed_at' => now()->subDays(9),
+            'confirmation_checklist' => true,
             // Came through SPJM and settled on SPPB.
             'billing_response' => BillingResponse::Sppb,
-            'billing_response_at' => now()->subDays(7),
         ], [
             'status' => ShipmentStatus::Completed,
             'completed_at' => now()->subDays(2),
+            'current_milestone' => ImportMilestone::EmptyReturned,
         ]);
 
         $this->hsCodes($imported, '8450.11');
 
-        $this->container($imported, 'ONEU9988771', '20', 'GP', 'SL-0007', [
+        $this->container($imported, 'ONEU9988771', '20', [
             'gate_out_cy_at' => now()->subDays(3),
+            'tracking_position' => 'Driver Budi — live location shared',
+            'gross_weight' => 18500,
+            'gross_weight_unit' => 'kg',
+            'cbm' => 33.2,
+            'factory_loading_at' => now()->subDays(3)->addHours(2),
             'empty_returned_at' => now()->subDays(2),
             'status' => ContainerStatus::Completed,
             'completed_at' => now()->subDays(2),
@@ -118,8 +114,8 @@ class DemoImportShipmentSeeder extends Seeder
 
     /**
      * Create or refresh a shipment. `$initial` holds progress fields (status,
-     * completed_at) written only on creation so re-seeding never rewinds a
-     * live shipment.
+     * completed_at, current_milestone) written only on creation so re-seeding
+     * never rewinds a live shipment.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $initial
@@ -166,7 +162,7 @@ class DemoImportShipmentSeeder extends Seeder
      *
      * @param  array<string, mixed>  $initial
      */
-    private function container(ImportShipment $shipment, string $number, string $size, string $type, string $seal, array $initial = []): void
+    private function container(ImportShipment $shipment, string $number, string $size, array $initial = []): void
     {
         $container = ImportContainer::query()->firstOrNew([
             'import_shipment_id' => $shipment->getKey(),
@@ -175,8 +171,6 @@ class DemoImportShipmentSeeder extends Seeder
 
         $container->fill([
             'size' => $size,
-            'type' => $type,
-            'seal_number' => $seal,
         ]);
 
         if (! $container->exists) {

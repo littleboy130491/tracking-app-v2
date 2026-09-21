@@ -4,9 +4,9 @@
  * File: database/migrations/2026_09_15_040008_create_import_containers_table.php
  * Responsibility: Creates the `import_containers` table (a container in an import shipment).
  * What it does:
- * - Each row is a shipment-scoped container holding import fields only:
- *   identity, driver, gate-out, weights, inspection, factory loading and
- *   depot return data.
+ * - Each row is a shipment-scoped container holding import fields only, one
+ *   column group per IMPORT.md milestone: identity, gate-out, tracking,
+ *   weights, factory loading and depot return data.
  * How to use: App\Models\ImportContainer belongsTo ImportShipment; hasMany Attachment.
  * How to extend: Add new import container fields as nullable columns and expose
  *   them in the import container form sections.
@@ -26,30 +26,31 @@ return new class extends Migration
         Schema::create('import_containers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('import_shipment_id')->constrained()->cascadeOnDelete();
+            // Response billing — No. container / Tambahan step SPJM — size.
             $table->string('container_number', 30);
             $table->string('size', 20)->nullable();
-            $table->string('type', 30)->nullable();
-            $table->string('seal_number', 100)->nullable();
 
+            // Gate out from inbound terminal — driver name and No. license.
             $table->string('driver_name')->nullable();
             // "No. License": meaning is unconfirmed (migration_plan §14), stored as text.
             $table->string('license_number', 100)->nullable();
-            $table->string('driver_license_number', 100)->nullable();
-
             $table->timestamp('gate_out_cy_at')->nullable();
+
+            // Container on the way factory — driver tracking.
+            $table->string('tracking_position')->nullable();
+            $table->string('tracking_position_input')->nullable();
+
+            // Payment bahandle — gross weight.
             $table->decimal('gross_weight', 15, 3)->nullable();
             $table->string('gross_weight_unit', 20)->nullable();
+            // Waiting change status SPJM to SPPB — CBM / measurement.
             $table->decimal('cbm', 15, 3)->nullable();
 
-            $table->string('inspection_status', 30)->default('not_started');
-            $table->timestamp('inspected_at')->nullable();
-            $table->text('inspection_notes')->nullable();
+            // Container arrived in factory — loading date and status.
+            $table->timestamp('factory_loading_at')->nullable();
+            $table->string('factory_loading_status', 30)->default('on_process');
 
-            $table->timestamp('factory_arrived_at')->nullable();
-            $table->string('factory_loading_status', 30)->default('not_started');
-            $table->timestamp('factory_loading_started_at')->nullable();
-            $table->timestamp('factory_loading_finished_at')->nullable();
-
+            // Empty container returned — depot and return date.
             $table->string('return_depot_name')->nullable();
             $table->timestamp('empty_returned_at')->nullable();
 

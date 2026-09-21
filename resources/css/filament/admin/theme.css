@@ -1,0 +1,123 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/*
+ * Curator media picker: the plugin ships no compiled CSS, so its component
+ * styles and the utilities used in its blade views must be compiled into this
+ * theme (see vendor/awcodes/filament-curator/README.md, "Custom theme").
+ */
+@import '../../../../vendor/awcodes/filament-curator/resources/css/plugin.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/livewire/**/*';
+@source '../../../../vendor/awcodes/filament-curator/resources/**/*.blade.php';
+
+/*
+ * Containers repeater (export + import shipment forms): tint each container
+ * item's header band so the container sections stand out. The repeater is
+ * tagged with `bl-containers` in ShipmentFields::containersTab(). Unlayered
+ * rules so they win over Filament's layered component styles. The header is
+ * fully rounded while the item is collapsed (it is then the whole card) and
+ * top-rounded only once expanded.
+ */
+.bl-containers .fi-fo-repeater-item-header {
+    background-color: rgba(73, 155, 255, 0.12);
+    border-radius: 0.75rem 0.75rem 0 0;
+}
+
+.bl-containers .fi-fo-repeater-item.fi-collapsed .fi-fo-repeater-item-header {
+    border-radius: 0.75rem;
+}
+
+.bl-containers .fi-fo-repeater-item-header-label {
+    color: rgb(26, 95, 168);
+    font-weight: 600;
+}
+
+.dark .bl-containers .fi-fo-repeater-item-header {
+    background-color: rgba(73, 155, 255, 0.16);
+}
+
+.dark .bl-containers .fi-fo-repeater-item-header-label {
+    color: rgb(125, 190, 255);
+}
+
+/*
+ * Notes composer (Livewire NotesPanel): Filament's input wrapper is a
+ * single-line flex row, so a real textarea must be allowed to grow, and
+ * the Add note button sits below it with a clear gap.
+ */
+.notes-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.notes-panel-composer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.notes-panel-composer .fi-input-wrp {
+    align-items: stretch;
+}
+
+.notes-panel-textarea {
+    display: block;
+    width: 100%;
+    min-height: 7rem;
+    padding: 0.75rem 1rem;
+    border: none;
+    background: transparent;
+    resize: vertical;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: inherit;
+    outline: none;
+    box-shadow: none;
+}
+
+.notes-panel-textarea::placeholder {
+    color: rgb(156, 163, 175);
+}
+
+.dark .notes-panel-textarea::placeholder {
+    color: rgb(107, 114, 128);
+}
+
+.notes-panel-composer .fi-btn {
+    align-self: flex-start;
+}
+
+/*
+ * Curator photo pickers (container Photo Door / Floor / Seal / EIR / Additional):
+ * the plugin grids multiple picks into 1/3-width cards, which cramps the single
+ * photos this form stores. One full-width card per row, preview filling it.
+ */
+.curator-media-picker ul {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.curator-media-picker li > div > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/*
+ * Empty editable fields (ShipmentFields::gate() adds `bl-empty-field` on the
+ * wrapper while the field is unlocked and has no value): a green border only,
+ * so the admin can spot missing process data at a glance. The ring colour is
+ * left alone while the field is focused (primary) or invalid (danger).
+ */
+.bl-empty-field .fi-input-wrp:not(:focus-within):not(.fi-invalid) {
+    --tw-ring-color: rgba(3, 235, 98, 0.65);
+}
+
+.dark .bl-empty-field .fi-input-wrp:not(:focus-within):not(.fi-invalid) {
+    --tw-ring-color: rgba(3, 235, 98, 0.55);
+}
+
+
+

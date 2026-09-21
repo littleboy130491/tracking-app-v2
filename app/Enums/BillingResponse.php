@@ -27,4 +27,13 @@ enum BillingResponse: string
     {
         return $this->value;
     }
+
+    public function color(): string
+    {
+        return match ($this) {
+            self::Sppb => 'success',
+            self::Ap, self::Spjk => 'warning',
+            self::Spjm => 'danger',
+        };
+    }
 }

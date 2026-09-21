@@ -4,8 +4,8 @@
  * File: app/Enums/ImportMilestone.php
  * Responsibility: The ordered tracking milestones of an import shipment.
  * What it does:
- * - Holds one case per import milestone; `sequence()` returns them in order,
- *   dropping the SPJM branch unless the billing response was SPJM.
+ * - Holds one case per import milestone (IMPORT.md); `sequence()` returns them
+ *   in order, dropping the SPJM branch unless the billing response was SPJM.
  * - `next()` / `previous()` move through that sequence; `unlocked()` tells the
  *   form whether a milestone has been reached so its fields are editable.
  * How to use: ImportShipment casts `current_milestone` to this enum.
@@ -18,21 +18,28 @@ use Filament\Support\Contracts\HasLabel;
 
 enum ImportMilestone: string implements HasLabel
 {
+    // Process 1 — document intake.
     case DocumentReceived = 'document_received';
     case CheckingDocument = 'checking_document';
+    // Process 2 — PIB, billing and customs.
     case DraftPib = 'draft_pib';
-    case DraftPibConfirmed = 'draft_pib_confirmed';
-    case BillingIssued = 'billing_issued';
+    case CheckingDraftPib = 'checking_draft_pib';
+    case WaitingConfirmation = 'waiting_confirmation';
+    case FinalSendingPib = 'final_sending_pib';
     case ThcPayment = 'thc_payment';
+    case WaitingReleaseDo = 'waiting_release_do';
     case DoRelease = 'do_release';
     case BillingPayment = 'billing_payment';
-    case BillingResponseReceived = 'billing_response_received';
-    case DocumentsUploaded = 'documents_uploaded';
-    case BehandlePayment = 'behandle_payment';
+    case ResponseBilling = 'response_billing';
+    case UploadAllDocument = 'upload_all_document';
+    case WaitingProcessBehandle = 'waiting_process_behandle';
+    case PaymentBehandle = 'payment_behandle';
     case Inspection = 'inspection';
-    case SppbReceived = 'sppb_received';
+    case WaitingChangeStatusSppb = 'waiting_change_status_sppb';
+    case ContainerShippingSchedule = 'container_shipping_schedule';
+    // Process 3 — delivery and return.
     case GateOutCy = 'gate_out_cy';
-    case OnTheWayToConsignee = 'on_the_way_to_consignee';
+    case OnTheWayToFactory = 'on_the_way_to_factory';
     case ArrivedAtFactory = 'arrived_at_factory';
     case EmptyReturned = 'empty_returned';
 
@@ -42,19 +49,23 @@ enum ImportMilestone: string implements HasLabel
             self::DocumentReceived => 'Document received',
             self::CheckingDocument => 'Checking document',
             self::DraftPib => 'Draft PIB',
-            self::DraftPibConfirmed => 'Draft PIB confirmed',
-            self::BillingIssued => 'Billing issued',
-            self::ThcPayment => 'THC payment',
+            self::CheckingDraftPib => 'Checking draft PIB to importir',
+            self::WaitingConfirmation => 'Waiting confirmation from customer',
+            self::FinalSendingPib => 'Final sending PIB to custom (issuing billing)',
+            self::ThcPayment => 'Process payment THC',
+            self::WaitingReleaseDo => 'Waiting release DO',
             self::DoRelease => 'DO release',
-            self::BillingPayment => 'Billing payment',
-            self::BillingResponseReceived => 'Billing response received',
-            self::DocumentsUploaded => 'Documents uploaded',
-            self::BehandlePayment => 'Behandle payment',
+            self::BillingPayment => 'Payment billing',
+            self::ResponseBilling => 'Response billing',
+            self::UploadAllDocument => 'Upload all document',
+            self::WaitingProcessBehandle => 'Waiting process bahandle',
+            self::PaymentBehandle => 'Payment bahandle',
             self::Inspection => 'Container inspection',
-            self::SppbReceived => 'SPPB received',
-            self::GateOutCy => 'Gate out CY',
-            self::OnTheWayToConsignee => 'On the way to consignee',
-            self::ArrivedAtFactory => 'Arrived at factory',
+            self::WaitingChangeStatusSppb => 'Waiting change status SPJM to SPPB',
+            self::ContainerShippingSchedule => 'Container shipping schedule',
+            self::GateOutCy => 'Gate out from inbound terminal',
+            self::OnTheWayToFactory => 'Container on the way factory',
+            self::ArrivedAtFactory => 'Container arrived in factory',
             self::EmptyReturned => 'Empty container returned',
         };
     }
@@ -71,18 +82,22 @@ enum ImportMilestone: string implements HasLabel
             self::DocumentReceived,
             self::CheckingDocument,
             self::DraftPib,
-            self::DraftPibConfirmed,
-            self::BillingIssued,
+            self::CheckingDraftPib,
+            self::WaitingConfirmation,
+            self::FinalSendingPib,
             self::ThcPayment,
+            self::WaitingReleaseDo,
             self::DoRelease,
             self::BillingPayment,
-            self::BillingResponseReceived,
-            self::DocumentsUploaded,
-            self::BehandlePayment,
+            self::ResponseBilling,
+            self::UploadAllDocument,
+            self::WaitingProcessBehandle,
+            self::PaymentBehandle,
             self::Inspection,
-            self::SppbReceived,
+            self::WaitingChangeStatusSppb,
+            self::ContainerShippingSchedule,
             self::GateOutCy,
-            self::OnTheWayToConsignee,
+            self::OnTheWayToFactory,
             self::ArrivedAtFactory,
             self::EmptyReturned,
         ];
@@ -135,13 +150,18 @@ enum ImportMilestone: string implements HasLabel
     }
 
     /**
-     * The SPJM branch: extra import steps that only run when customs answers
-     * the billing with SPJM.
+     * The SPJM branch: the additional customs steps that only run when the
+     * billing response was SPJM. The branch itself is information only — the
+     * form shows a notice while the response is SPJM; it is not a step.
      */
     public function isSpjmOnly(): bool
     {
         return match ($this) {
-            self::DocumentsUploaded, self::BehandlePayment, self::Inspection, self::SppbReceived => true,
+            self::UploadAllDocument,
+            self::WaitingProcessBehandle,
+            self::PaymentBehandle,
+            self::Inspection,
+            self::WaitingChangeStatusSppb => true,
             default => false,
         };
     }

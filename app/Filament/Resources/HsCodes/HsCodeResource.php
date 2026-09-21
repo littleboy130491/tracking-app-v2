@@ -23,6 +23,8 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
 class HsCodeResource extends Resource
@@ -54,5 +56,17 @@ class HsCodeResource extends Resource
             'create' => CreateHsCode::route('/create'),
             'edit' => EditHsCode::route('/{record}/edit'),
         ];
+    }
+
+    /**
+     * Let the edit page open a trashed code so it can be restored; without
+     * this the SoftDeletingScope would 404 on trashed records.
+     */
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
     }
 }

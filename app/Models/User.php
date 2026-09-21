@@ -9,7 +9,8 @@
  * - Links to the companies a user may handle through the company_user pivot.
  * - Restricts Filament impersonation: only admin/super_admin may act, and a
  *   super_admin target needs a super_admin actor (no upward escalation).
- * How to use: `$user->companies`, `$user->hasRole('admin')`, `$user->isInternal()`.
+ * How to use: `$user->companies`, `$user->hasRole('admin')`, `$user->isInternal()`,
+ *   `$user->canExportTables()`, `$user->canPruneOldData()`.
  * How to extend: Add profile fields; keep role logic in spatie roles, not columns.
  */
 
@@ -26,6 +27,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -35,7 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser, Otpable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasNotes, HasOtps, HasRoles, Notifiable;
+    use HasFactory, HasNotes, HasOtps, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * @return array<string, string>
@@ -120,6 +122,25 @@ class User extends Authenticatable implements FilamentUser, Otpable
     }
 
     /**
+     * Admins may export table data to CSV (pxlrbt/filament-excel); operators
+     * can read the same tables but never download them.
+     */
+    public function canExportTables(): bool
+    {
+        return $this->hasAnyRole(Role::PRIVILEGED);
+    }
+
+    /**
+     * Only super_admin may permanently delete records older than the
+     * retention window (see App\Services\Prune\OldDataPruner); admins
+     * soft-delete and restore but never purge.
+     */
+    public function canPruneOldData(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN);
+    }
+
+    /**
      * Super admins may only be impersonated by another super admin, so an
      * admin can never escalate by impersonating upwards.
      */
@@ -134,11 +155,11 @@ class User extends Authenticatable implements FilamentUser, Otpable
 
     /**
      * Only active internal users may reach the admin panel; customer-portal
-     * users are kept out entirely (spec.md: regular users see the customer
-     * dashboard only).
+     * users and soft-deleted accounts are kept out entirely (spec.md: regular
+     * users see the customer dashboard only).
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active && $this->isInternal();
+        return ! $this->trashed() && $this->is_active && $this->isInternal();
     }
 }

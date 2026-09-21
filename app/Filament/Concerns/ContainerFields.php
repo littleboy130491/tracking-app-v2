@@ -15,7 +15,6 @@ namespace App\Filament\Concerns;
 
 use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
-use App\Enums\InspectionStatus;
 use App\Enums\StuffingStatus;
 use App\Livewire\NotesPanel;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
@@ -24,7 +23,6 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -32,7 +30,7 @@ use Filament\Schemas\Components\Section;
 class ContainerFields
 {
     /**
-     * Container identity: number, size, type and seal.
+     * Export container identity: number, size, type and seal.
      *
      * @return list<Field>
      */
@@ -57,7 +55,40 @@ class ContainerFields
     }
 
     /**
-     * Driver and vehicle identity.
+     * Import container identity: the container number. IMPORT.md adds the
+     * containers to the shipment at the response-billing step; the size is a
+     * separate group because it unlocks later (Tambahan step SPJM).
+     *
+     * @return list<Field>
+     */
+    public static function importIdentity(): array
+    {
+        return [
+            TextInput::make('container_number')
+                ->required()
+                ->distinct()
+                ->maxLength(30)
+                // Live-on-blur so the collapsed item header shows the number as soon as it is typed.
+                ->live(onBlur: true),
+        ];
+    }
+
+    /**
+     * Import: container size, entered once the SPJM processing starts.
+     *
+     * @return list<Field>
+     */
+    public static function importSize(): array
+    {
+        return [
+            Select::make('size')
+                ->label('Container Size')
+                ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
+        ];
+    }
+
+    /**
+     * Export: driver and vehicle identity.
      *
      * @return list<Field>
      */
@@ -71,6 +102,22 @@ class ContainerFields
                 ->maxLength(100),
             TextInput::make('driver_license_number')
                 ->label('Driver License Number')
+                ->maxLength(100),
+        ];
+    }
+
+    /**
+     * Import: driver name and No. license for the gate-out delivery.
+     *
+     * @return list<Field>
+     */
+    public static function importDriver(): array
+    {
+        return [
+            TextInput::make('driver_name')
+                ->maxLength(255),
+            TextInput::make('license_number')
+                ->label('No. License')
                 ->maxLength(100),
         ];
     }
@@ -94,6 +141,8 @@ class ContainerFields
             fn (string $key): CuratorPicker => CuratorPicker::make($key)
                 ->label($labels[$key])
                 ->multiple()
+                // One photo per slot (door, floor, seal, EIR, additional).
+                ->maxItems(1)
                 ->dehydrated(false),
             array_keys($containerModel::photoPickers()),
         );
@@ -199,7 +248,7 @@ class ContainerFields
     }
 
     /**
-     * Import: gate out and weights.
+     * Import: gate-out datetime from the inbound terminal.
      *
      * @return list<Field>
      */
@@ -207,52 +256,88 @@ class ContainerFields
     {
         return [
             DateTimePicker::make('gate_out_cy_at')
-                ->label('Gate out CY at'),
+                ->label('Gate out CY'),
+        ];
+    }
+
+    /**
+     * Import: driver position tracking on the way to the factory. The callers
+     * place both fields side by side in a two-column grid.
+     *
+     * @return list<Field>
+     */
+    public static function importTracking(): array
+    {
+        return [
+            TextInput::make('tracking_position')
+                ->label('Tracking position driver')
+                ->maxLength(255),
+            TextInput::make('tracking_position_input')
+                ->label('Tracking position input (manual)')
+                ->maxLength(500),
+        ];
+    }
+
+    /**
+     * Import: gross weight recorded at the bahandle payment step.
+     *
+     * @return list<Field>
+     */
+    public static function importWeights(): array
+    {
+        return [
             TextInput::make('gross_weight')
                 ->numeric(),
             TextInput::make('gross_weight_unit')
                 ->maxLength(20),
+        ];
+    }
+
+    /**
+     * Import: CBM / measurement, recorded when the SPJM status changes to SPPB.
+     *
+     * @return list<Field>
+     */
+    public static function importCbm(): array
+    {
+        return [
             TextInput::make('cbm')
+                ->label('CBM / measurement')
                 ->numeric(),
         ];
     }
 
     /**
-     * Import: container inspection.
+     * Import: factory loading date and status.
      *
      * @return list<Field>
      */
-    public static function importInspection(): array
+    public static function importFactoryLoading(): array
     {
         return [
-            Select::make('inspection_status')
-                ->options(InspectionStatus::options())
-                ->default(InspectionStatus::NotStarted->value)
+            DateTimePicker::make('factory_loading_at')
+                ->label('Loading in factory'),
+            Select::make('factory_loading_status')
+                ->label('Loading in factory status')
+                ->options(FactoryLoadingStatus::options())
+                ->default(FactoryLoadingStatus::OnProcess->value)
                 ->required(),
-            DateTimePicker::make('inspected_at'),
-            Textarea::make('inspection_notes')
-                ->columnSpanFull(),
         ];
     }
 
     /**
-     * Import: factory arrival, loading and empty return.
+     * Import: empty container return data.
      *
      * @return list<Field>
      */
-    public static function importFactoryReturn(): array
+    public static function importReturn(): array
     {
         return [
-            DateTimePicker::make('factory_arrived_at'),
-            Select::make('factory_loading_status')
-                ->options(FactoryLoadingStatus::options())
-                ->default(FactoryLoadingStatus::NotStarted->value)
-                ->required(),
-            DateTimePicker::make('factory_loading_started_at'),
-            DateTimePicker::make('factory_loading_finished_at'),
             TextInput::make('return_depot_name')
+                ->label('Return depot name')
                 ->maxLength(255),
-            DateTimePicker::make('empty_returned_at'),
+            DateTimePicker::make('empty_returned_at')
+                ->label('Return date'),
         ];
     }
 

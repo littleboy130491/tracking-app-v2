@@ -15,7 +15,6 @@
 
 namespace Tests\Feature\Portal;
 
-use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ExportMilestone;
 use App\Enums\ImportMilestone;
 use App\Enums\ShipmentStatus;
@@ -477,8 +476,7 @@ class PortalTest extends TestCase
 
         $shipment->refresh();
 
-        $this->assertSame(DraftPibConfirmationStatus::Confirmed, $shipment->draft_pib_confirmation_status);
-        $this->assertNotNull($shipment->draft_pib_confirmed_at);
+        $this->assertTrue($shipment->confirmation_checklist);
 
         $this->assertDatabaseHas('activity_logs', [
             'import_shipment_id' => $shipment->getKey(),
@@ -540,7 +538,7 @@ class PortalTest extends TestCase
             ->call('requestRevision')
             ->assertHasErrors('revisionNotes');
 
-        $this->assertSame(DraftPibConfirmationStatus::Confirmed, $shipment->refresh()->draft_pib_confirmation_status);
+        $this->assertTrue($shipment->refresh()->confirmation_checklist);
         $this->assertDatabaseMissing('activity_logs', [
             'import_shipment_id' => $shipment->getKey(),
             'event' => 'draft_pib_revision_requested',
@@ -555,7 +553,6 @@ class PortalTest extends TestCase
         $this->actingAs($user);
 
         $before = ActivityLog::query()->count();
-        $confirmedAt = $shipment->draft_pib_confirmed_at;
 
         Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
             ->call('confirm')
@@ -563,13 +560,13 @@ class PortalTest extends TestCase
             ->assertSee('already confirmed');
 
         $this->assertSame($before, ActivityLog::query()->count());
-        $this->assertTrue($confirmedAt->equalTo($shipment->refresh()->draft_pib_confirmed_at));
+        $this->assertTrue($shipment->refresh()->confirmation_checklist);
     }
 
     private function confirmedImportShipment(): ImportShipment
     {
         return ImportShipment::query()
-            ->where('draft_pib_confirmation_status', DraftPibConfirmationStatus::Confirmed)
+            ->where('confirmation_checklist', true)
             ->firstOrFail();
     }
 
@@ -648,7 +645,7 @@ class PortalTest extends TestCase
             'company_name_snapshot' => $company->name,
             'current_milestone' => ImportMilestone::DocumentReceived,
             'status' => $status,
-            'draft_pib_confirmation_status' => DraftPibConfirmationStatus::Pending,
+            'confirmation_checklist' => false,
         ]);
 
         $shipment->containers()->create([

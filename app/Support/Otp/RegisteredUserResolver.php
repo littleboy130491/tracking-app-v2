@@ -30,7 +30,7 @@ class RegisteredUserResolver
         /** @var User|null $user */
         $user = $model::query()->where('email', $email)->first();
 
-        if (! $user || ! $user->is_active || ! ($user->hasRole(Role::CUSTOMER) || $user->canViewAllShipments())) {
+        if (! $user || $user->trashed() || ! $user->is_active || ! ($user->hasRole(Role::CUSTOMER) || $user->canViewAllShipments())) {
             // Same message for "unknown" and "not allowed" so the form cannot be
             // used to enumerate customer email addresses.
             throw ValidationException::withMessages([

@@ -39,6 +39,7 @@ class ExportContainerForm
                         Select::make('export_shipment_id')
                             ->label('Export shipment')
                             ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                            ->getOptionLabelFromRecordUsing(fn (ExportShipment $record): string => $record->pickerLabel())
                             ->searchable()
                             ->preload()
                             ->required(),

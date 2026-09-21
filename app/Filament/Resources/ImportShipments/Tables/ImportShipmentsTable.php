@@ -7,6 +7,11 @@
  * - Shows the identifying and status columns plus the customs billing
  *   response, with filters for status, response and company, and a
  *   soft-delete filter.
+ * - Lists each container number as a badge linking to that container's edit page.
+ * - Offers a CSV header action, restricted to admin/super_admin via
+ *   User::canExportTables().
+ * - Offers a "Prune old data" header action for the same roles, deleting
+ *   import B/Ls older than the retention window.
  * How to use: Rendered by ListImportShipments.
  * How to extend: Add filters/columns as reporting needs grow.
  */
@@ -15,6 +20,10 @@ namespace App\Filament\Resources\ImportShipments\Tables;
 
 use App\Enums\BillingResponse;
 use App\Enums\ShipmentStatus;
+use App\Filament\Concerns\PrunableTableHeaderAction;
+use App\Filament\Concerns\TableExportColumns;
+use App\Filament\Resources\ImportContainers\ImportContainerResource;
+use App\Models\ImportShipment;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -26,12 +35,15 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ImportShipmentsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['containers', 'hsCodes', 'company', 'creator', 'updater', 'documentReceivedBy']))
             ->columns([
                 TextColumn::make('bl_number')
                     ->label('B/L number')
@@ -50,12 +62,25 @@ class ImportShipmentsTable
                 TextColumn::make('billing_response')
                     ->label('Response')
                     ->badge()
+                    ->color(fn (BillingResponse $state): string => $state->color())
                     ->placeholder('—')
                     ->sortable(),
-                TextColumn::make('containers_count')
+                TextColumn::make('containers.container_number')
                     ->label('Containers')
-                    ->counts('containers')
-                    ->badge(),
+                    ->badge()
+                    ->placeholder('—')
+                    ->searchable()
+                    ->url(function (mixed $state, ImportShipment $record): ?string {
+                        if (! filled($state)) {
+                            return null;
+                        }
+
+                        $container = $record->containers->firstWhere('container_number', $state);
+
+                        return $container
+                            ? ImportContainerResource::getUrl('edit', ['record' => $container])
+                            : null;
+                    }),
                 TextColumn::make('eta_at')
                     ->label('ETA')
                     ->dateTime()
@@ -80,6 +105,14 @@ class ImportShipmentsTable
             ])
             ->recordActions([
                 EditAction::make(),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        ExcelExport::make()->withColumns(TableExportColumns::for(TableExportColumns::IMPORT_SHIPMENTS)),
+                    ])
+                    ->visible(fn (): bool => (bool) auth()->user()?->canExportTables()),
+                PrunableTableHeaderAction::make('import-shipments'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

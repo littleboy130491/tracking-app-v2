@@ -13,7 +13,6 @@ _Checking Booking Order_
 
 Data:
 
-- Nomor AJU
 - No. DO
 - Shipping Line
 - Vessel Name

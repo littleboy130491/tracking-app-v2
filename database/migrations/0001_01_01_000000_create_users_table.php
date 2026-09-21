@@ -7,6 +7,8 @@
  * - Users serve both internal staff (password login) and portal customers
  *   (OTP login, no password needed in practice).
  * - `phone` is optional contact data; `is_active` gates panel/portal access.
+ * - Soft-deletable: a removed user is blocked from logging in; admin may
+ *   restore, only super_admin may permanently delete.
  * How to use: Run with `php artisan migrate`; model is App\Models\User.
  * How to extend: Add user-level attributes as nullable columns here; keep
  *   role logic in the spatie roles tables, not on users.
@@ -32,6 +34,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

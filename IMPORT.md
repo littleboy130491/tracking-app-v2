@@ -5,7 +5,6 @@ OUTPUT - Process 1
 Document Received -> progress
 Customer -> field
 Checking Document -> progress
-Nomor AJU -> field
 No. BL -> field
 
 INPUT - Process 2
@@ -17,6 +16,7 @@ Vessel Name -> field
 Waiting Confirmation from Customer -> progress
 Confirmation Checklist -> field (boolean)
 Final Sending PIB to Custom (Bea Cukai), menerbitkan billing -> progress
+Nomor AJU -> field
 Voyage -> field
 Status Billing -> field
 Process Payment THC -> progress

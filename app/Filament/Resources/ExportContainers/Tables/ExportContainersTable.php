@@ -6,6 +6,10 @@
  * What it does:
  * - Shows the container identity, its shipment and the export statuses, with
  *   filters for status, stuffing and shipment plus a soft-delete filter.
+ * - Offers a CSV header action, restricted to admin/super_admin via
+ *   User::canExportTables().
+ * - Offers a "Prune old data" header action for the same roles, deleting
+ *   export containers older than the retention window.
  * How to use: Rendered by ListExportContainers.
  * How to extend: Add columns as container tracking grows.
  */
@@ -14,6 +18,9 @@ namespace App\Filament\Resources\ExportContainers\Tables;
 
 use App\Enums\ContainerStatus;
 use App\Enums\StuffingStatus;
+use App\Filament\Concerns\PrunableTableHeaderAction;
+use App\Filament\Concerns\TableExportColumns;
+use App\Models\ExportShipment;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -26,12 +33,15 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ExportContainersTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('shipment.company'))
             ->columns([
                 TextColumn::make('container_number')
                     ->label('Container')
@@ -78,12 +88,21 @@ class ExportContainersTable
                 SelectFilter::make('export_shipment_id')
                     ->label('Shipment')
                     ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                    ->getOptionLabelFromRecordUsing(fn (ExportShipment $record): string => $record->pickerLabel())
                     ->searchable()
                     ->preload(),
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 EditAction::make(),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        ExcelExport::make()->withColumns(TableExportColumns::for(TableExportColumns::EXPORT_CONTAINERS)),
+                    ])
+                    ->visible(fn (): bool => (bool) auth()->user()?->canExportTables()),
+                PrunableTableHeaderAction::make('export-containers'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

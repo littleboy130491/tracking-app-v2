@@ -4,6 +4,9 @@
     What it does:
     - Draws the milestone sequence as dots on a progress line: done = filled,
       current = highlighted ring, upcoming = translucent grey.
+    - Rows hold at most 10 steps. The SPJM-only steps (red; they exist only
+      while the billing response is SPJM) stay on the second row together with
+      the response-billing step that precedes them.
     - Each step is a button calling jumpToMilestone() on the edit page;
       wire:confirm guards against misclicks.
     - Each step is addressable (id="bl-ms-step-N") and a delegated click
@@ -15,11 +18,14 @@
            $editable (bool — false on the create page, where there is no record).
 --}}
 <style>
-    .bl-ms { overflow-x: auto; padding: 4px 0 6px; }
-    .bl-ms ol { display: flex; min-width: max-content; margin: 0; padding: 0; list-style: none; }
+    .bl-ms { overflow-x: auto; padding: 16px 0 20px; }
+    /* One row per ol: at most 10 steps each; extra rows stack below. */
+    .bl-ms ol { display: flex; margin: 0; padding: 0; list-style: none; }
+    .bl-ms ol + ol { margin-top: 14px; }
     .bl-ms li { position: relative; display: flex; flex-direction: column; align-items: center; width: 108px; flex-shrink: 0; }
     /* connector line: a full-width bar centered behind each dot, joining neighbours */
     .bl-ms li::before { content: ''; position: absolute; top: 11px; left: -50%; width: 100%; height: 2px; background: rgba(148, 163, 184, .35); }
+    /* no connector before the first step of a row */
     .bl-ms li:first-child::before { display: none; }
     .bl-ms li.reached::before { background: rgb(3, 235, 98); }
     .bl-ms .ms-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; background: none; border: 0; padding: 0; }
@@ -49,38 +55,80 @@
     .bl-ms-goto-dot { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 9999px; font-size: 10px; font-weight: 600; background: rgba(3, 235, 98, .25); color: rgb(2, 140, 60); }
     .dark .bl-ms-goto { color: rgb(74, 222, 128); }
     .dark .bl-ms-goto-dot { background: rgba(74, 222, 128, .2); color: rgb(74, 222, 128); }
+    /* SPJM-only steps (they exist only while the billing response is SPJM): red. */
+    .bl-ms li.spjm .ms-dot { background: rgba(239, 68, 68, .35); color: rgb(153, 27, 27); }
+    .bl-ms li.spjm .ms-label { color: rgb(185, 28, 28); }
+    .bl-ms li.spjm.reached::before { background: rgb(248, 113, 113); }
+    .bl-ms li.spjm.done .ms-dot { background: rgb(239, 68, 68); color: #fff; }
+    .bl-ms li.spjm.current .ms-dot { background: rgb(220, 38, 38); color: #fff; box-shadow: 0 0 0 4px rgba(239, 68, 68, .3); }
+    .bl-ms li.spjm.current .ms-label { font-weight: 600; color: rgb(185, 28, 28); }
+    .dark .bl-ms li.spjm .ms-dot { background: rgba(239, 68, 68, .4); color: rgb(254, 202, 202); }
+    .dark .bl-ms li.spjm .ms-label { color: rgb(252, 165, 165); }
+    .dark .bl-ms li.spjm.reached::before { background: rgb(248, 113, 113); }
+    .dark .bl-ms li.spjm.done .ms-dot,
+    .dark .bl-ms li.spjm.current .ms-dot { background: rgb(239, 68, 68); color: #fff; }
+    .dark .bl-ms li.spjm.current .ms-label { color: rgb(252, 165, 165); }
 </style>
 @php
-    $currentIndex = $current ? array_search($current, $sequence, true) : false;
+    $steps = collect($sequence)->values();
+    $currentIndex = $current ? $steps->search($current) : false;
     // Forward moves are capped at one step; any earlier step stays clickable.
     $nextAllowedIndex = $currentIndex === false ? 0 : $currentIndex + 1;
+
+    // Rows hold at most 10 steps. The SPJM-only block (the additional customs
+    // steps, present only while the response is SPJM) stays together with the
+    // response-billing step that precedes it: it fills the second row and the
+    // remaining steps continue below.
+    $isSpjmStep = fn ($step): bool => method_exists($step, 'isSpjmOnly') && $step->isSpjmOnly();
+    $rows = collect();
+    $row = collect();
+    $previousWasSpjm = false;
+
+    foreach ($steps as $step) {
+        $isSpjm = $isSpjmStep($step);
+
+        if ($row->isNotEmpty() && ($row->count() === 10 || ($previousWasSpjm && ! $isSpjm))) {
+            $rows->push($row);
+            $row = collect();
+        }
+
+        $row->push($step);
+        $previousWasSpjm = $isSpjm;
+    }
+
+    if ($row->isNotEmpty()) {
+        $rows->push($row);
+    }
 @endphp
 <div class="bl-ms" id="bl-ms">
-    <ol>
-        @foreach ($sequence as $i => $step)
-            @php
-                $done = $currentIndex !== false && $i < $currentIndex;
-                $active = $step === $current;
-                $allowed = $editable && ! $active && $i <= $nextAllowedIndex;
-                $liClass = $done ? 'done reached' : ($active ? 'current reached' : '');
-            @endphp
-            <li
-                id="bl-ms-step-{{ $i + 1 }}"
-                data-bl-ms-step="{{ $i + 1 }}"
-                class="{{ $liClass }}"
-            >
-                <button
-                    type="button"
-                    wire:click="mountAction('jumpToMilestone', {'milestone': '{{ $step->value }}'})"
-                    @disabled(! $allowed)
-                    class="ms-btn"
+    @foreach ($rows as $rowIndex => $row)
+        <ol>
+            @foreach ($row->values() as $columnIndex => $step)
+                @php
+                    $i = $rows->take($rowIndex)->sum(fn ($previous): int => $previous->count()) + $columnIndex;
+                    $done = $currentIndex !== false && $i < $currentIndex;
+                    $active = $step === $current;
+                    $allowed = $editable && ! $active && $i <= $nextAllowedIndex;
+                    $liClass = ($done ? 'done reached' : ($active ? 'current reached' : '')).($isSpjmStep($step) ? ' spjm' : '');
+                @endphp
+                <li
+                    id="bl-ms-step-{{ $i + 1 }}"
+                    data-bl-ms-step="{{ $i + 1 }}"
+                    class="{{ $liClass }}"
                 >
-                    <span class="ms-dot">{{ $done ? '✓' : $i + 1 }}</span>
-                    <span class="ms-label">{{ $step->getLabel() }}</span>
-                </button>
-            </li>
-        @endforeach
-    </ol>
+                    <button
+                        type="button"
+                        wire:click="mountAction('jumpToMilestone', {'milestone': '{{ $step->value }}'})"
+                        @disabled(! $allowed)
+                        class="ms-btn"
+                    >
+                        <span class="ms-dot">{{ $done ? '✓' : $i + 1 }}</span>
+                        <span class="ms-label">{{ $step->getLabel() }}</span>
+                    </button>
+                </li>
+            @endforeach
+        </ol>
+    @endforeach
 </div>
 <script>
     // Scrolled-to from a locked field's helper text: bring the matching

@@ -6,17 +6,16 @@
  * What it does:
  * - Shows the customer-visible shipment facts, the shipment-level journey
  *   timeline and the list of containers (each opens the container page).
- * - The customer can confirm the draft PIB or request a revision, which
- *   writes back to the shipment and the activity log. Once the draft is
- *   confirmed those actions are neither offered nor accepted: the guard is
- *   here, not only in the view.
+ * - The customer can confirm the draft PIB (sets the confirmation checklist)
+ *   or request a revision, which writes back to the shipment and the activity
+ *   log. Once the draft is confirmed those actions are neither offered nor
+ *   accepted: the guard is here, not only in the view.
  * How to use: route customer.import-shipments.show.
  * How to extend: surface more customer-visible fields as they are added.
  */
 
 namespace App\Livewire\Customer;
 
-use App\Enums\DraftPibConfirmationStatus;
 use App\Models\ImportShipment;
 use App\Services\ActivityLogger;
 use App\Services\ShipmentTimeline;
@@ -53,18 +52,14 @@ class ImportShipmentDetail extends Component
             return;
         }
 
-        $shipment->update([
-            'draft_pib_confirmation_status' => DraftPibConfirmationStatus::Confirmed,
-            'draft_pib_confirmed_at' => now(),
-            'draft_pib_confirmation_notes' => null,
-        ]);
+        $shipment->update(['confirmation_checklist' => true]);
 
         app(ActivityLogger::class)->record(
             shipment: $shipment,
             event: 'draft_pib_confirmed',
             entityType: ImportShipment::class,
             entityId: $shipment->getKey(),
-            newValues: ['draft_pib_confirmation_status' => DraftPibConfirmationStatus::Confirmed->value],
+            newValues: ['confirmation_checklist' => true],
             customerSummary: 'Draft PIB confirmed by the customer.',
             customerVisible: true,
         );
@@ -85,12 +80,8 @@ class ImportShipmentDetail extends Component
 
         $this->validate(['revisionNotes' => ['required', 'string', 'max:1000']]);
 
-        $shipment->update([
-            'draft_pib_confirmation_status' => DraftPibConfirmationStatus::RevisionRequested,
-            'draft_pib_confirmed_at' => null,
-            'draft_pib_confirmation_notes' => $this->revisionNotes,
-        ]);
-
+        // The checklist only holds confirmed/not-confirmed; the request itself
+        // is recorded on the activity log, where the office reads it.
         app(ActivityLogger::class)->record(
             shipment: $shipment,
             event: 'draft_pib_revision_requested',
@@ -119,7 +110,7 @@ class ImportShipmentDetail extends Component
 
     private function isDraftPibConfirmed(ImportShipment $shipment): bool
     {
-        return $shipment->draft_pib_confirmation_status === DraftPibConfirmationStatus::Confirmed;
+        return (bool) $shipment->confirmation_checklist;
     }
 
     private function shipment(): ImportShipment

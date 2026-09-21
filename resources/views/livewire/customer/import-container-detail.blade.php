@@ -19,8 +19,8 @@
             <div class="font-medium">{{ trim(($container->size ?? '').' '.($container->type ?? '')) ?: '—' }}</div>
         </div>
         <div>
-            <div class="text-xs uppercase tracking-wide text-slate-500">Seal number</div>
-            <div class="font-medium">{{ $container->seal_number ?: '—' }}</div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Driver</div>
+            <div class="font-medium">{{ $container->driver_name ?: '—' }}</div>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wide text-slate-500">Status</div>

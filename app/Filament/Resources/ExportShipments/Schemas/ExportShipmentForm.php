@@ -59,9 +59,6 @@ class ExportShipmentForm
                                             TextInput::make('do_number')
                                                 ->label('DO number')
                                                 ->maxLength(100),
-                                            TextInput::make('aju_number')
-                                                ->label('AJU number')
-                                                ->maxLength(100),
                                             TextInput::make('shipping_line'),
                                             TextInput::make('vessel_name'),
                                             TextInput::make('voyage_number')
@@ -113,6 +110,16 @@ class ExportShipmentForm
                                         Textarea::make('stuffing_destination')
                                             ->columnSpanFull(),
                                     ], $enum, ExportMilestone::PickupEmptyContainer),
+                                ]),
+                                Grid::make(2)->schema([
+                                    // Step 5 — Stuffing at factory / PEB & NPE. The AJU
+                                    // number exists only once the PEB is lodged, so it
+                                    // unlocks here, above the container list.
+                                    ...ShipmentFields::gated([
+                                        TextInput::make('aju_number')
+                                            ->label('AJU number')
+                                            ->maxLength(100),
+                                    ], $enum, ExportMilestone::StuffingPebNpe),
                                 ]),
                             ],
                         ),

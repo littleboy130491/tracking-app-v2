@@ -5,7 +5,8 @@
  * Responsibility: Seeds demo export shipments and their containers.
  * What it does:
  * - Creates two in-progress export shipments and one completed example, so the
- *   admin and the portal have live and finished records to look at.
+ *   admin and the portal have live and finished records to look at. Each
+ *   shipment's milestone reflects the data seeded for it.
  * - Finds companies by code, so it depends on DemoCompanySeeder running first
  *   and must not assume how many companies exist.
  * - Idempotent: reference numbers are unique and progress fields are only
@@ -18,6 +19,7 @@
 namespace Database\Seeders;
 
 use App\Enums\ContainerStatus;
+use App\Enums\ExportMilestone;
 use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
 use App\Enums\StuffingStatus;
@@ -37,7 +39,9 @@ class DemoExportShipmentSeeder extends Seeder
     }
 
     /**
-     * Shipments left part-way through, so the admin has live work.
+     * Shipments left part-way through, so the admin has live work: their
+     * header data and container identities are filled, which lands them at
+     * "pick up empty container".
      */
     private function seedInProgressShipments(): void
     {
@@ -51,6 +55,8 @@ class DemoExportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Singapore (SGSIN)',
             'eta_at' => now()->addDays(10),
             'goods_description' => 'Furniture parts',
+        ], [
+            'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
 
         $this->hsCodes($nusantara, '9403.60');
@@ -68,6 +74,8 @@ class DemoExportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Kaohsiung (TWKHH)',
             'eta_at' => now()->addDays(14),
             'goods_description' => 'Processed timber',
+        ], [
+            'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
 
         $this->hsCodes($borneo, '4407.99');
@@ -76,13 +84,16 @@ class DemoExportShipmentSeeder extends Seeder
     }
 
     /**
-     * One export shipment whose data is already filled end to end.
+     * One export shipment whose data is already filled end to end: it sits on
+     * the final step, which is what completes a shipment.
      */
     private function seedCompletedShipment(): void
     {
         $exported = $this->shipment('SNI', [
             'bl_number' => 'BL-EXP-0003',
             'shipment_mode' => ShipmentMode::Fcl,
+            // The AJU number exists once the PEB is lodged (step 5).
+            'aju_number' => 'AJU-EXP-0003',
             'shipping_line' => 'Evergreen',
             'vessel_name' => 'MV Ever Summit',
             'voyage_number' => 'V-512',
@@ -100,6 +111,7 @@ class DemoExportShipmentSeeder extends Seeder
         ], [
             'status' => ShipmentStatus::Completed,
             'completed_at' => now()->subDays(6),
+            'current_milestone' => ExportMilestone::FinalChecking,
         ]);
 
         $this->hsCodes($exported, '2604.00');
@@ -121,8 +133,8 @@ class DemoExportShipmentSeeder extends Seeder
 
     /**
      * Create or refresh a shipment. `$initial` holds progress fields (status,
-     * completed_at) written only on creation so re-seeding never rewinds a
-     * live shipment.
+     * completed_at, current_milestone) written only on creation so re-seeding
+     * never rewinds a live shipment.
      *
      * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $initial

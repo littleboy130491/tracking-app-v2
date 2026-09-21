@@ -2,11 +2,13 @@
 
 /**
  * File: app/Enums/FactoryLoadingStatus.php
- * Responsibility: Factory loading progress for a container.
+ * Responsibility: Factory loading progress for an import container.
  * What it does:
- * - Tracks not_started / on_process / final_process per migration_plan.md.
+ * - Tracks on_process / finished per IMPORT.md ("Loading in Factory Status");
+ *   loading starts as soon as the container is at the factory, so there is no
+ *   "not started" state.
  * How to use: Container casts `factory_loading_status` to this enum.
- * How to extend: Add "cancelled" if loading can be aborted mid-way.
+ * How to extend: Add stages such as "cancelled" if the operation allows it.
  */
 
 namespace App\Enums;
@@ -17,16 +19,14 @@ enum FactoryLoadingStatus: string
 {
     use HasSelectOptions;
 
-    case NotStarted = 'not_started';
     case OnProcess = 'on_process';
-    case FinalProcess = 'final_process';
+    case Finished = 'finished';
 
     public function label(): string
     {
         return match ($this) {
-            self::NotStarted => 'Not Started',
             self::OnProcess => 'On Process',
-            self::FinalProcess => 'Final Process',
+            self::Finished => 'Finished',
         };
     }
 }

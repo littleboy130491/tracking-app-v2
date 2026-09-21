@@ -5,7 +5,8 @@
  * Responsibility: Edits an import shipment.
  * What it does:
  * - Renders the customer/shipping/containers/notes/activity form; the header
- *   exposes Regress, Advance, restore (on trashed records) and save.
+ *   exposes New import B/L, Regress, Advance, restore (on trashed records)
+ *   and save.
  * - `jumpToMilestone()` backs the stepper's click-to-jump buttons.
  * - Each save audits the changed shipment, nested container, HS-code and
  *   attachment-assignment values.
@@ -52,7 +53,7 @@ class EditImportShipment extends EditRecord
                 $enum = $this->record::milestoneEnum();
                 $target = $enum::tryFrom($arguments['milestone'] ?? '');
 
-                return $target ? 'Move progress to "'.$target->getLabel().'"?': 'Move progress?';
+                return $target ? 'Move progress to "'.$target->getLabel().'"?' : 'Move progress?';
             })
             ->action(function (array $arguments): void {
                 $enum = $this->record::milestoneEnum();
@@ -130,6 +131,11 @@ class EditImportShipment extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('createShipment')
+                ->label('New import B/L')
+                ->icon(Heroicon::Plus)
+                ->color('gray')
+                ->url(CreateImportShipment::getUrl()),
             Action::make('regressMilestone')
                 ->label('Regress')
                 ->icon(Heroicon::ArrowLeft)

@@ -5,38 +5,38 @@
  * Responsibility: Admin form for an import shipment.
  * What it does:
  * - Customer section above the tabs, then the milestone stepper on edit.
- * - Shipping Details: document checking, draft PIB, billing/THC/behandle
- *   payments, DO release, billing response and sailing dates, each disabled
- *   until its milestone is reached.
+ * - Shipping Details: one field group per IMPORT.md milestone (document
+ *   checking, PIB confirmation, billing/THC/DO data, sailing dates, documents
+ *   and HS codes), each disabled until its milestone is reached.
  * - Containers: the import container repeater; items stay open to distinguish
  *   individual container records.
- * - Notes and Activity log tabs.
+ * - Status, Notes and Activity log tabs.
  * How to use: Rendered by the import shipment create and edit pages.
  * How to extend: add a field inside the Shipping Details grid and wrap it in
- *   ShipmentFields::gate() with the milestone that unlocks it.
+ *   ShipmentFields::gated() with the milestone that unlocks it.
  */
 
 namespace App\Filament\Resources\ImportShipments\Schemas;
 
 use App\Enums\BillingIssuanceStatus;
-use App\Enums\BillingPaymentStatus;
 use App\Enums\BillingResponse;
-use App\Enums\DraftPibConfirmationStatus;
 use App\Enums\ImportMilestone;
-use App\Enums\ShipmentMode;
-use App\Enums\ShipmentStatus;
 use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ImportContainer;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class ImportShipmentForm
 {
@@ -57,112 +57,103 @@ class ImportShipmentForm
                             ->schema([
                                 Grid::make(2)
                                     ->schema([
-                                        // Step 2 — Checking document. These unlock together.
+                                        // Step 2 — Checking document.
+                                        ...ShipmentFields::gated([
+                                            TextInput::make('bl_number')
+                                                ->label('B/L number')
+                                                ->maxLength(100),
+                                        ], $enum, ImportMilestone::CheckingDocument),
+                                        // Step 3 — Draft PIB.
+                                        ...ShipmentFields::gated([
+                                            TextInput::make('shipping_line'),
+                                        ], $enum, ImportMilestone::DraftPib),
+                                        // Step 4 — Checking draft PIB to importir.
+                                        ...ShipmentFields::gated([
+                                            TextInput::make('vessel_name'),
+                                        ], $enum, ImportMilestone::CheckingDraftPib),
+                                        // Step 5 — Waiting confirmation from customer.
+                                        ...ShipmentFields::gated([
+                                            Toggle::make('confirmation_checklist')
+                                                ->label('Confirmation checklist'),
+                                        ], $enum, ImportMilestone::WaitingConfirmation),
+                                        // Step 6 — Final sending PIB to custom (issuing billing).
                                         ...ShipmentFields::gated([
                                             TextInput::make('aju_number')
                                                 ->label('AJU number')
                                                 ->maxLength(100),
-                                            TextInput::make('bl_number')
-                                                ->label('B/L number')
-                                                ->maxLength(100),
-                                            TextInput::make('shipping_line'),
-                                            TextInput::make('vessel_name'),
                                             TextInput::make('voyage_number')
                                                 ->maxLength(100),
-                                            TextInput::make('port_of_loading'),
-                                            TextInput::make('port_of_discharge'),
-                                            Select::make('shipment_mode')
-                                                ->label('Shipment mode')
-                                                ->options(ShipmentMode::options()),
-                                            Textarea::make('goods_description')
-                                                ->columnSpanFull(),
-                                            ShipmentFields::hsCodesField(),
-                                        ], $enum, ImportMilestone::CheckingDocument),
-                                        // Draft PIB sent to the customer for confirmation.
-                                        ...ShipmentFields::gated([
-                                            Select::make('draft_pib_confirmation_status')
-                                                ->options(DraftPibConfirmationStatus::options())
-                                                ->default(DraftPibConfirmationStatus::Pending),
-                                            DateTimePicker::make('draft_pib_confirmed_at')
-                                                ->label('Confirmed at'),
-                                            Textarea::make('draft_pib_confirmation_notes')
-                                                ->label('Confirmation notes')
-                                                ->columnSpanFull(),
-                                        ], $enum, ImportMilestone::DraftPib),
-                                        // Billing issued, THC payment, DO release.
-                                        ...ShipmentFields::gated([
                                             Select::make('billing_issuance_status')
+                                                ->label('Status billing')
                                                 ->options(BillingIssuanceStatus::options())
                                                 ->default(BillingIssuanceStatus::NotIssued),
-                                            DateTimePicker::make('billing_issued_at')
-                                                ->label('Issued at'),
-                                        ], $enum, ImportMilestone::BillingIssued),
+                                        ], $enum, ImportMilestone::FinalSendingPib),
+                                        // Step 7 — Process payment THC.
                                         ...ShipmentFields::gated([
-                                            Select::make('thc_payment_status')
-                                                ->options(BillingPaymentStatus::options())
-                                                ->default(BillingPaymentStatus::NotPaid),
-                                            DateTimePicker::make('thc_paid_at')
-                                                ->label('Paid at'),
+                                            TextInput::make('port_of_loading'),
                                         ], $enum, ImportMilestone::ThcPayment),
+                                        // Step 8 — Waiting release DO.
                                         ...ShipmentFields::gated([
-                                            TextInput::make('do_number')
-                                                ->label('DO number')
-                                                ->maxLength(100),
-                                            DateTimePicker::make('do_released_at')
-                                                ->label('DO released at'),
+                                            DatePicker::make('departure_date'),
+                                        ], $enum, ImportMilestone::WaitingReleaseDo),
+                                        // Step 9 — DO release.
+                                        ...ShipmentFields::gated([
+                                            TextInput::make('port_of_discharge'),
                                         ], $enum, ImportMilestone::DoRelease),
-                                        // Billing payment, customs response and behandle.
+                                        // Step 10 — Payment billing (arrival time / ETA).
                                         ...ShipmentFields::gated([
-                                            Select::make('billing_payment_status')
-                                                ->options(BillingPaymentStatus::options())
-                                                ->default(BillingPaymentStatus::NotPaid),
-                                            DateTimePicker::make('billing_paid_at')
-                                                ->label('Paid at'),
+                                            DateTimePicker::make('eta_at')
+                                                ->label('Arrival time / ETA'),
                                         ], $enum, ImportMilestone::BillingPayment),
+                                        // Step 11 — Response billing (SPPB/AP/SPJK/SPJM).
                                         ...ShipmentFields::gated([
                                             Select::make('billing_response')
                                                 ->options(BillingResponse::options()),
-                                            DateTimePicker::make('billing_response_at')
-                                                ->label('Response at'),
-                                        ], $enum, ImportMilestone::BillingResponseReceived),
+                                        ], $enum, ImportMilestone::ResponseBilling),
+                                        // Informational: the SPJM response adds customs
+                                        // steps after this point; the notice shows while
+                                        // the response is SPJM and is not a step itself.
+                                        Placeholder::make('spjm_notice')
+                                            ->hiddenLabel()
+                                            ->columnSpanFull()
+                                            ->visible(fn (Get $get): bool => ShipmentFields::enumValue($get('billing_response'), BillingResponse::class) === BillingResponse::Spjm)
+                                            ->content(new HtmlString(
+                                                '<div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 ring-1 ring-blue-200">'
+                                                .'<strong>Tambahan step SPJM.</strong> Response billing is SPJM, so the additional customs steps apply after this point: '
+                                                .'Upload all document &rarr; Waiting process bahandle &rarr; Payment bahandle &rarr; Container inspection &rarr; Waiting change status SPJM to SPPB.'
+                                                .'</div>'
+                                            )),
+                                        // Step 13 — Upload all document.
                                         ...ShipmentFields::gated([
-                                            Select::make('behandle_payment_status')
-                                                ->options(BillingPaymentStatus::options()),
-                                            DateTimePicker::make('behandle_paid_at')
-                                                ->label('Paid at'),
-                                        ], $enum, ImportMilestone::BehandlePayment),
-                                        // Sailing dates.
+                                            Textarea::make('goods_description')
+                                                ->columnSpanFull(),
+                                        ], $enum, ImportMilestone::UploadAllDocument),
+                                        // Step 14 — Waiting process bahandle.
                                         ...ShipmentFields::gated([
-                                            DatePicker::make('departure_date'),
-                                            DateTimePicker::make('eta_at')
-                                                ->label('ETA'),
-                                            DateTimePicker::make('actual_arrival_at')
-                                                ->label('Actual arrival'),
-                                        ], $enum, ImportMilestone::DraftPib),
-                                        // Completion.
-                                        ...ShipmentFields::gated([
-                                            Select::make('status')
-                                                ->options(ShipmentStatus::options())
-                                                ->default(ShipmentStatus::Draft),
-                                            DateTimePicker::make('completed_at')
-                                                ->label('Completed at'),
-                                        ], $enum, ImportMilestone::EmptyReturned),
+                                            ShipmentFields::hsCodesField(),
+                                        ], $enum, ImportMilestone::WaitingProcessBehandle),
                                     ]),
                             ]),
                         ShipmentFields::containersTab(
                             $enum,
                             ImportContainer::class,
                             [
-                                ...ShipmentFields::gated(ContainerFields::identity(), $enum, ImportMilestone::CheckingDocument, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::driver(), $enum, ImportMilestone::OnTheWayToConsignee, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::photos(ImportContainer::class), $enum, ImportMilestone::CheckingDocument, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importIdentity(), $enum, ImportMilestone::ResponseBilling, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importSize(), $enum, ImportMilestone::UploadAllDocument, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::photos(ImportContainer::class), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importGateOut(), $enum, ImportMilestone::GateOutCy, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::importInspection(), $enum, ImportMilestone::Inspection, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::importFactoryReturn(), $enum, ImportMilestone::ArrivedAtFactory, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::status(), $enum, ImportMilestone::EmptyReturned, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importDriver(), $enum, ImportMilestone::GateOutCy, '../../'),
+                                Grid::make(2)
+                                    ->columnSpanFull()
+                                    ->schema(ShipmentFields::gated(ContainerFields::importTracking(), $enum, ImportMilestone::OnTheWayToFactory, '../../')),
+                                ...ShipmentFields::gated(ContainerFields::importWeights(), $enum, ImportMilestone::PaymentBehandle, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importCbm(), $enum, ImportMilestone::WaitingChangeStatusSppb, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importFactoryLoading(), $enum, ImportMilestone::ArrivedAtFactory, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importReturn(), $enum, ImportMilestone::EmptyReturned, '../../'),
                             ],
-                            ImportMilestone::CheckingDocument,
+                            ImportMilestone::ResponseBilling,
                         ),
+                        ShipmentFields::statusTab($enum, ImportMilestone::EmptyReturned),
                         ShipmentFields::notesTab(),
                         ShipmentFields::activityLogTab(),
                     ]),

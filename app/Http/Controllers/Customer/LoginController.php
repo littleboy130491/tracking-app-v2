@@ -118,7 +118,7 @@ class LoginController
         /** @var User|null $user */
         $user = $record->user;
 
-        if (! $user || ! $user->is_active) {
+        if (! $user || $user->trashed() || ! $user->is_active) {
             return redirect()
                 ->route('customer.login')
                 ->withErrors(['email' => 'This account is no longer active.']);

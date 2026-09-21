@@ -5,6 +5,7 @@
      How to use: @include('livewire.customer.partials.shipment-containers', [
        'containers' => $containers, 'routeName' => '...', 'routeParam' => '...']);
      How to extend: add columns once more customer-visible container fields exist. --}}
+@php($showSeal = $containers->contains(fn ($container) => filled($container->seal_number)))
 <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
     <div class="border-b border-slate-200 px-4 py-3">
         <h2 class="font-semibold text-slate-900">Containers</h2>
@@ -14,7 +15,9 @@
             <tr>
                 <th class="px-4 py-3">Container</th>
                 <th class="px-4 py-3">Size / type</th>
-                <th class="px-4 py-3">Seal</th>
+                @if ($showSeal)
+                    <th class="px-4 py-3">Seal</th>
+                @endif
                 <th class="px-4 py-3">Status</th>
                 <th class="px-4 py-3">Latest update</th>
             </tr>
@@ -33,7 +36,9 @@
                         </a>
                     </td>
                     <td class="px-4 py-3">{{ trim(($container->size ?? '').' '.($container->type ?? '')) ?: '—' }}</td>
-                    <td class="px-4 py-3">{{ $container->seal_number ?: '—' }}</td>
+                    @if ($showSeal)
+                        <td class="px-4 py-3">{{ $container->seal_number ?: '—' }}</td>
+                    @endif
                     <td class="px-4 py-3">{{ $container->status->label() }}</td>
                     <td class="px-4 py-3">
                         {{ $container->latest_event ? \Illuminate\Support\Str::headline($container->latest_event) : '—' }}
@@ -44,7 +49,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+                    <td colspan="{{ $showSeal ? 5 : 4 }}" class="px-4 py-8 text-center text-slate-500">
                         No containers have been added yet.
                     </td>
                 </tr>

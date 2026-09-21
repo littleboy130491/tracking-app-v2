@@ -7,6 +7,7 @@
  * - Applies the create defaults (company name snapshot, document received
  *   date/by) so both processes behave the same.
  * - Implements the milestone helpers used by the admin stepper and pages.
+ * - pickerLabel() is the never-null B/L caption used by Filament shipment pickers.
  * How to use: `use ActsAsShipment;` in ExportShipment / ImportShipment and
  *   declare `milestoneEnum()`.
  * How to extend: add shared shipment behaviour here; process-specific fields
@@ -15,6 +16,8 @@
 
 namespace App\Models\Concerns;
 
+use App\Enums\ExportMilestone;
+use App\Enums\ImportMilestone;
 use App\Enums\ShipmentStatus;
 use App\Services\ActivityLogger;
 use BackedEnum;
@@ -26,7 +29,7 @@ trait ActsAsShipment
     /**
      * The milestone enum backing this shipment model.
      *
-     * @return class-string<\App\Enums\ExportMilestone|\App\Enums\ImportMilestone>
+     * @return class-string<ExportMilestone|ImportMilestone>
      */
     abstract public static function milestoneEnum(): string;
 
@@ -46,6 +49,17 @@ trait ActsAsShipment
     public function scopeVisibleInPortal(Builder $query): Builder
     {
         return $query->where('status', '!=', ShipmentStatus::Draft->value);
+    }
+
+    /**
+     * Caption for Filament shipment selects/filters. `bl_number` is nullable
+     * until Step 2; Select forbids a null option label.
+     */
+    public function pickerLabel(): string
+    {
+        return filled($this->bl_number)
+            ? (string) $this->bl_number
+            : 'No B/L yet (#'.$this->getKey().')';
     }
 
     /**

@@ -6,6 +6,8 @@
  * What it does:
  * - Stores identity/contact data for a customer company.
  * - `code` is an optional unique short code; `is_active` toggles access.
+ * - Soft-deletable: admin/super_admin may remove and restore; only
+ *   super_admin may permanently delete.
  * How to use: Run with `php artisan migrate`; model is App\Models\Company.
  * How to extend: Add new company-level attributes as nullable columns here.
  */
@@ -27,6 +29,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -55,6 +55,9 @@ class ShipmentActivityLoggingTest extends TestCase
     public function test_locked_fields_name_the_milestone_that_unlocks_them(): void
     {
         $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+        // The seeder lands demo shipments on their data's step; rewind this
+        // one so the step-2 lock message is what gets asserted.
+        $export->update(['current_milestone' => ExportMilestone::DocumentReceived]);
 
         Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->assertSee('Locked until Step 2: Checking booking order')
@@ -66,21 +69,20 @@ class ShipmentActivityLoggingTest extends TestCase
         $import->update(['current_milestone' => ImportMilestone::DraftPib]);
 
         Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
-            ->assertSee('Locked until Step 7: DO release')
-            ->assertSee('data-bl-ms-goto="7"', false);
+            ->assertSee('Locked until Step 9: DO release')
+            ->assertSee('data-bl-ms-goto="9"', false);
     }
 
     public function test_shipment_save_records_only_changed_fields_and_actor(): void
     {
         $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
-        // AJU/B/L numbers are gated at "Checking booking order"; advance so the
-        // form actually dehydrates them and they can be audited.
+        // The B/L number is gated at "Checking booking order"; advance so the
+        // form actually dehydrates it and it can be audited.
         $export->update(['current_milestone' => ExportMilestone::CheckingBookingOrder]);
 
         Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
             ->fillForm([
                 'bl_number' => 'BL-AUDITED-001',
-                'aju_number' => 'AJU-AUDITED-001',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -93,11 +95,9 @@ class ShipmentActivityLoggingTest extends TestCase
 
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertSame('BL-EXP-0001', $log->old_values['bl_number']);
-        $this->assertNull($log->old_values['aju_number']);
         $this->assertSame('BL-AUDITED-001', $log->new_values['bl_number']);
-        $this->assertSame('AJU-AUDITED-001', $log->new_values['aju_number']);
-        $this->assertCount(2, $log->old_values);
-        $this->assertCount(2, $log->new_values);
+        $this->assertCount(1, $log->old_values);
+        $this->assertCount(1, $log->new_values);
         $this->assertArrayNotHasKey('updated_at', $log->new_values);
         $this->assertArrayNotHasKey('updated_by', $log->new_values);
         $this->assertFalse($log->is_customer_visible);
@@ -122,7 +122,8 @@ class ShipmentActivityLoggingTest extends TestCase
     public function test_shipment_save_records_hs_code_assignments(): void
     {
         $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
-        $import->update(['current_milestone' => ImportMilestone::CheckingDocument]);
+        // HS codes unlock at "waiting process bahandle" per IMPORT.md.
+        $import->update(['current_milestone' => ImportMilestone::WaitingProcessBehandle]);
 
         $newHsCode = HsCode::query()
             ->whereDoesntHave('importShipments', fn ($query) => $query->whereKey($import->getKey()))
@@ -260,10 +261,10 @@ class ShipmentActivityLoggingTest extends TestCase
         $unpicked = $media(['export_container_id' => $container->getKey(), 'category' => 'door_photo']);
 
         // CuratorPicker state is a uuid-keyed array of full media arrays, so
-        // set() (not fillForm()) with complete media payloads mimics picking.
+        // set() (not fillForm()) with a complete media payload mimics picking.
+        // The pickers allow one photo per slot, so pick a single one.
         Livewire::test(EditExportContainer::class, ['record' => $container->getRouteKey()])
             ->set('data.photo_door_items', [
-                $linked->fresh()->toArray(),
                 $picked->fresh()->toArray(),
             ])
             ->call('save')
@@ -272,6 +273,7 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertSame($container->getKey(), $picked->fresh()->export_container_id);
         $this->assertSame($container->export_shipment_id, $picked->fresh()->export_shipment_id);
         $this->assertSame('door_photo', $picked->fresh()->category?->value);
+        $this->assertNull($linked->fresh()->export_container_id);
         $this->assertNull($unpicked->fresh()->export_container_id);
 
         $log = ActivityLog::query()
@@ -285,7 +287,7 @@ class ShipmentActivityLoggingTest extends TestCase
             $log->old_values['attachments'],
         );
         $this->assertSame(
-            [$linked->getKey(), $picked->getKey()],
+            [$picked->getKey()],
             $log->new_values['attachments'],
         );
     }

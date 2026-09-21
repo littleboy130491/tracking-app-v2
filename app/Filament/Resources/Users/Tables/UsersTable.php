@@ -8,22 +8,36 @@
  *   page) and active state; filters by role and company.
  * - Offers an Impersonate row action (visible only to admin/super_admin;
  *   enforced by User::canImpersonate()/canBeImpersonated()).
+ * - Offers a CSV header action, restricted to admin/super_admin via
+ *   User::canExportTables().
+ * - Offers a "Prune old data" header action, restricted to super_admin,
+ *   deleting users older than the retention window.
+ * - Soft delete: admin/super_admin may trash and restore; the force-delete
+ *   action is hidden unless the user may permanently delete (super_admin).
  * How to use: Rendered by ListUsers.
  * How to extend: Add filters/columns as user administration grows.
  */
 
 namespace App\Filament\Resources\Users\Tables;
 
+use App\Filament\Concerns\PrunableTableHeaderAction;
+use App\Filament\Concerns\TableExportColumns;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use STS\FilamentImpersonate\Actions\Impersonate;
 
 class UsersTable
@@ -31,6 +45,7 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['roles', 'companies']))
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
@@ -71,14 +86,25 @@ class UsersTable
                     ->multiple()
                     ->preload(),
                 TernaryFilter::make('is_active'),
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 Impersonate::make()->redirectTo('/'),
                 EditAction::make(),
             ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        ExcelExport::make()->withColumns(TableExportColumns::for(TableExportColumns::USERS)),
+                    ])
+                    ->visible(fn (): bool => (bool) auth()->user()?->canExportTables()),
+                PrunableTableHeaderAction::make('users'),
+            ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
                 ]),
             ]);
     }

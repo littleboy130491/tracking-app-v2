@@ -26,15 +26,8 @@
     <div class="mt-6 rounded-xl bg-white p-6 shadow-sm">
         <h2 class="text-lg font-semibold text-slate-900">Draft PIB confirmation</h2>
         <p class="mt-1 text-sm text-slate-500">
-            Current status: <strong>{{ $shipment->draft_pib_confirmation_status->label() }}</strong>
-            @if ($shipment->draft_pib_confirmed_at)
-                ({{ $shipment->draft_pib_confirmed_at->format('d M Y H:i') }})
-            @endif
+            Current status: <strong>{{ $draftPibConfirmed ? 'Confirmed' : 'Waiting for your confirmation' }}</strong>
         </p>
-
-        @if ($shipment->draft_pib_confirmation_notes)
-            <p class="mt-2 text-sm text-slate-600">Your notes: {{ $shipment->draft_pib_confirmation_notes }}</p>
-        @endif
 
         @if ($draftPibConfirmed)
             <p class="mt-4 rounded-md bg-accent-100 p-3 text-sm text-accent-600">

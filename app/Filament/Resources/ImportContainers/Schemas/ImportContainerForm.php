@@ -5,8 +5,8 @@
  * Responsibility: Admin form for a standalone import container.
  * What it does:
  * - Selects the parent import shipment, then edits the import container
- *   fields (identity, driver, photos, gate out/weights, inspection, factory
- *   loading/return and status).
+ *   fields (identity, driver, photos, gate out, tracking, weights,
+ *   factory loading/return and status) per IMPORT.md.
  * - Milestone gating happens on the shipment form's repeater; the standalone
  *   form edits the same fields freely.
  * How to use: Rendered by the import container create/edit pages.
@@ -18,6 +18,7 @@ namespace App\Filament\Resources\ImportContainers\Schemas;
 
 use App\Filament\Concerns\ContainerFields;
 use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
@@ -36,29 +37,42 @@ class ImportContainerForm
                         Select::make('import_shipment_id')
                             ->label('Import shipment')
                             ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
+                            ->getOptionLabelFromRecordUsing(fn (ImportShipment $record): string => $record->pickerLabel())
                             ->searchable()
                             ->preload()
                             ->required(),
                     ]),
                 Section::make('Container')
                     ->columns(3)
-                    ->schema(ContainerFields::identity()),
-                Section::make('Transport')
+                    ->schema([
+                        ...ContainerFields::importIdentity(),
+                        ...ContainerFields::importSize(),
+                    ]),
+                Section::make('Driver')
                     ->columns(3)
-                    ->schema(ContainerFields::driver()),
+                    ->schema(ContainerFields::importDriver()),
                 Section::make('Photos')
                     ->description('Named photo slots for this container.')
                     ->columns(2)
                     ->schema(ContainerFields::photos(ImportContainer::class)),
-                Section::make('Gate out & weights')
+                Section::make('Gate out')
                     ->columns(3)
                     ->schema(ContainerFields::importGateOut()),
-                Section::make('Inspection')
+                Section::make('Tracking')
                     ->columns(3)
-                    ->schema(ContainerFields::importInspection()),
-                Section::make('Factory & return')
+                    ->schema(ContainerFields::importTracking()),
+                Section::make('Weights & measurement')
                     ->columns(3)
-                    ->schema(ContainerFields::importFactoryReturn()),
+                    ->schema([
+                        ...ContainerFields::importWeights(),
+                        ...ContainerFields::importCbm(),
+                    ]),
+                Section::make('Factory loading & return')
+                    ->columns(3)
+                    ->schema([
+                        ...ContainerFields::importFactoryLoading(),
+                        ...ContainerFields::importReturn(),
+                    ]),
                 Section::make('Status')
                     ->columns(3)
                     ->schema(ContainerFields::status()),

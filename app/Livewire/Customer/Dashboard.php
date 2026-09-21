@@ -79,7 +79,8 @@ class Dashboard extends Component
                     ->where('bl_number', 'like', '%'.$this->number.'%')
                     ->orWhereHas('containers', fn (Builder $containers) => $containers
                         ->where('container_number', 'like', '%'.$this->number.'%')
-                        ->orWhere('seal_number', 'like', '%'.$this->number.'%')),
+                        // Only export containers carry a seal number.
+                        ->when($isExport, fn (Builder $seal) => $seal->orWhere('seal_number', 'like', '%'.$this->number.'%'))),
             ))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))

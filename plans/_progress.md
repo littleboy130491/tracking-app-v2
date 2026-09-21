@@ -133,6 +133,11 @@ Blocked: None
 - Post-plan tweak (09:57): **Stuffing date** is now date + time (column changed to timestamp, picker switched to DateTimePicker, seeder updated).
 - Post-plan tweak (10:03): portal hides **draft** shipments (list + detail + container URLs 404, admins included); the milestone engine flips draft → in progress as soon as a shipment advances past Document received.
 - Post-plan tweak (10:06): export container **Final checked** is a toggle instead of a checkbox.
+- Post-plan tweak (2026-09-21 16:20): **AJU number** removed from the export shipment form only (import keeps it); `export_shipments.aju_number` column and model fillable kept for existing data. Portal never displayed AJU, so no portal change. Audit test updated to fill/assert `bl_number` only.
+- Post-plan tweak (2026-09-21 13:57): Notes composer uses a real textarea with padding and a clear gap above **Add note** (the button no longer overlaps the field).
+- Post-plan tweak (2026-09-21 14:05): Milestone stepper vertical padding increased (4/6px → 16/20px).
+- Post-plan tweak (2026-09-21 14:26): Container list/form shipment pickers no longer 500 when a shipment has a null B/L number (Filament Select forbids a null option label).
+- Post-plan tweak (2026-09-21 15:14): B/L tables list each container number as a clickable badge to the container edit page (export + import + company relation managers).
 
 ## Notes
 
@@ -146,3 +151,35 @@ Blocked: None
 - Step 4 done: old admin resources/policies deleted early (kept the panel clean); menus are Export / Import / Master data / CRM / Monitoring.
 - Remaining legacy: old portal Livewire components + views + routes (Step 5), old BillOfLading/Container models, BillOfLadingStatus enum, DemoShipmentSeeder, legacy tests (Step 6).
 - Permissions: PermissionSeeder auto-discovers the four new resources; the dev DB is empty so `migrate:fresh --seed` in Step 6 regenerates everything.
+- Post-plan tweak (2026-09-21 15:10): **Import process rebuilt to IMPORT.md** — milestone enum expanded to 22 steps (added Waiting confirmation from customer, Waiting release DO, Tambahan step SPJM, Waiting process bahandle, Waiting change status SPJM to SPPB, Container shipping schedule); fields re-gated per step (containers repeater now unlocks at Response billing, HS codes at Waiting process bahandle); non-spec import columns dropped (shipment_mode, do_number, payment statuses/timestamps, draft-PIB status/notes, actual_arrival_at, container type/seal/driver_license/inspection/factory_arrived_at); added `confirmation_checklist` (boolean) and container `tracking_position`/`tracking_position_input`; portal draft-PIB confirm now sets the checklist; seeder, tests and UAT updated; `migrate:fresh --seed` + full suite green (95 tests).
+
+---
+
+# Progress - CSV export + prune old data
+
+Goal: CSV export (all fields incl. relationships) and a 3-year prune action on the seven main tables, admin/super_admin only.
+Started: 2026-09-21 19:10
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Install pxlrbt/filament-excel - DONE
+- [x] Step 2: Shared full-field export columns (TableExportColumns) - DONE
+- [x] Step 3: Prune service (OldDataPruner) + header action builder - DONE
+- [x] Step 4: Wire both actions into all seven tables - DONE
+- [x] Step 5: Permissions + tests + docs - DONE
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Notes
+
+- Package: pxlrbt/filament-excel ^4.1 (MIT, maintained, wraps maatwebsite/excel); Filament v5 does not ship CSV export natively.
+- Export uses explicit columns, not fromTable(), so every stored field and relation is included. Relation columns use getStateUsing() because data_get() cannot resolve HasMany (Arr::wrap(null) === []).
+- Prune is a confirmation-gated header action: DangerAction semantics, count + cutoff in the dialog, forceDelete() so soft-deleted rows go too; children cascade.
+- Visibility: User::canExportTables() / User::canPruneOldData() both return hasAnyRole(Role::PRIVILEGED) (admin + super_admin). The action re-checks in action() so a crafted request cannot bypass it.
+- PermissionSeeder adds a baseline `Prune:LegacyData` permission (admins get it via RoleSeeder's all-permissions sync; operators are excluded).
+- Tests: tests/Feature/Admin/TableExportAndPruneTest.php — action visibility per role on all 7 tables, prune cutoff/cascade, full column sets, real map() output. Full suite 128 passed.
