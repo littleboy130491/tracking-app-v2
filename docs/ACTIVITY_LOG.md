@@ -755,3 +755,7 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Replace ETA column with Created/Updated |
 | 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Replace ETA column with Created/Updated |
 | 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | Assert Created/Updated columns replace ETA |
+| 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Add Loading/Discharge location columns |
+| 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Add Loading/Discharge location columns |
+| 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Add Loading/Discharge location columns |
+| 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Add Loading/Discharge location columns |

@@ -274,6 +274,8 @@ class TableExportAndPruneTest extends TestCase
             $this->assertContains('created_at', $names, "{$page} should show Created");
             $this->assertContains('updated_at', $names, "{$page} should show Updated");
             $this->assertNotContains('eta_at', $names, "{$page} should not show ETA");
+            $this->assertContains('port_of_loading', $names, "{$page} should show Loading");
+            $this->assertContains('port_of_discharge', $names, "{$page} should show Discharge");
         }
     }
 
@@ -295,6 +297,8 @@ class TableExportAndPruneTest extends TestCase
             $this->assertContains('created_at', $names);
             $this->assertContains('updated_at', $names);
             $this->assertNotContains('eta_at', $names);
+            $this->assertContains('port_of_loading', $names);
+            $this->assertContains('port_of_discharge', $names);
         }
     }
 }

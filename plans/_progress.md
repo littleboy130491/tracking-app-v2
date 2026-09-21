@@ -200,3 +200,19 @@ Status: COMPLETE
 Notes:
 - Display-only change; eta_at stays in the DB, edit form, portal estimate line and CSV export.
 - Relation managers are standalone Livewire components; test with ownerRecord + pageClass.
+
+---
+
+# Progress - Loading/Discharge columns on shipment tables
+
+Goal: Show port_of_loading + port_of_discharge on the B/L tables and company relation managers.
+Started: 2026-09-21 20:25
+Status: COMPLETE
+
+- [x] Add Loading/Discharge columns to export + import B/L tables - DONE
+- [x] Add to companies export/import relation managers - DONE
+- [x] Tests + docs - DONE (29 pass)
+
+Notes:
+- Display/search only; no schema change (columns already existed and were on the forms).
+- Both columns searchable, placeholder '—', toggleable.

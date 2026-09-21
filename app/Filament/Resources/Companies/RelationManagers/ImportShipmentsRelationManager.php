@@ -67,6 +67,16 @@ class ImportShipmentsRelationManager extends RelationManager
                             ? ImportContainerResource::getUrl('edit', ['record' => $container])
                             : null;
                     }),
+                TextColumn::make('port_of_loading')
+                    ->label('Loading')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->toggleable(),
+                TextColumn::make('port_of_discharge')
+                    ->label('Discharge')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()

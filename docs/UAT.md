@@ -11,6 +11,20 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Loading / Discharge location columns (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel; log in as `admin@example.com` / `password`.
+- `php artisan migrate:fresh --seed`.
+
+- [ ] Open **Bill of Ladings → Export**. Expected: a **Loading** and a **Discharge** column appear (may need the column-toggle menu if hidden); empty values show `—`.
+- [ ] Type a port name into the table search box. Expected: rows filter by loading/discharge location.
+- [ ] Repeat on **Bill of Ladings → Import**. Expected: the same **Loading** / **Discharge** columns.
+- [ ] Open **CRM → Companies → (edit a company)**, look at the **Export B/Ls** and **Import B/Ls** panels. Expected: both show **Loading** and **Discharge**.
+- [ ] Open a shipment's **edit** form and set **Port of loading** / **Port of discharge**, save, and return to the list. Expected: the table reflects the saved values.
+- [ ] Hide the two columns via the column-toggle menu and reload. Expected: the choice sticks (they are toggleable).
+
 ## 0. Shipment tables show Created / Updated instead of ETA (2026-09-21)
 
 **Prerequisites**
