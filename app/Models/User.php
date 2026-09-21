@@ -92,6 +92,18 @@ class User extends Authenticatable implements FilamentUser, Otpable
     }
 
     /**
+     * Internal staff only (roles flagged `is_internal`). Used by admin pickers
+     * that must not offer customer accounts, e.g. "Document received by".
+     *
+     * @param  Builder<*>  $query
+     * @return Builder<*>
+     */
+    public static function scopeInternal(Builder $query): Builder
+    {
+        return $query->whereHas('roles', fn (Builder $roles): Builder => $roles->where('is_internal', true));
+    }
+
+    /**
      * Staff roles (admin, operator) are flagged internal; the portal role is not.
      */
     public function isInternal(): bool

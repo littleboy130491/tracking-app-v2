@@ -4,12 +4,14 @@
  * File: app/Models/HsCode.php
  * Responsibility: A harmonized-system code (master data).
  * What it does:
- * - Shared across shipments via two pivots (export_shipment_hs_code and
- *   import_shipment_hs_code), so one code + description is defined once and
+ * - Shared across shipments and containers via three pivots
+ *   (export_shipment_hs_code, import_shipment_hs_code and
+ *   import_container_hs_code), so one code + description is defined once and
  *   reused.
- * How to use: `$hsCode->exportShipments`, `$hsCode->importShipments`.
+ * How to use: `$hsCode->exportShipments`, `$hsCode->importShipments`,
+ *   `$hsCode->importContainers`.
  * How to extend: Add columns such as duty rate; pivot extras live on the
- *   shipment-specific pivot tables.
+ *   shipment- or container-specific pivot tables.
  */
 
 namespace App\Models;
@@ -39,5 +41,13 @@ class HsCode extends Model
     public function importShipments(): BelongsToMany
     {
         return $this->belongsToMany(ImportShipment::class, 'import_shipment_hs_code');
+    }
+
+    /**
+     * @return BelongsToMany<ImportContainer, $this>
+     */
+    public function importContainers(): BelongsToMany
+    {
+        return $this->belongsToMany(ImportContainer::class, 'import_container_hs_code');
     }
 }

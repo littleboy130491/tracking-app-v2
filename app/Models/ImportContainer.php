@@ -4,10 +4,13 @@
  * File: app/Models/ImportContainer.php
  * Responsibility: A container belonging to one import shipment.
  * What it does:
- * - Tracks the IMPORT.md container data: identity, gate-out, driver tracking,
- *   weights, factory loading and depot return.
+ * - Tracks the IMPORT.md container data: identity, cargo (description of
+ *   goods, packages), gate-out, driver tracking (free-text position plus a
+ *   validated URL), weights, factory loading and depot return.
+ * - Carries its own HS codes through the import_container_hs_code pivot,
+ *   defaulted from the parent shipment when the container is created.
  * - Owns its attachments; the photo pickers write through syncAttachments().
- * How to use: `$container->shipment`, `$container->attachments`.
+ * How to use: `$container->shipment`, `$container->hsCodes`, `$container->attachments`.
  * How to extend: Add import container fields as columns and expose them in the
  *   import container form or the shipment form's containers repeater.
  */
@@ -22,13 +25,15 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'import_shipment_id', 'container_number', 'size',
+    'description_of_goods', 'packages',
     'driver_name', 'license_number', 'gate_out_cy_at',
-    'tracking_position', 'tracking_position_input',
+    'tracking_position', 'tracking_position_url',
     'gross_weight', 'gross_weight_unit', 'cbm',
     'factory_loading_at', 'factory_loading_status',
     'return_depot_name', 'empty_returned_at',
@@ -61,6 +66,39 @@ class ImportContainer extends Model
     }
 
     /**
+     * Seed a new container from its parent shipment: the cargo fields are
+     * copied when left empty, and the shipment's HS codes are attached when
+     * the container starts without any. Both hooks guard against a container
+     * created without a shipment, so drafts never error.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (ImportContainer $container): void {
+            if ($container->shipment === null) {
+                return;
+            }
+
+            if (blank($container->description_of_goods)) {
+                $container->description_of_goods = $container->shipment->goods_description;
+            }
+
+            if (blank($container->packages)) {
+                $container->packages = $container->shipment->packages;
+            }
+        });
+
+        static::created(function (ImportContainer $container): void {
+            if ($container->shipment === null || $container->hsCodes()->exists()) {
+                return;
+            }
+
+            $container->hsCodes()->syncWithoutDetaching(
+                $container->shipment->hsCodes()->pluck('hs_codes.id')
+            );
+        });
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
@@ -84,6 +122,14 @@ class ImportContainer extends Model
     public function shipment(): BelongsTo
     {
         return $this->belongsTo(ImportShipment::class, 'import_shipment_id');
+    }
+
+    /**
+     * @return BelongsToMany<HsCode, $this>
+     */
+    public function hsCodes(): BelongsToMany
+    {
+        return $this->belongsToMany(HsCode::class, 'import_container_hs_code');
     }
 
     /**

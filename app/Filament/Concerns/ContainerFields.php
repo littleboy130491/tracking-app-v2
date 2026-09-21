@@ -23,6 +23,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\LivewireField;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -57,7 +58,7 @@ class ContainerFields
     /**
      * Import container identity: the container number. IMPORT.md adds the
      * containers to the shipment at the response-billing step; the size is a
-     * separate group because it unlocks later (Tambahan step SPJM).
+     * separate group because it unlocks later (upload all document).
      *
      * @return list<Field>
      */
@@ -261,8 +262,9 @@ class ContainerFields
     }
 
     /**
-     * Import: driver position tracking on the way to the factory. The callers
-     * place both fields side by side in a two-column grid.
+     * Import: driver position tracking on the way to the factory. Mirrors the
+     * export pair: a short position text plus a validated tracking URL. The
+     * callers place both fields side by side in a two-column grid.
      *
      * @return list<Field>
      */
@@ -272,10 +274,56 @@ class ContainerFields
             TextInput::make('tracking_position')
                 ->label('Tracking position driver')
                 ->maxLength(255),
-            TextInput::make('tracking_position_input')
-                ->label('Tracking position input (manual)')
+            TextInput::make('tracking_position_url')
+                ->label('Tracking position (url)')
+                ->url()
                 ->maxLength(500),
         ];
+    }
+
+    /**
+     * Import: cargo details per container — description of goods, packages and
+     * the HS codes this container carries. The form seeds them from the parent
+     * shipment and the operator can override any of them.
+     *
+     * @return list<Field>
+     */
+    public static function importCargo(): array
+    {
+        return [
+            Textarea::make('description_of_goods')
+                ->label('Description of goods')
+                ->rows(2)
+                ->columnSpanFull(),
+            TextInput::make('packages')
+                ->maxLength(255),
+            self::hsCodesField(),
+        ];
+    }
+
+    /**
+     * The HS-code multi-select with inline create, shared by the shipment form
+     * and the container forms.
+     */
+    public static function hsCodesField(): Select
+    {
+        return Select::make('hsCodes')
+            ->label('HS codes')
+            ->relationship('hsCodes', 'code')
+            ->multiple()
+            ->searchable()
+            ->preload()
+            ->createOptionModalHeading('New HS code')
+            ->createOptionForm([
+                TextInput::make('code')
+                    ->label('HS code')
+                    ->required()
+                    ->unique('hs_codes', 'code')
+                    ->maxLength(30),
+                Textarea::make('description')
+                    ->rows(3),
+            ])
+            ->columnSpanFull();
     }
 
     /**

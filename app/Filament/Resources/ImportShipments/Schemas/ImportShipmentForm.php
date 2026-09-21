@@ -6,10 +6,12 @@
  * What it does:
  * - Customer section above the tabs, then the milestone stepper on edit.
  * - Shipping Details: one field group per IMPORT.md milestone (document
- *   checking, PIB confirmation, billing/THC/DO data, sailing dates, documents
- *   and HS codes), each disabled until its milestone is reached.
- * - Containers: the import container repeater; items stay open to distinguish
- *   individual container records.
+ *   checking, PIB confirmation, billing/THC/DO data and sailing dates), each
+ *   disabled until its milestone is reached. Description of goods, packages
+ *   and HS codes unlock with the billing response (Step 11).
+ * - Containers: the loading header fields (terminal name, date of loading,
+ *   loading destination) above the import container repeater; each item
+ *   carries its own cargo fields and HS codes, seeded from the shipment.
  * - Status, Notes and Activity log tabs.
  * How to use: Rendered by the import shipment create and edit pages.
  * How to extend: add a field inside the Shipping Details grid and wrap it in
@@ -24,9 +26,9 @@ use App\Enums\ImportMilestone;
 use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ImportContainer;
+use App\Models\ImportShipment;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -34,9 +36,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Illuminate\Support\HtmlString;
 
 class ImportShipmentForm
 {
@@ -110,28 +110,17 @@ class ImportShipmentForm
                                             Select::make('billing_response')
                                                 ->options(BillingResponse::options()),
                                         ], $enum, ImportMilestone::ResponseBilling),
-                                        // Informational: the SPJM response adds customs
-                                        // steps after this point; the notice shows while
-                                        // the response is SPJM and is not a step itself.
-                                        Placeholder::make('spjm_notice')
-                                            ->hiddenLabel()
-                                            ->columnSpanFull()
-                                            ->visible(fn (Get $get): bool => ShipmentFields::enumValue($get('billing_response'), BillingResponse::class) === BillingResponse::Spjm)
-                                            ->content(new HtmlString(
-                                                '<div class="rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800 ring-1 ring-blue-200">'
-                                                .'<strong>Tambahan step SPJM.</strong> Response billing is SPJM, so the additional customs steps apply after this point: '
-                                                .'Upload all document &rarr; Waiting process bahandle &rarr; Payment bahandle &rarr; Container inspection &rarr; Waiting change status SPJM to SPPB.'
-                                                .'</div>'
-                                            )),
-                                        // Step 13 — Upload all document.
+                                        // Step 11 — cargo details, unlocked with the
+                                        // billing response: the shipment-level values
+                                        // seed each container and stay overridable.
                                         ...ShipmentFields::gated([
                                             Textarea::make('goods_description')
+                                                ->label('Description of goods')
                                                 ->columnSpanFull(),
-                                        ], $enum, ImportMilestone::UploadAllDocument),
-                                        // Step 14 — Waiting process bahandle.
-                                        ...ShipmentFields::gated([
+                                            TextInput::make('packages')
+                                                ->maxLength(255),
                                             ShipmentFields::hsCodesField(),
-                                        ], $enum, ImportMilestone::WaitingProcessBehandle),
+                                        ], $enum, ImportMilestone::ResponseBilling),
                                     ]),
                             ]),
                         ShipmentFields::containersTab(
@@ -139,7 +128,8 @@ class ImportShipmentForm
                             ImportContainer::class,
                             [
                                 ...ShipmentFields::gated(ContainerFields::importIdentity(), $enum, ImportMilestone::ResponseBilling, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::importSize(), $enum, ImportMilestone::UploadAllDocument, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importSize(), $enum, ImportMilestone::ResponseBilling, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importCargo(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::photos(ImportContainer::class), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importGateOut(), $enum, ImportMilestone::GateOutCy, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importDriver(), $enum, ImportMilestone::GateOutCy, '../../'),
@@ -152,6 +142,25 @@ class ImportShipmentForm
                                 ...ShipmentFields::gated(ContainerFields::importReturn(), $enum, ImportMilestone::EmptyReturned, '../../'),
                             ],
                             ImportMilestone::ResponseBilling,
+                            [
+                                Grid::make(2)->schema([
+                                    // Loading data unlocks with the delivery
+                                    // schedule, which is the first step after the
+                                    // billing response.
+                                    ...ShipmentFields::gated([
+                                        TextInput::make('terminal_name')
+                                            ->label('Terminal name')
+                                            ->maxLength(255),
+                                        DatePicker::make('loading_date')
+                                            ->label('Date of loading'),
+                                        Textarea::make('loading_destination')
+                                            ->label('Loading destination')
+                                            ->rows(2)
+                                            ->columnSpanFull(),
+                                    ], $enum, ImportMilestone::ContainerShippingSchedule),
+                                ]),
+                            ],
+                            fn (array $data, ImportShipment $shipment): array => self::seedContainerCargo($data, $shipment),
                         ),
                         ShipmentFields::statusTab($enum, ImportMilestone::EmptyReturned),
                         ShipmentFields::notesTab(),
@@ -159,5 +168,30 @@ class ImportShipmentForm
                     ]),
                 ShipmentFields::hiddenCurrentMilestone($enum),
             ]);
+    }
+
+    /**
+     * Seeds one container row from the parent shipment: the cargo fields and
+     * the HS-code selection default to the shipment values and can still be
+     * overridden per container. Values the container already carries win.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private static function seedContainerCargo(array $data, ImportShipment $shipment): array
+    {
+        if (blank($data['description_of_goods'] ?? null)) {
+            $data['description_of_goods'] = $shipment->goods_description;
+        }
+
+        if (blank($data['packages'] ?? null)) {
+            $data['packages'] = $shipment->packages;
+        }
+
+        if (blank($data['hsCodes'] ?? null)) {
+            $data['hsCodes'] = $shipment->hsCodes()->orderBy('code')->pluck('hs_codes.id')->all();
+        }
+
+        return $data;
     }
 }

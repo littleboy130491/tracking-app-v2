@@ -11,6 +11,25 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Import cargo fields, tracking URL and container defaults (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel; log in as `admin@example.com` / `password`.
+- `php artisan migrate:fresh --seed`.
+- Open `BL-IMP-0001` (SPJM, sits at **Waiting process bahandle**, so Step 11 is already reached).
+
+- [ ] Edit `BL-IMP-0001` → **Shipping Details**. Expected: **Description of goods**, **Packages** and **HS codes** sit with the billing fields, unlocked at `Step 11: Response billing` (not at a later step).
+- [ ] **Containers** tab, above the repeater. Expected: only **Terminal name**, **Date of loading** and **Loading destination** remain as shipment header fields.
+- [ ] Expand container `CMAU7654321`. Expected: **Container Size**, **Description of goods**, **Packages** and **HS codes** are shown and unlocked (Step 11), next to the container number.
+- [ ] Check the cargo fields on the container. Expected: they start from the shipment values (`Electronic components` / `85 cartons` / `8542.31`) and can be changed per container without affecting the shipment.
+- [ ] Change a container's **Description of goods** and Save. Expected: the container keeps the overridden value; the shipment's own Description of goods is unchanged.
+- [ ] Change a container's **HS codes** selection and Save; reopen the container. Expected: the selected codes persist for that container only.
+- [ ] Set **Tracking position (url)** on a container to `not a url` and Save. Expected: a validation error; a full `https://…` URL saves and persists.
+- [ ] Open **Containers → Import → New**, pick `BL-IMP-0001`, fill Container Number, leave the cargo fields empty and Save. Expected: the new container inherits the shipment's Description of goods, Packages and HS codes.
+- [ ] Reopen that new container, change one cargo value and Save. Expected: the change sticks; the shipment is untouched.
+- [ ] Export the **Containers → Import** table to CSV. Expected: the export includes **Tracking position (url)**, **Description of goods** and **Packages**; the old manual tracking field is gone.
+
 ## 0. Loading / Discharge location columns (2026-09-21)
 
 **Prerequisites**
@@ -176,6 +195,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Bill of Ladings → Export → New. Expected: only the **Customer** section (Customer, Document received date/by); no stepper, no tabs.
 - [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**. The header shows a **New export B/L** action (plus Regress / Advance / Save); clicking it opens the create form.
+- [ ] **Document received by** (same on the import form): open the dropdown. Expected: only **staff accounts** are offered (admin / super admin / operator) — customer accounts never appear.
 - [ ] Shipping Details order: **B/L number, DO number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode, Goods description** (no AJU number here — it lives on the Containers tab, unlocked at Step 5). **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
 - [ ] **Status** tab (between Containers and Notes). Expected: **Status** dropdown (draft / in progress / completed / cancelled) + **Completed at**, both editable once Step 8 is reached; Save persists them and the Activity log records the change.
 - [ ] At Step 1 the fields show `Locked until Step 2: Checking booking order`. Click **Advance** → they become editable.
@@ -185,13 +205,14 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Import shipment form (IMPORT.md spec)**
 
 - [ ] Bill of Ladings → Import → New works the same way (Customer only on create).
-- [ ] Open `BL-IMP-0001` → Edit. Expected: the stepper shows the SPJM branch (21 steps) in three rows — row 1: the 10 steps up to **Payment billing**; row 2: **Response billing** followed by the **five SPJM-only steps in red** (Upload all document, Waiting process bahandle, Payment bahandle, Container inspection, Waiting change status SPJM to SPPB); row 3: the remaining 5 steps. The header shows a **New import B/L** action that opens the create form. Shipping Details unlocks in this order: **B/L number** at `Step 2: Checking document`; **Shipping line** at `Step 3: Draft PIB`; **Vessel name** at `Step 4: Checking draft PIB to importir`; **Confirmation checklist** toggle at `Step 5: Waiting confirmation from customer`; **AJU number**, **Voyage** and **Status billing** at `Step 6: Final sending PIB to custom (issuing billing)`; **Port of loading** at `Step 7: Process payment THC`; **Departure date** at `Step 8: Waiting release DO`; **Port of discharge** at `Step 9: DO release`; **Arrival time / ETA** at `Step 10: Payment billing`; **Response billing** at `Step 11: Response billing`; **Goods description** at `Step 12: Upload all document`; **HS codes** at `Step 13: Waiting process bahandle`.
-- [ ] SPJM notice: on `BL-IMP-0001` (**Response billing = SPJM**) an info box **Tambahan step SPJM** appears right below the response field, listing the extra steps; on `BL-IMP-0002` (**SPPB**) it is absent. Tambahan step SPJM is **not** a step on the stepper.
+- [ ] Open `BL-IMP-0001` → Edit. Expected: the stepper shows the SPJM branch (21 steps) in three rows — row 1: the 10 steps up to **Payment billing**; row 2: **Response billing** followed by the **five SPJM-only steps in red** (Upload all document, Waiting process bahandle, Payment bahandle, Container inspection, Waiting change status SPJM to SPPB); row 3: the remaining 5 steps. The header shows a **New import B/L** action that opens the create form. Shipping Details unlocks in this order: **B/L number** at `Step 2: Checking document`; **Shipping line** at `Step 3: Draft PIB`; **Vessel name** at `Step 4: Checking draft PIB to importir`; **Confirmation checklist** toggle at `Step 5: Waiting confirmation from customer`; **AJU number**, **Voyage** and **Status billing** at `Step 6: Final sending PIB to custom (issuing billing)`; **Port of loading** at `Step 7: Process payment THC`; **Departure date** at `Step 8: Waiting release DO`; **Port of discharge** at `Step 9: DO release`; **Arrival time / ETA** at `Step 10: Payment billing`; **Response billing**, **Description of goods**, **Packages** and **HS codes** at `Step 11: Response billing`.
+- [ ] Containers tab, **above the repeater** (shipment header fields). Expected: **Terminal name**, **Date of loading** and **Loading destination** — locked until `Step 17: Container shipping schedule` on the SPJM shipment (Step 12 on a non-SPJM shipment).
 - [ ] Set **Response billing** = SPPB on a shipment at Step 11. Expected: the stepper drops the red SPJM block (row 2 becomes Response billing + the normal steps, 16 steps total) and the next step is **Container shipping schedule**.
 - [ ] `BL-IMP-0002` (completed, SPPB) shows the same shortened sequence.
 - [ ] SPJM demo data: `BL-IMP-0003` (completed SPJM, SIN) shows the whole red block done and the shipment completed; `BL-IMP-0004` (BJM) sits at **Response billing** with the red block upcoming and its containers carrying only the number (no size yet).
 - [ ] **Status** tab (after Containers): Status + Completed at, editable once the last step is reached.
-- [ ] Containers tab (repeater unlocks at `Step 11: Response billing`): expand `CMAU7654321`. Expected: container number at Step 11; **Size** at `Upload all document`; photos at Step 11; **Gate out CY** + **Driver name** + **No. License** at `Gate out from inbound terminal`; **Tracking position driver** + **Tracking position input (manual)** at `Container on the way factory`; **Gross weight** at `Payment bahandle`; **CBM / measurement** at `Waiting change status SPJM to SPPB`; **Loading in factory** + status at `Container arrived in factory`; **Return depot name** + **Return date** at `Empty container returned`.
+- [ ] Containers tab (repeater unlocks at `Step 11: Response billing`): expand `CMAU7654321`. Expected: container number, **Size**, **Description of goods**, **Packages** and **HS codes** at Step 11 — the cargo fields start from the shipment values and can be overridden per container; photos at Step 11; **Gate out CY** + **Driver name** + **No. License** at `Gate out from inbound terminal`; **Tracking position driver** + **Tracking position (url)** at `Container on the way factory`; **Gross weight** at `Payment bahandle`; **CBM / measurement** at `Waiting change status SPJM to SPPB`; **Loading in factory** + status at `Container arrived in factory`; **Return depot name** + **Return date** at `Empty container returned`.
+- [ ] Set a container's **Tracking position (url)** to a plain text value (e.g. `not a url`) and Save. Expected: a validation error appears; entering a full URL (`https://…`) saves.
 - [ ] Removed per IMPORT.md: no DO number, no payment status/timestamps, no draft-PIB status/notes fields, no inspection fields, no container Type/Seal on import.
 
 **Standalone containers**

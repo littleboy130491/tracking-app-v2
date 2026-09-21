@@ -32,12 +32,13 @@ No. Container -> field (relationship, repeater)
 No. Container -> subfield-container
 No. AJU -> field
 Response Billing -> field
-Tambahan Step SPJM -> progress (conditional: Response Billing = SPJM)
 Size Container -> subfield-container
+Description of Goods -> field (shipment level, seeded to each container, overridable)
+Packages -> field (shipment level, seeded to each container, overridable)
+Hscode -> field (shipment level, multiple per container, overridable)
+Tambahan Step SPJM -> progress (conditional: Response Billing = SPJM)
 Upload All Document -> progress
-Description of Goods -> field
 Waiting Process Bahandle -> progress
-Hscode -> field
 Payment Bahandle -> progress
 Gross Weight -> subfield-container
 Container Inspection -> progress
@@ -55,7 +56,7 @@ Driver Name -> subfield-container
 No. License -> subfield-container
 Container On The Way Factory -> progress
 Tracking Position Driver -> subfield-container
-Tracking Position Input -> subfield-container (manual)
+Tracking Position (url) -> subfield-container (validated URL)
 Container Arrived in Factory -> progress
 Loading in Factory -> subfield-container
 Loading in Factory Status -> subfield-container (ON-PROCESS | FINISHED)

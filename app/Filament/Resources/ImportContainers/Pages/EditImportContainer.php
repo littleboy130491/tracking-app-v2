@@ -6,6 +6,8 @@
  * What it does:
  * - Renders the container form; header exposes restore (on trashed records)
  *   and save.
+ * - Empty cargo fields start from the parent shipment; the operator can
+ *   override them per container.
  * - Standalone edits audit only the values that actually changed.
  * How to use: Reached by editing an import container.
  * How to extend: Add header actions for container-level operations.
@@ -48,6 +50,34 @@ class EditImportContainer extends EditRecord
                 ->filter(fn (Attachment $attachment): bool => $attachment->category?->value === $category)
                 ->values()
                 ->map->toArray()
+                ->all();
+        }
+
+        return $this->seedCargoFromShipment($data);
+    }
+
+    /**
+     * Fills empty cargo fields from the parent shipment, so the container
+     * starts from the B/L values and the operator can override any of them.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function seedCargoFromShipment(array $data): array
+    {
+        $shipment = $this->record->shipment;
+
+        if (! $shipment) {
+            return $data;
+        }
+
+        $data['description_of_goods'] ??= $shipment->goods_description;
+        $data['packages'] ??= $shipment->packages;
+
+        if (blank($data['hsCodes'] ?? null)) {
+            $data['hsCodes'] = ($this->record->hsCodes->isNotEmpty()
+                ? $this->record->hsCodes->pluck('id')
+                : $shipment->hsCodes()->orderBy('code')->pluck('hs_codes.id'))
                 ->all();
         }
 

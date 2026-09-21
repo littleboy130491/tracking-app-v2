@@ -34,6 +34,7 @@ use App\Filament\Resources\ExportShipments\Pages\ListExportShipments;
 use App\Filament\Resources\HsCodes\HsCodeResource;
 use App\Filament\Resources\HsCodes\Pages\CreateHsCode;
 use App\Filament\Resources\ImportContainers\ImportContainerResource;
+use App\Filament\Resources\ImportContainers\Pages\CreateImportContainer;
 use App\Filament\Resources\ImportContainers\Pages\ListImportContainers;
 use App\Filament\Resources\ImportShipments\ImportShipmentResource;
 use App\Filament\Resources\ImportShipments\Pages\CreateImportShipment;
@@ -43,10 +44,12 @@ use App\Filament\Resources\Users\UserResource;
 use App\Models\Company;
 use App\Models\ExportShipment;
 use App\Models\HsCode;
+use App\Models\ImportContainer;
 use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Select;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -432,6 +435,50 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertSame(0, substr_count($sppbHtml, ' spjm'));
     }
 
+    public function test_import_container_tab_header_fields_follow_the_milestones(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin);
+
+        // BL-IMP-0001 sits at "waiting process bahandle": the cargo details
+        // are unlocked, the loading data still waits for "container shipping
+        // schedule".
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertFormFieldExists('goods_description')
+            ->assertFormFieldExists('packages')
+            ->assertFormFieldExists('hsCodes')
+            ->assertFormFieldExists('terminal_name')
+            ->assertFormFieldExists('loading_date')
+            ->assertFormFieldExists('loading_destination')
+            ->assertSee('Locked until Step 17: Container shipping schedule');
+    }
+
+    public function test_document_received_by_offers_staff_only(): void
+    {
+        $admin = $this->admin();
+        $this->actingAs($admin);
+
+        // The scope behind the picker excludes customer accounts.
+        $internalEmails = User::query()->internal()->pluck('email');
+        $this->assertTrue($internalEmails->contains('admin@example.com'));
+        $this->assertTrue($internalEmails->contains('operator@example.com'));
+        $this->assertFalse($internalEmails->contains('customer@example.com'));
+        $this->assertFalse($internalEmails->contains('sari@java-retail.test'));
+
+        $customerIds = User::query()->whereNotIn('email', $internalEmails->all())->pluck('id')->map(fn ($id): int => (int) $id)->all();
+
+        $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+
+        Livewire::test(EditExportShipment::class, ['record' => $export->getRouteKey()])
+            ->assertFormFieldExists('document_received_by', function (Select $field) use ($customerIds): bool {
+                $optionIds = array_map('intval', array_keys($field->getOptions()));
+
+                return $optionIds !== [] && array_intersect($optionIds, $customerIds) === [];
+            });
+    }
+
     public function test_spjm_demo_shipments_cover_the_branch(): void
     {
         $completed = ImportShipment::query()->where('bl_number', 'BL-IMP-0003')->firstOrFail();
@@ -446,22 +493,6 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertSame(2, $fresh->containers()->count());
         // The size unlocks later in the branch, so the fresh containers have none yet.
         $this->assertNull($fresh->containers()->first()->size);
-    }
-
-    public function test_spjm_notice_shows_only_while_the_response_is_spjm(): void
-    {
-        $admin = $this->admin();
-        $this->actingAs($admin);
-
-        $spjm = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
-
-        Livewire::test(EditImportShipment::class, ['record' => $spjm->getRouteKey()])
-            ->assertSee('Tambahan step SPJM');
-
-        $sppb = ImportShipment::query()->where('bl_number', 'BL-IMP-0002')->firstOrFail();
-
-        Livewire::test(EditImportShipment::class, ['record' => $sppb->getRouteKey()])
-            ->assertDontSee('Tambahan step SPJM');
     }
 
     public function test_company_list_links_customers_and_operators_to_their_edit_page(): void
@@ -639,5 +670,85 @@ class AdminPanelSmokeTest extends TestCase
         $this->actingAs($customer)
             ->get(UserResource::getUrl('index'))
             ->assertForbidden();
+    }
+
+    public function test_import_form_uses_the_tracking_url_and_step_11_cargo_fields(): void
+    {
+        $admin = $this->admin();
+
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertOk()
+            ->assertSee('Tracking position (url)')
+            ->assertDontSee('Tracking position input (manual)')
+            ->assertSee('Description of goods')
+            ->assertSee('HS codes');
+    }
+
+    public function test_new_standalone_container_inherits_the_shipment_cargo_and_hs_codes(): void
+    {
+        $admin = $this->admin();
+
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+        $shipmentHsCodeIds = $import->hsCodes()->pluck('hs_codes.id')->sort()->values()->all();
+
+        $this->assertNotEmpty($shipmentHsCodeIds);
+
+        $this->actingAs($admin);
+
+        Livewire::test(CreateImportContainer::class)
+            ->fillForm([
+                'import_shipment_id' => $import->getKey(),
+                'container_number' => 'INHERIT-CONT-1',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $container = ImportContainer::query()->where('container_number', 'INHERIT-CONT-1')->firstOrFail();
+
+        $this->assertSame($import->goods_description, $container->description_of_goods);
+        $this->assertSame($import->packages, $container->packages);
+        $this->assertSame(
+            $shipmentHsCodeIds,
+            $container->hsCodes()->pluck('hs_codes.id')->sort()->values()->all(),
+        );
+    }
+
+    public function test_new_repeater_container_persists_its_cargo_and_hs_codes(): void
+    {
+        $admin = $this->admin();
+
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+        $shipmentHsCodeIds = $import->hsCodes()->pluck('hs_codes.id')->sort()->values()->all();
+
+        $this->assertNotEmpty($shipmentHsCodeIds);
+
+        $this->actingAs($admin);
+
+        $component = Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()]);
+
+        $containers = $component->get('data.containers');
+        $containers['new-1'] = [
+            'container_number' => 'REPEATER-CONT-1',
+            'import_shipment_id' => $import->getKey(),
+            'factory_loading_status' => 'on_process',
+            'description_of_goods' => $import->goods_description,
+            'packages' => $import->packages,
+            'hsCodes' => $shipmentHsCodeIds,
+        ];
+
+        $component->set('data.containers', $containers)->call('save')->assertHasNoFormErrors();
+
+        $container = ImportContainer::query()->where('container_number', 'REPEATER-CONT-1')->firstOrFail();
+
+        $this->assertSame($import->goods_description, $container->description_of_goods);
+        $this->assertSame($import->packages, $container->packages);
+        $this->assertSame(
+            $shipmentHsCodeIds,
+            $container->hsCodes()->pluck('hs_codes.id')->sort()->values()->all(),
+        );
     }
 }

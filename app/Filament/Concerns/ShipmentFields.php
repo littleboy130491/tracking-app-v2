@@ -21,10 +21,12 @@ use App\Enums\ShipmentStatus;
 use App\Livewire\NotesPanel;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
+use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
 use BackedEnum;
 use Closure;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Field;
@@ -74,7 +76,8 @@ class ShipmentFields
                     ->required(),
                 Select::make('document_received_by')
                     ->label('Document received by')
-                    ->relationship('documentReceivedBy', 'name')
+                    // Staff only: customer accounts never receive documents.
+                    ->relationship('documentReceivedBy', 'name', modifyQueryUsing: fn (Builder $query): Builder => $query->internal())
                     ->default(auth()->id())
                     ->disabled(fn (): bool => ! auth()->user()?->hasAnyRole(Role::PRIVILEGED))
                     ->dehydrated(fn (): bool => (bool) auth()->user()?->hasAnyRole(Role::PRIVILEGED)),
@@ -203,6 +206,7 @@ class ShipmentFields
      *
      * @param  list<Field>  $itemFields
      * @param  list<Component>  $headerComponents
+     * @param  (Closure(array<string, mixed>, ImportShipment): array<string, mixed>)|null  $seedItemState
      */
     public static function containersTab(
         string $milestoneEnum,
@@ -210,34 +214,55 @@ class ShipmentFields
         array $itemFields,
         BackedEnum $unlockedAt,
         array $headerComponents = [],
+        ?Closure $seedItemState = null,
     ): Tab {
+        $repeater = Repeater::make('containers')
+            ->relationship()
+            ->defaultItems(0)
+            ->extraAttributes(['class' => 'bl-containers'])
+            ->itemLabel(function ($container): string {
+                // Read the raw item state: the dehydrated snapshot Filament
+                // passes as $state drops every form-field key, so it would be empty.
+                $state = (array) $container->getRawState();
+
+                return $state['container_number'] ?? 'New container';
+            })
+            ->collapsible()
+            ->collapsed()
+            ->columns(3)
+            ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => [
+                ...$data,
+                ...self::photoPickerItems($containerModel, $data['id'] ?? null),
+            ]);
+
+        if ($seedItemState) {
+            // Seeds a newly added item from the parent shipment, so its
+            // relationship fields (e.g. HS codes) persist on save.
+            $repeater->addAction(function (Action $action) use ($seedItemState): Action {
+                return $action->action(function (Repeater $component) use ($seedItemState): void {
+                    $shipment = $component->getRecord();
+
+                    if (! $shipment instanceof ImportShipment) {
+                        return;
+                    }
+
+                    $items = $component->getRawState();
+                    $key = array_key_last($items);
+
+                    if ($key === null) {
+                        return;
+                    }
+
+                    $component->getChildSchema($key)->rawState($seedItemState([], $shipment));
+                });
+            });
+        }
+
         return Tab::make('Containers')
             ->visibleOn('edit')
             ->schema([
                 ...$headerComponents,
-                self::gate(
-                    Repeater::make('containers')
-                        ->relationship()
-                        ->defaultItems(0)
-                        ->extraAttributes(['class' => 'bl-containers'])
-                        ->itemLabel(function ($container): string {
-                            // Read the raw item state: the dehydrated snapshot Filament
-                            // passes as $state drops every form-field key, so it would be empty.
-                            $state = (array) $container->getRawState();
-
-                            return $state['container_number'] ?? 'New container';
-                        })
-                        ->collapsible()
-                        ->collapsed()
-                        ->columns(3)
-                        ->mutateRelationshipDataBeforeFillUsing(fn (array $data): array => [
-                            ...$data,
-                            ...self::photoPickerItems($containerModel, $data['id'] ?? null),
-                        ])
-                        ->schema($itemFields),
-                    $milestoneEnum,
-                    $unlockedAt,
-                ),
+                self::gate($repeater->schema($itemFields), $milestoneEnum, $unlockedAt),
             ]);
     }
 
@@ -262,27 +287,12 @@ class ShipmentFields
     }
 
     /**
-     * The HS-code multi-select with inline create; identical for both forms.
+     * The shipment-level HS-code multi-select, gated on the shipment form.
+     * The field itself is shared with the container forms.
      */
     public static function hsCodesField(): Select
     {
-        return Select::make('hsCodes')
-            ->label('HS codes')
-            ->relationship('hsCodes', 'code')
-            ->multiple()
-            ->searchable()
-            ->preload()
-            ->createOptionModalHeading('New HS code')
-            ->createOptionForm([
-                TextInput::make('code')
-                    ->label('HS code')
-                    ->required()
-                    ->unique('hs_codes', 'code')
-                    ->maxLength(30),
-                Textarea::make('description')
-                    ->rows(3),
-            ])
-            ->columnSpanFull();
+        return ContainerFields::hsCodesField();
     }
 
     /**

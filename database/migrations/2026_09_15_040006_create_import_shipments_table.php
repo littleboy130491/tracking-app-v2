@@ -47,6 +47,12 @@ return new class extends Migration
             $table->string('billing_response', 20)->nullable();
             // Upload all document.
             $table->text('goods_description')->nullable();
+            // Containers tab header: cargo and loading data.
+            $table->string('packages')->nullable();
+            // Container shipping schedule.
+            $table->string('terminal_name')->nullable();
+            $table->date('loading_date')->nullable();
+            $table->text('loading_destination')->nullable();
 
             $table->string('status', 30)->default('draft');
             $table->string('current_milestone', 40)->default('document_received');

@@ -9,6 +9,8 @@
  *   red block can be seen both finished and upcoming.
  * - Each shipment's milestone matches the data seeded for it; the SPJM steps
  *   only exist while `billing_response` is SPJM.
+ * - Containers carry their own driver/tracking data, including a validated
+ *   tracking URL for the container on the way to the factory.
  * - Finds companies by code, so it depends on DemoCompanySeeder running first.
  * - Idempotent: B/L numbers are unique and progress fields are only written
  *   when the record is first created.
@@ -57,6 +59,10 @@ class DemoSpjmShipmentSeeder extends Seeder
             'departure_date' => now()->subDays(25)->toDateString(),
             'eta_at' => now()->subDays(9),
             'goods_description' => 'Textile machinery',
+            'packages' => '64 crates',
+            'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',
+            'loading_date' => now()->subDays(6)->toDateString(),
+            'loading_destination' => 'Gudang SIN, Surabaya',
             'billing_issuance_status' => BillingIssuanceStatus::Issued,
             // The customer confirmed the draft PIB during the process.
             'confirmation_checklist' => true,
@@ -90,7 +96,7 @@ class DemoSpjmShipmentSeeder extends Seeder
             'gate_out_cy_at' => now()->subDays(7),
             'driver_name' => 'Agus Salim',
             'license_number' => 'L 8842 XX',
-            'tracking_position_input' => 'Checkpoint Waru, 14:20',
+            'tracking_position_url' => 'https://maps.example.com/live/MSKU7788991',
             'gross_weight' => 14250,
             'gross_weight_unit' => 'kg',
             'cbm' => 29.1,

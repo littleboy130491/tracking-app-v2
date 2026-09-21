@@ -117,6 +117,7 @@ class TableExportColumns
                 'aju_number', 'voyage_number', 'billing_issuance_status',
                 'port_of_loading', 'departure_date', 'port_of_discharge',
                 'eta_at', 'billing_response', 'goods_description',
+                'packages', 'terminal_name', 'loading_date', 'loading_destination',
                 'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
                 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at',
             ]),
@@ -160,8 +161,9 @@ class TableExportColumns
         return [
             ...self::fields([
                 'id', 'import_shipment_id', 'container_number', 'size',
+                'description_of_goods', 'packages',
                 'driver_name', 'license_number', 'gate_out_cy_at',
-                'tracking_position', 'tracking_position_input',
+                'tracking_position', 'tracking_position_url',
                 'gross_weight', 'gross_weight_unit', 'cbm',
                 'factory_loading_at', 'factory_loading_status',
                 'return_depot_name', 'empty_returned_at', 'status', 'latest_event',
@@ -172,6 +174,7 @@ class TableExportColumns
             Column::make('shipment.company.name')->heading('Company'),
             self::relationColumn('shipment.status', 'Shipment status', fn ($record): string => (string) $record->shipment?->status?->label()),
             self::relationColumn('shipment.current_milestone', 'Shipment milestone', fn ($record): string => (string) $record->shipment?->current_milestone?->label()),
+            self::relationColumn('hsCodes.code', 'HS codes', fn ($record): string => $record->hsCodes->pluck('code')->implode(', ')),
         ];
     }
 

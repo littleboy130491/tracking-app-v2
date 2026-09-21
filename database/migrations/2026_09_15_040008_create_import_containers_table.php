@@ -5,9 +5,11 @@
  * Responsibility: Creates the `import_containers` table (a container in an import shipment).
  * What it does:
  * - Each row is a shipment-scoped container holding import fields only, one
- *   column group per IMPORT.md milestone: identity, gate-out, tracking,
- *   weights, factory loading and depot return data.
- * How to use: App\Models\ImportContainer belongsTo ImportShipment; hasMany Attachment.
+ *   column group per IMPORT.md milestone: identity, cargo (description of
+ *   goods and packages), gate-out, tracking (free-text position plus a
+ *   validated URL), weights, factory loading and depot return data.
+ * How to use: App\Models\ImportContainer belongsTo ImportShipment; belongsToMany
+ *   HsCode (import_container_hs_code pivot); hasMany Attachment.
  * How to extend: Add new import container fields as nullable columns and expose
  *   them in the import container form sections.
  *
@@ -29,6 +31,10 @@ return new class extends Migration
             // Response billing — No. container / Tambahan step SPJM — size.
             $table->string('container_number', 30);
             $table->string('size', 20)->nullable();
+            // Container cargo — response billing / upload all document: each
+            // container carries its own description of goods and packages.
+            $table->text('description_of_goods')->nullable();
+            $table->string('packages', 255)->nullable();
 
             // Gate out from inbound terminal — driver name and No. license.
             $table->string('driver_name')->nullable();
@@ -38,7 +44,7 @@ return new class extends Migration
 
             // Container on the way factory — driver tracking.
             $table->string('tracking_position')->nullable();
-            $table->string('tracking_position_input')->nullable();
+            $table->string('tracking_position_url', 500)->nullable();
 
             // Payment bahandle — gross weight.
             $table->decimal('gross_weight', 15, 3)->nullable();

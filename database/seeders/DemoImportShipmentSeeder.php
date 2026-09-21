@@ -9,6 +9,8 @@
  *   Each shipment's milestone reflects the data seeded for it.
  * - Finds companies by code, so it depends on DemoCompanySeeder running first
  *   and must not assume how many companies exist.
+ * - Containers carry their own cargo fields (description of goods, packages)
+ *   so the container-level form has demo data next to the shipment defaults.
  * - Idempotent: reference numbers are unique and progress fields are only
  *   written when the record is first created, so re-running never resets
  *   anyone's work.
@@ -55,6 +57,10 @@ class DemoImportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'eta_at' => now()->addDays(5),
             'goods_description' => 'Electronic components',
+            // Cargo details land at "upload all document"; the loading data
+            // (terminal, date, destination) only at "container shipping
+            // schedule", which this shipment has not reached yet.
+            'packages' => '85 cartons',
             'billing_issuance_status' => BillingIssuanceStatus::Issued,
             // SPJM keeps this shipment on the behandle branch.
             'billing_response' => BillingResponse::Spjm,
@@ -64,8 +70,14 @@ class DemoImportShipmentSeeder extends Seeder
 
         $this->hsCodes($sinar, '8542.31');
 
-        $this->container($sinar, 'CMAU7654321', '20');
-        $this->container($sinar, 'CMAU7654322', '20');
+        $this->container($sinar, 'CMAU7654321', '20', [
+            'description_of_goods' => 'Electronic components',
+            'packages' => '85 cartons',
+        ]);
+        $this->container($sinar, 'CMAU7654322', '20', [
+            'description_of_goods' => 'Electronic components',
+            'packages' => '85 cartons',
+        ]);
     }
 
     /**
@@ -86,6 +98,10 @@ class DemoImportShipmentSeeder extends Seeder
             'departure_date' => now()->subDays(18)->toDateString(),
             'eta_at' => now()->subDays(4),
             'goods_description' => 'Household appliances',
+            'packages' => '120 cartons',
+            'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',
+            'loading_date' => now()->subDays(3)->toDateString(),
+            'loading_destination' => 'Gudang JRD, Sidoarjo',
             'billing_issuance_status' => BillingIssuanceStatus::Issued,
             // The customer confirmed the draft PIB during the process.
             'confirmation_checklist' => true,
@@ -100,6 +116,8 @@ class DemoImportShipmentSeeder extends Seeder
         $this->hsCodes($imported, '8450.11');
 
         $this->container($imported, 'ONEU9988771', '20', [
+            'description_of_goods' => 'Household appliances',
+            'packages' => '120 cartons',
             'gate_out_cy_at' => now()->subDays(3),
             'tracking_position' => 'Driver Budi — live location shared',
             'gross_weight' => 18500,
@@ -157,8 +175,9 @@ class DemoImportShipmentSeeder extends Seeder
     }
 
     /**
-     * Containers keep whatever progress they have: descriptive fields are
-     * refreshed, `$initial` progress fields only apply on creation.
+     * Containers keep whatever progress they have: the size is refreshed,
+     * while the cargo fields (description of goods, packages) and `$initial`
+     * progress fields only apply on creation.
      *
      * @param  array<string, mixed>  $initial
      */

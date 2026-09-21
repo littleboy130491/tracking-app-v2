@@ -759,3 +759,50 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Add Loading/Discharge location columns |
 | 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Add Loading/Discharge location columns |
 | 2026-09-21 20:25 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Add Loading/Discharge location columns |
+| 2026-09-21 20:45 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/User.php | internal() scope: users with an internal role only |
+| 2026-09-21 20:45 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Document received by lists staff only |
+| 2026-09-21 20:45 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Staff-only picker test |
+| 2026-09-21 20:45 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Document received by staff-only checklist |
+| 2026-09-21 17:08 | Devin (Fusion) | CREATE | RECOMMENDATION_PLAN.md | Added advisory import workflow analysis and future recommendations |
+| 2026-09-21 17:22 | Devin (Fusion) | UPDATE | RECOMMENDATION_PLAN.md | Removed Markdown trailing whitespace from customer timeline |
+| 2026-09-21 17:24 | Devin (Fusion) | UPDATE | RECOMMENDATION_PLAN.md | Synced recommendations with new import cargo and loading fields |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | packages, terminal_name, loading_date, loading_destination |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/ImportShipment.php | New cargo/loading fields in fillable and casts |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Cargo/loading fields above the containers repeater |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Import CSV export includes the new fields |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Seeds packages/terminal/loading per milestone |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Completed SPJM seeds cargo/loading data |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Containers tab header fields + gate test |
+| 2026-09-21 21:10 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Containers tab header fields checklist |
+| 2026-09-21 21:25 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Removed the SPJM info notice |
+| 2026-09-21 21:25 | Devin (GLM-5.3 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Dropped the SPJM notice test |
+| 2026-09-21 21:25 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | SPJM notice item removed |
+| 2026-09-21 17:59 | Devin (Fusion) | UPDATE | plans/_progress.md | Started import tracking URL implementation plan |
+| 2026-09-21 18:05 | Devin (Fusion) | UPDATE | composer.json | Added Laravel Boost development dependency |
+| 2026-09-21 18:05 | Devin (Fusion) | UPDATE | composer.lock | Locked Laravel Boost development dependency |
+| 2026-09-21 18:05 | Devin (Fusion) | UPDATE | AGENTS.md | Installed Laravel Boost project guidance |
+| 2026-09-21 18:05 | Devin (Fusion) | UPDATE | CLAUDE.md | Installed Laravel Boost project guidance |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | boost.json | Laravel Boost agent configuration |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | .mcp.json | Laravel Boost MCP server registration |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | opencode.json | Laravel Boost OpenCode configuration |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | .agents/skills/** | Laravel Boost skill files for agent use |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | .claude/skills/** | Laravel Boost skill files for agent use |
+| 2026-09-21 18:05 | Devin (Fusion) | CREATE | .grok/skills/** | Laravel Boost skill files for agent use |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | tracking URL, container cargo columns |
+| 2026-09-21 18:40 | Devin (Fusion) | CREATE | database/migrations/2026_09_21_111540_create_import_container_hs_code_table.php | Container-level HS code pivot |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Models/ImportContainer.php | Cargo fields, HS codes relation, shipment defaults |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Models/HsCode.php | importContainers relation |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Concerns/ContainerFields.php | Tracking URL, import cargo group, HS codes field |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Repeater seeding hook for new containers |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Cargo fields to Response billing, container seeding |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php | Container cargo fields |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Resources/ImportContainers/Pages/CreateImportContainer.php | Cargo and HS code seeding from shipment |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Resources/ImportContainers/Pages/EditImportContainer.php | Cargo defaults from shipment on fill |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Import container export uses new fields |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Container cargo demo data |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Tracking URL demo value |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Tracking URL, cargo placement and inheritance tests |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | IMPORT.md | Cargo fields and tracking URL moved to Response billing |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | docs/ERD.md | Import cargo columns and container HS code pivot |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | docs/UAT.md | Import cargo and tracking URL checklist |
+| 2026-09-21 18:40 | Devin (Fusion) | UPDATE | RECOMMENDATION_PLAN.md | Tracking URL and cargo placement findings synced |

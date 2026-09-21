@@ -47,6 +47,7 @@ class ImportContainerForm
                     ->schema([
                         ...ContainerFields::importIdentity(),
                         ...ContainerFields::importSize(),
+                        ...ContainerFields::importCargo(),
                     ]),
                 Section::make('Driver')
                     ->columns(3)

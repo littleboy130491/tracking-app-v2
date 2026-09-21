@@ -216,3 +216,35 @@ Status: COMPLETE
 Notes:
 - Display/search only; no schema change (columns already existed and were on the forms).
 - Both columns searchable, placeholder '—', toggleable.
+
+---
+
+# Progress - Import tracking URL and field placement
+
+Goal: Rename the import manual tracking input to a validated URL and move cargo fields to the Response billing step.
+Started: 2026-09-21 17:59
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Finish required Laravel Boost setup - DONE
+- [x] Step 2: Rename tracking_position_input to tracking_position_url - DONE
+- [x] Step 3: Move shipment Description of goods, Packages, HS codes to Response billing (Step 11) - DONE
+- [x] Step 4: Move container Size to Response billing; add container Description of goods, Packages and HS codes with shipment defaults - DONE
+- [x] Step 5: Add regression tests for URL validation and field placement - DONE
+- [x] Step 6: Update IMPORT.md, ERD, UAT, recommendation and logs - DONE
+- [x] Step 7: Run Pint and targeted tests; review the final diff - DONE
+
+## Current Focus
+
+Working on: Final verification
+Next: None
+Blocked: None
+
+## Notes
+
+- Import keeps `tracking_position`; `tracking_position_input` becomes `tracking_position_url` with Export-equivalent URL validation.
+- User decision: Description of goods, Packages and HS codes unlock at Response billing (Step 11) on the shipment form.
+- User decision: Container Size unlocks at Response billing; each container gets its own Description of goods, Packages and multiple HS codes that default from the shipment and can be overridden.
+- Step 1 used composer require + `php artisan boost:install --no-interaction`; Boost added guidelines/skills/MCP config.
+- Implementation complete: 30 AdminPanelSmokeTest tests pass (165 assertions); the add-item seeding hook lives in ShipmentFields::containersTab().
