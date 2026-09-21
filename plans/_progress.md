@@ -183,3 +183,20 @@ Blocked: None
 - Visibility: User::canExportTables() / User::canPruneOldData() both return hasAnyRole(Role::PRIVILEGED) (admin + super_admin). The action re-checks in action() so a crafted request cannot bypass it.
 - PermissionSeeder adds a baseline `Prune:LegacyData` permission (admins get it via RoleSeeder's all-permissions sync; operators are excluded).
 - Tests: tests/Feature/Admin/TableExportAndPruneTest.php — action visibility per role on all 7 tables, prune cutoff/cascade, full column sets, real map() output. Full suite 128 passed.
+
+---
+
+# Progress - Shipment tables: Created/Updated instead of ETA
+
+Goal: Show created_at + updated_at (not ETA) in the four admin shipment tables.
+Started: 2026-09-21 20:05
+Status: COMPLETE
+
+- [x] B/L export + import tables: ETA -> Created + Updated (both visible) - DONE
+- [x] Companies export/import relation managers: ETA -> Created + Updated - DONE
+- [x] Tests: assert columns present/absent - DONE (29 pass)
+- [x] Docs + activity log - DONE
+
+Notes:
+- Display-only change; eta_at stays in the DB, edit form, portal estimate line and CSV export.
+- Relation managers are standalone Livewire components; test with ownerRecord + pageClass.

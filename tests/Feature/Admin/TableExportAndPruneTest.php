@@ -4,7 +4,8 @@
  * File: tests/Feature/Admin/TableExportAndPruneTest.php
  * Responsibility: Guards the CSV export and prune-old-data table header actions.
  * What it does:
- * - Proves both actions are visible to admin/super_admin but hidden from operators.
+ * - Proves export is visible to admin/super_admin and hidden from operators,
+ *   and that prune (permanent delete) is visible to super_admin only.
  * - Proves the prune service only deletes rows older than the 3-year window and
  *   takes their child rows (containers, logs) with them.
  * How to use: `php artisan test --filter=TableExportAndPruneTest`.
@@ -14,18 +15,23 @@
 namespace Tests\Feature\Admin;
 
 use App\Filament\Concerns\TableExportColumns;
+use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
+use App\Filament\Resources\Companies\RelationManagers\ExportShipmentsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\ImportShipmentsRelationManager;
 use App\Filament\Resources\ExportContainers\Pages\ListExportContainers;
 use App\Filament\Resources\ExportShipments\Pages\ListExportShipments;
 use App\Filament\Resources\HsCodes\Pages\ListHsCodes;
 use App\Filament\Resources\ImportContainers\Pages\ListImportContainers;
 use App\Filament\Resources\ImportShipments\Pages\ListImportShipments;
 use App\Filament\Resources\Users\Pages\ListUsers;
+use App\Models\Company;
 use App\Models\ExportShipment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Prune\OldDataPruner;
 use Filament\Facades\Filament;
+use Filament\Tables\Columns\Column as TableColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -74,13 +80,15 @@ class TableExportAndPruneTest extends TestCase
      * @param  class-string  $page
      */
     #[DataProvider('tableProvider')]
-    public function test_admin_sees_the_export_and_prune_actions(string $page): void
+    public function test_admin_sees_the_export_action_but_never_prune(string $page): void
     {
         $this->actingAs($this->user(Role::ADMIN));
 
+        // An admin may soft-delete and restore, but permanent deletion (prune)
+        // is reserved for super_admin.
         Livewire::test($page)
             ->assertTableActionVisible('export')
-            ->assertTableActionVisible('prune-'.self::pruneKey($page));
+            ->assertTableActionHidden('prune-'.self::pruneKey($page));
     }
 
     /**
@@ -163,9 +171,9 @@ class TableExportAndPruneTest extends TestCase
         $this->assertDatabaseMissing('export_containers', ['id' => $container->getKey()]);
     }
 
-    public function test_prune_action_deletes_old_rows_for_an_admin(): void
+    public function test_prune_action_deletes_old_rows_for_a_super_admin(): void
     {
-        $this->actingAs($this->user(Role::ADMIN));
+        $this->actingAs($this->user(Role::SUPER_ADMIN));
 
         $old = ExportShipment::query()->firstOrFail();
         $old->forceFill(['created_at' => now()->subYears(4)])->save();
@@ -251,5 +259,42 @@ class TableExportAndPruneTest extends TestCase
         );
         $this->assertArrayHasKey('deleted_at', $row);
         $this->assertArrayNotHasKey('password', $row);
+    }
+
+    public function test_shipment_tables_show_created_and_updated_instead_of_eta(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        foreach ([ListExportShipments::class, ListImportShipments::class] as $page) {
+            $names = array_map(
+                fn (TableColumn $column): string => $column->getName(),
+                Livewire::test($page)->instance()->getTable()->getColumns(),
+            );
+
+            $this->assertContains('created_at', $names, "{$page} should show Created");
+            $this->assertContains('updated_at', $names, "{$page} should show Updated");
+            $this->assertNotContains('eta_at', $names, "{$page} should not show ETA");
+        }
+    }
+
+    public function test_company_shipment_relation_managers_show_created_and_updated(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        $company = Company::query()->firstOrFail();
+
+        foreach ([ExportShipmentsRelationManager::class, ImportShipmentsRelationManager::class] as $relationManager) {
+            $names = array_map(
+                fn (TableColumn $column): string => $column->getName(),
+                Livewire::test($relationManager, [
+                    'ownerRecord' => $company,
+                    'pageClass' => EditCompany::class,
+                ])->instance()->getTable()->getColumns(),
+            );
+
+            $this->assertContains('created_at', $names);
+            $this->assertContains('updated_at', $names);
+            $this->assertNotContains('eta_at', $names);
+        }
     }
 }

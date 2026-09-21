@@ -81,15 +81,16 @@ class ImportShipmentsTable
                             ? ImportContainerResource::getUrl('edit', ['record' => $container])
                             : null;
                     }),
-                TextColumn::make('eta_at')
-                    ->label('ETA')
+                TextColumn::make('created_at')
+                    ->label('Created')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('updated_at')
+                    ->label('Updated')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -117,7 +118,8 @@ class ImportShipmentsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make()
+                        ->visible(fn (): bool => (bool) auth()->user()?->can('ForceDeleteAny:ImportShipment')),
                     RestoreBulkAction::make(),
                 ]),
             ]);

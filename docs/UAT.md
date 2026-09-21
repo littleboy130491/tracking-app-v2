@@ -11,6 +11,49 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Shipment tables show Created / Updated instead of ETA (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel; log in as `admin@example.com` / `password`.
+- `php artisan migrate:fresh --seed`.
+
+- [ ] Open **Bill of Ladings → Export**. Expected: the table no longer has an **ETA** column; it shows **Created** and **Updated** (date + time), both sortable.
+- [ ] Repeat on **Bill of Ladings → Import**. Expected: same **Created** / **Updated** columns, no ETA.
+- [ ] Open **CRM → Companies → (edit a company)** and look at the **Export B/Ls** panel. Expected: **Created** and **Updated** columns, no ETA.
+- [ ] In the same company page, check the **Import B/Ls** panel. Expected: **Created** and **Updated** columns, no ETA.
+- [ ] Confirm ETA is not lost elsewhere: open a shipment's **edit** form. Expected: the **ETA** field is still there and editable.
+- [ ] Customer portal: open a shipment. Expected: the ETA estimate line is still shown to customers.
+
+## 0. Delete rights by role (2026-09-21)
+
+**Prerequisites**
+
+- Admin panel; log in as `superadmin@example.com`, `admin@example.com` or `operator@example.com` (all `password`).
+- `php artisan migrate:fresh --seed`.
+
+**Super admin — permanent delete**
+
+- [ ] Log in as `superadmin@example.com` → **Master data → HS codes**. Expected: a **Force delete** bulk action appears (select rows → bulk menu).
+- [ ] Select a row → **Delete**. Expected: the row leaves the list; turn on the **Trashed** filter to see it again.
+- [ ] With the row trashed, choose **Force delete**. Expected: the row is permanently removed; it no longer appears even under the **Trashed** filter.
+
+**Admin — soft delete and recover only**
+
+- [ ] Log in as `admin@example.com` → **CRM → Companies**. Expected: a **Delete** bulk action and a **Restore** action appear, but **no Force delete** action.
+- [ ] Select a company → **Delete**. Expected: the company disappears from the default list.
+- [ ] Set the **Trashed** filter (top-right of the table). Expected: the deleted company is listed.
+- [ ] Select it → **Restore**. Expected: the company returns to the default list.
+- [ ] Repeat for **Users** and **Master data → HS codes**.
+- [ ] On **Bill of Ladings → Export/Import** and **Containers → Export/Import**, log in as admin. Expected: **Delete** and **Restore** appear, **Force delete** does not.
+- [ ] As admin, open **Users → (edit a user)** and delete that user. Expected: the user is soft-deleted; logging in as that account is refused, and the admin panel is unreachable for it until restored.
+
+**Operator — no delete at all**
+
+- [ ] Log in as `operator@example.com` → **Bill of Ladings → Export/Import**. Expected: **no** Delete, Restore or Force delete actions appear (only view/edit).
+- [ ] Open **CRM → Companies**, **Users** directly by URL. Expected: access is denied (admin-only resources).
+- [ ] Confirm the **Prune old data** button is absent everywhere for the operator.
+
 ## 0. Table CSV export & prune old data (2026-09-21)
 
 **Prerequisites**
@@ -36,8 +79,9 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Prune old data**
 
-- [ ] As admin, open any of the seven tables. Expected: a red **Prune old data** button appears next to **Export**.
-- [ ] Click it. Expected: a confirmation dialog says how many records would be permanently deleted and states the cutoff (3 years ago), with a **Delete permanently** button.
+- [ ] As **`superadmin@example.com`**, open any of the seven tables. Expected: a red **Prune old data** button appears next to **Export**.
+- [ ] As **`admin@example.com`**, open the same tables. Expected: the **Export** button appears, but the **Prune old data** button is **hidden** (permanent deletion is super-admin only).
+- [ ] Click **Prune old data**. Expected: a confirmation dialog says how many records would be permanently deleted and states the cutoff (3 years ago), with a **Delete permanently** button.
 - [ ] Confirm. Expected: a green notification reports how many records were deleted; the table refreshes.
 - [ ] Age a shipment (`created_at` older than 3 years) and prune. Expected: that shipment **and its containers** are removed for good (including soft-deleted rows).
 - [ ] Prune again with no old data. Expected: the notification reports `Deleted 0 …` and nothing else changes.

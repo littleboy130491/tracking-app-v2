@@ -24,6 +24,7 @@ use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Company;
+use App\Models\HsCode;
 use App\Models\Role;
 use App\Models\User;
 use App\Support\Authorization\AssignableRoles;
@@ -177,20 +178,37 @@ class UserRoleAssignmentTest extends TestCase
         $this->assertTrue($this->admin->can('ViewAny:Company'));
     }
 
-    public function test_only_admin_and_super_admin_can_delete_records(): void
+    public function test_delete_rights_follow_the_role_hierarchy(): void
     {
         $operator = User::query()->where('email', 'operator@example.com')->firstOrFail();
+        $customer = $this->customer;
 
-        // The whole delete lifecycle is admin territory, on every resource.
-        foreach (['Delete', 'DeleteAny', 'ForceDelete', 'ForceDeleteAny', 'Restore', 'RestoreAny'] as $ability) {
-            $this->assertFalse($operator->can("$ability:Company"), "operator should not hold $ability:Company");
-            $this->assertFalse($operator->can("$ability:ExportShipment"), "operator should not hold $ability:ExportShipment");
-            $this->assertFalse($operator->can("$ability:ImportShipment"), "operator should not hold $ability:ImportShipment");
+        // No delete lifecycle at all for operators or customers, on every
+        // resource.
+        foreach ([$operator, $customer] as $user) {
+            foreach (['Delete', 'DeleteAny', 'ForceDelete', 'ForceDeleteAny', 'Restore', 'RestoreAny'] as $ability) {
+                $this->assertFalse($user->can("$ability:Company"), "{$user->email} should not hold $ability:Company");
+                $this->assertFalse($user->can("$ability:ExportShipment"), "{$user->email} should not hold $ability:ExportShipment");
+                $this->assertFalse($user->can("$ability:ImportShipment"), "{$user->email} should not hold $ability:ImportShipment");
+            }
         }
 
-        $this->assertTrue($this->admin->can('Delete:Company'));
-        $this->assertTrue($this->admin->can('ForceDelete:Company'));
+        // Admin soft-deletes and restores, but never permanently deletes.
+        foreach (['Delete', 'DeleteAny', 'Restore', 'RestoreAny'] as $ability) {
+            $this->assertTrue($this->admin->can("$ability:Company"), "admin should hold $ability:Company");
+        }
+
+        foreach (['ForceDelete', 'ForceDeleteAny'] as $ability) {
+            $this->assertFalse($this->admin->can("$ability:Company"), "admin should not hold $ability:Company");
+            $this->assertFalse($this->admin->can("$ability:ExportShipment"), "admin should not hold $ability:ExportShipment");
+        }
+
+        $this->assertFalse($this->admin->canPruneOldData());
+
+        // Only super_admin may purge.
+        $this->assertTrue($this->superAdmin->can('ForceDelete:Company'));
         $this->assertTrue($this->superAdmin->can('Delete:Company'));
+        $this->assertTrue($this->superAdmin->canPruneOldData());
 
         // Operators still keep their write access on shipments.
         $this->assertTrue($operator->can('Update:ExportShipment'));
@@ -264,5 +282,66 @@ class UserRoleAssignmentTest extends TestCase
             collect($keys)->contains(fn (string $key): bool => str_starts_with($key, 'data.roles')),
             'Expected the roles field to be rejected. Errors: '.implode(', ', $keys),
         );
+    }
+
+    public function test_admin_soft_deletes_and_restores_a_company(): void
+    {
+        $company = Company::query()->firstOrFail();
+
+        $this->actingAs($this->admin);
+
+        $company->delete();
+        $this->assertSoftDeleted('companies', ['id' => $company->getKey()]);
+
+        // The edit page must still open the trashed record so it can be restored.
+        Livewire::test(EditCompany::class, ['record' => $company->getKey()])
+            ->assertOk();
+
+        $company->restore();
+        $this->assertDatabaseHas('companies', ['id' => $company->getKey(), 'deleted_at' => null]);
+    }
+
+    public function test_admin_soft_deletes_and_restores_a_user(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($this->admin);
+
+        $user->delete();
+        $this->assertSoftDeleted('users', ['id' => $user->getKey()]);
+
+        // A trashed user may not reach the admin panel at all.
+        $this->assertFalse($user->refresh()->canAccessPanel(app('filament')->getPanel('admin')));
+
+        $user->restore();
+        $this->assertDatabaseHas('users', ['id' => $user->getKey(), 'deleted_at' => null]);
+    }
+
+    public function test_admin_soft_deletes_and_restores_an_hs_code(): void
+    {
+        $hsCode = HsCode::query()->firstOrFail();
+
+        $this->actingAs($this->admin);
+
+        $hsCode->delete();
+        $this->assertSoftDeleted('hs_codes', ['id' => $hsCode->getKey()]);
+
+        $hsCode->restore();
+        $this->assertDatabaseHas('hs_codes', ['id' => $hsCode->getKey(), 'deleted_at' => null]);
+    }
+
+    public function test_only_a_super_admin_may_permanently_delete_a_trashed_record(): void
+    {
+        $hsCode = HsCode::query()->firstOrFail();
+        $hsCode->delete();
+
+        $this->actingAs($this->admin);
+        $this->assertFalse($this->admin->can('forceDelete', $hsCode));
+
+        $this->actingAs($this->superAdmin);
+        $this->assertTrue($this->superAdmin->can('forceDelete', $hsCode));
+
+        $hsCode->forceDelete();
+        $this->assertDatabaseMissing('hs_codes', ['id' => $hsCode->getKey()]);
     }
 }

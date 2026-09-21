@@ -28,6 +28,7 @@ use App\Models\User;
 use App\Services\ActivityLogger;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -153,7 +154,11 @@ class NotesPanel extends Component
             ImportShipment::class => ImportShipmentResource::getEloquentQuery()->findOrFail($this->noteableId),
             ExportContainer::class => ExportContainerResource::getEloquentQuery()->findOrFail($this->noteableId),
             ImportContainer::class => ImportContainerResource::getEloquentQuery()->findOrFail($this->noteableId),
-            default => $this->noteableType::query()->findOrFail($this->noteableId),
+            // Company/User may be trashed; their edit pages stay reachable for
+            // restore, so resolve them without the soft-delete scope too.
+            default => $this->noteableType::query()
+                ->withoutGlobalScopes([SoftDeletingScope::class])
+                ->findOrFail($this->noteableId),
         };
     }
 

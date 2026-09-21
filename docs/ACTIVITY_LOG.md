@@ -737,3 +737,21 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | database/seeders/RoleSeeder.php | Super admin only gets ForceDelete; admin gets soft delete + restore |
 | 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Models/User.php | canPruneOldData now super_admin only |
 | 2026-09-21 19:10 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Concerns/PrunableTableHeaderAction.php | Wording: prune restricted to super admin |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/Tables/CompaniesTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Users/Tables/UsersTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/HsCodes/Tables/HsCodesTable.php | Hide force-delete unless ForceDeleteAny permitted |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Services/Prune/OldDataPruner.php | Include trashed rows in prune scope |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | app/Livewire/NotesPanel.php | Resolve trashed Company/User for notes |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/UserRoleAssignmentTest.php | Delete-hierarchy + soft-delete/restore/force-delete tests |
+| 2026-09-21 19:35 | Devin (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | Prune moved from admin to super_admin |
+| 2026-09-21 19:45 | Devin (deepseek-v4.1-flash) | UPDATE | docs/UAT.md | Delete-rights-by-role checklist; prune now super admin |
+| 2026-09-21 19:45 | Devin (deepseek-v4.1-flash) | UPDATE | docs/ERD.md | Note soft deletes on shipments/containers/users/companies/HS codes |
+| 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Replace ETA column with Created/Updated |
+| 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Replace ETA column with Created/Updated |
+| 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Replace ETA column with Created/Updated |
+| 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Replace ETA column with Created/Updated |
+| 2026-09-21 20:05 | Devin (deepseek-v4.1-flash) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | Assert Created/Updated columns replace ETA |

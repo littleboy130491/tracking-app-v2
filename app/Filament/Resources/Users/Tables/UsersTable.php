@@ -103,7 +103,8 @@ class UsersTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make()
+                        ->visible(fn (): bool => (bool) auth()->user()?->can('ForceDeleteAny:User')),
                     RestoreBulkAction::make(),
                 ]),
             ]);

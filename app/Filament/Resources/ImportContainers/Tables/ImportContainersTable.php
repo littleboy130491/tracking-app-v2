@@ -92,7 +92,8 @@ class ImportContainersTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
+                    ForceDeleteBulkAction::make()
+                        ->visible(fn (): bool => (bool) auth()->user()?->can('ForceDeleteAny:ImportContainer')),
                     RestoreBulkAction::make(),
                 ]),
             ]);

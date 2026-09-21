@@ -33,6 +33,7 @@ use App\Models\ImportShipment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 
@@ -133,6 +134,7 @@ class OldDataPruner
         }
 
         return self::modelFor($key)::query()
+            ->withoutGlobalScopes([SoftDeletingScope::class])
             ->where('created_at', '<', $this->cutoff());
     }
 
