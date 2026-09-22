@@ -881,3 +881,6 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/OperatorRowScopeTest.php | Assert import scoping with seeded data |
 | 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Pick container without seeded media |
 | 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added SPJM clamp and condition-seeder checks |
+| 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Add footer components after containers repeater |
+| 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Move loading fields below containers repeater |
+| 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Loading fields now below the containers repeater |
