@@ -4,10 +4,13 @@
  * File: app/Livewire/Customer/Dashboard.php
  * Responsibility: Customer portal home: greeting, Type filter, filters and shipment list.
  * What it does:
- * - Lists the shipments of the companies the signed-in user manages; the
- *   **Type** dropdown switches between the Export and Import lists.
+ * - Lists the shipments of the companies the signed-in user manages in one
+ *   combined list; the **Type** filter defaults to All and can narrow to
+ *   Export or Import only.
  * - Filters by type, company, number (B/L, container, seal), status, year and
  *   month (spec.md).
+ * - Merges the export and import tables in PHP (they are separate tables) and
+ *   paginates the combined result manually.
  * - Adds each shipment's latest journey entry so the list shows Latest Place
  *   and Latest Event like the reference tracker.
  * - Privileged staff (admin/super_admin) see every shipment; customers stay
@@ -25,6 +28,7 @@ use App\Models\ImportShipment;
 use App\Services\ShipmentTimeline;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -34,8 +38,8 @@ class Dashboard extends Component
 {
     use WithPagination;
 
-    /** Active list: 'export' or 'import' (the Type filter). */
-    public string $type = 'export';
+    /** Type filter: '' (All), 'export' or 'import'. */
+    public string $type = '';
 
     public string $company = '';
 
@@ -46,6 +50,9 @@ class Dashboard extends Component
     public string $year = '';
 
     public string $month = '';
+
+    /** Rows per page; the view offers a short list of page sizes. */
+    public int $perPage = 50;
 
     public function updated(string $property): void
     {
@@ -66,10 +73,80 @@ class Dashboard extends Component
         $viewAll = $user->canViewAllShipments();
         $companyIds = $viewAll ? [] : $user->companies()->pluck('companies.id')->all();
 
-        $isExport = $this->type === 'export';
-        $model = $isExport ? ExportShipment::class : ImportShipment::class;
+        $models = match ($this->type) {
+            'export' => [ExportShipment::class],
+            'import' => [ImportShipment::class],
+            default => [ExportShipment::class, ImportShipment::class],
+        };
 
-        $shipments = $model::query()
+        // Export and Import live in separate tables, so the combined list is
+        // merged in PHP and paginated manually instead of via paginate().
+        $rows = collect();
+        foreach ($models as $model) {
+            $rows = $rows->merge($this->shipmentQuery($model, $viewAll, $companyIds)->get());
+        }
+
+        $rows = $rows->sortByDesc('created_at')->values();
+
+        $perPage = in_array($this->perPage, [15, 25, 50, 100], true) ? $this->perPage : 50;
+        $page = max(1, (int) $this->getPage());
+        $total = $rows->count();
+        $shipments = new LengthAwarePaginator(
+            $rows->forPage($page, $perPage),
+            $total,
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()],
+        );
+        $shipments->withPath(request()->url());
+
+        $timeline = app(ShipmentTimeline::class);
+        $latest = $shipments->getCollection()->mapWithKeys(
+            fn (ExportShipment|ImportShipment $shipment) => [$shipment->getKey() => $timeline->latestForShipment($shipment)],
+        );
+
+        return view('livewire.customer.dashboard', [
+            'shipments' => $shipments,
+            'latest' => $latest,
+            // Each row links to its own process detail page; the view resolves
+            // the route name/param from the shipment instance.
+            'companies' => $viewAll
+                ? Company::query()->orderBy('name')->pluck('name', 'id')->all()
+                : $user->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
+            // Drafts never reach the portal (visibleInPortal), so the filter
+            // only offers the customer-visible states.
+            'statuses' => collect(ShipmentStatus::options())
+                ->except(ShipmentStatus::Draft->value)
+                ->all(),
+            'years' => collect($models)
+                ->flatMap(fn (string $model) => $model::query()
+                    ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
+                    ->selectRaw('distinct strftime("%Y", created_at) as year')
+                    ->pluck('year'))
+                ->filter()
+                ->unique()
+                ->sortDesc()
+                ->values()
+                ->mapWithKeys(fn (string $year) => [$year => $year])
+                ->all(),
+            'months' => [
+                '1' => 'January', '2' => 'February', '3' => 'March', '4' => 'April',
+                '5' => 'May', '6' => 'June', '7' => 'July', '8' => 'August',
+                '9' => 'September', '10' => 'October', '11' => 'November', '12' => 'December',
+            ],
+        ]);
+    }
+
+    /**
+     * The shared filter query for one shipment model (export or import).
+     *
+     * @param  class-string<ExportShipment|ImportShipment>  $model
+     * @param  list<int>  $companyIds
+     * @return Builder<ExportShipment|ImportShipment>
+     */
+    private function shipmentQuery(string $model, bool $viewAll, array $companyIds): Builder
+    {
+        return $model::query()
             ->visibleInPortal()
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with(['company', 'containers'])
@@ -80,41 +157,11 @@ class Dashboard extends Component
                     ->orWhereHas('containers', fn (Builder $containers) => $containers
                         ->where('container_number', 'like', '%'.$this->number.'%')
                         // Only export containers carry a seal number.
-                        ->when($isExport, fn (Builder $seal) => $seal->orWhere('seal_number', 'like', '%'.$this->number.'%'))),
+                        ->when($model === ExportShipment::class, fn (Builder $seal) => $seal->orWhere('seal_number', 'like', '%'.$this->number.'%'))),
             ))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
             ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('created_at', (int) $this->month))
-            ->orderByDesc('created_at')
-            ->paginate(15);
-
-        $timeline = app(ShipmentTimeline::class);
-        $latest = $shipments->getCollection()->mapWithKeys(
-            fn (ExportShipment|ImportShipment $shipment) => [$shipment->getKey() => $timeline->latestForShipment($shipment)],
-        );
-
-        return view('livewire.customer.dashboard', [
-            'shipments' => $shipments,
-            'latest' => $latest,
-            'routeName' => $isExport ? 'customer.export-shipments.show' : 'customer.import-shipments.show',
-            'routeParam' => $isExport ? 'exportShipment' : 'importShipment',
-            // Admins choose from every company; customers from their own.
-            'companies' => $viewAll
-                ? Company::query()->orderBy('name')->pluck('name', 'id')->all()
-                : $user->companies()->orderBy('name')->pluck('name', 'companies.id')->all(),
-            'statuses' => ShipmentStatus::options(),
-            'years' => $model::query()
-                ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
-                ->selectRaw('distinct strftime("%Y", created_at) as year')
-                ->orderByDesc('year')
-                ->pluck('year', 'year')
-                ->filter()
-                ->all(),
-            'months' => [
-                '1' => 'January', '2' => 'February', '3' => 'March', '4' => 'April',
-                '5' => 'May', '6' => 'June', '7' => 'July', '8' => 'August',
-                '9' => 'September', '10' => 'October', '11' => 'November', '12' => 'December',
-            ],
-        ]);
+            ->orderByDesc('created_at');
     }
 }

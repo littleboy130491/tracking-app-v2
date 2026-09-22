@@ -227,9 +227,13 @@ class PortalTest extends TestCase
 
         $this->actingAs($dewi);
 
+        // Default is All: both processes appear in one combined list.
         Livewire::test(Dashboard::class)
             ->assertSee('Type')
-            ->assertSet('type', 'export')
+            ->assertSet('type', '')
+            ->assertSee('BL-EXP-0001')
+            ->assertSee('BL-IMP-0001')
+            ->set('type', 'export')
             ->assertSee('BL-EXP-0001')
             ->assertDontSee('BL-IMP-0001')
             ->set('type', 'import')
@@ -320,6 +324,7 @@ class PortalTest extends TestCase
         $this->actingAs($dewi);
 
         Livewire::test(Dashboard::class)
+            ->set('type', 'export')
             ->set('company', (string) $borneo->getKey())
             ->assertDontSee('BL-EXP-0001')
             ->call('clearFilters')

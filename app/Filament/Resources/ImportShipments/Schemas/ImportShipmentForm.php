@@ -25,6 +25,7 @@ namespace App\Filament\Resources\ImportShipments\Schemas;
 use App\Enums\BillingIssuanceStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentMode;
 use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ImportContainer;
@@ -64,6 +65,9 @@ class ImportShipmentForm
                                             TextInput::make('bl_number')
                                                 ->label('B/L number')
                                                 ->maxLength(100),
+                                            Select::make('shipment_mode')
+                                                ->label('Shipment mode')
+                                                ->options(ShipmentMode::options()),
                                         ], $enum, ImportMilestone::CheckingDocument),
                                         // Step 3 — Draft PIB.
                                         ...ShipmentFields::gated([
@@ -106,6 +110,8 @@ class ImportShipmentForm
                                         ...ShipmentFields::gated([
                                             DateTimePicker::make('eta_at')
                                                 ->label('Arrival time / ETA'),
+                                            DateTimePicker::make('actual_arrival_at')
+                                                ->label('Actual arrival'),
                                         ], $enum, ImportMilestone::BillingPayment),
                                         // Step 11 — Response billing (SPPB/AP/SPJK/SPJM).
                                         ...ShipmentFields::gated([

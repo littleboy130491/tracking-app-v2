@@ -111,12 +111,12 @@ class TableExportColumns
     {
         return [
             ...self::fields([
-                'id', 'bl_number', 'company_id', 'company_name_snapshot',
+                'id', 'bl_number', 'shipment_mode', 'company_id', 'company_name_snapshot',
                 'document_received_date', 'document_received_by',
                 'shipping_line', 'vessel_name', 'confirmation_checklist',
                 'aju_number', 'voyage_number', 'billing_issuance_status',
                 'port_of_loading', 'departure_date', 'port_of_discharge',
-                'eta_at', 'billing_response', 'goods_description',
+                'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
                 'packages', 'terminal_name', 'loading_date', 'loading_destination',
                 'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
                 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at',

@@ -17,6 +17,7 @@ namespace App\Models;
 use App\Enums\BillingIssuanceStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
 use App\Enums\ShipmentType;
 use App\Models\Concerns\ActsAsShipment;
@@ -30,12 +31,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'bl_number', 'company_id', 'company_name_snapshot',
+    'bl_number', 'shipment_mode', 'company_id', 'company_name_snapshot',
     'document_received_date', 'document_received_by',
     'shipping_line', 'vessel_name', 'confirmation_checklist',
     'aju_number', 'voyage_number', 'billing_issuance_status',
     'port_of_loading', 'departure_date', 'port_of_discharge',
-    'eta_at', 'billing_response', 'goods_description',
+    'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
     'packages', 'terminal_name', 'loading_date', 'loading_destination',
     'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
     'created_by', 'updated_by',
@@ -72,6 +73,7 @@ class ImportShipment extends Model
     {
         return [
             'status' => ShipmentStatus::class,
+            'shipment_mode' => ShipmentMode::class,
             'current_milestone' => ImportMilestone::class,
             'billing_issuance_status' => BillingIssuanceStatus::class,
             'billing_response' => BillingResponse::class,
@@ -80,6 +82,7 @@ class ImportShipment extends Model
             'departure_date' => 'date',
             'loading_date' => 'date',
             'eta_at' => 'datetime',
+            'actual_arrival_at' => 'datetime',
             'latest_event_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

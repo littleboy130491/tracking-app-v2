@@ -21,6 +21,7 @@ use App\Enums\BillingIssuanceStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ContainerStatus;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
 use App\Models\Company;
 use App\Models\HsCode;
@@ -69,6 +70,7 @@ class DemoImportConditionSeeder extends Seeder
     {
         $checking = $this->shipment('NUS', [
             'bl_number' => 'BL-IMP-0010',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0004',
             'shipping_line' => 'Maersk',
             'vessel_name' => 'MV Ocean Trader',
@@ -86,6 +88,7 @@ class DemoImportConditionSeeder extends Seeder
 
         $draftPib = $this->shipment('SNI', [
             'bl_number' => 'BL-IMP-0011',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0005',
             'shipping_line' => 'Evergreen',
             'vessel_name' => 'MV Ever Legend',
@@ -118,6 +121,7 @@ class DemoImportConditionSeeder extends Seeder
     {
         $ap = $this->shipment('JRD', [
             'bl_number' => 'BL-IMP-0012',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0006',
             'shipping_line' => 'ONE',
             'vessel_name' => 'MV One Horizon',
@@ -144,6 +148,7 @@ class DemoImportConditionSeeder extends Seeder
 
         $spjk = $this->shipment('SIN', [
             'bl_number' => 'BL-IMP-0013',
+            'shipment_mode' => ShipmentMode::Lcl,
             'aju_number' => 'AJU-0007',
             'shipping_line' => 'CMA CGM',
             'vessel_name' => 'MV Southern Tide',
@@ -177,6 +182,7 @@ class DemoImportConditionSeeder extends Seeder
     {
         $shipment = $this->shipment('JRD', [
             'bl_number' => 'BL-IMP-0014',
+            'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'SITC',
             'vessel_name' => 'MV SITC Haiphong',
             'voyage_number' => 'V-808',

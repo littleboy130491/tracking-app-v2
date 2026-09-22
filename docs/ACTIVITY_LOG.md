@@ -884,3 +884,30 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Add footer components after containers repeater |
 | 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Move loading fields below containers repeater |
 | 2026-09-22 16:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Loading fields now below the containers repeater |
+| 2026-09-22 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Type filter defaults to All |
+| 2026-09-22 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Added All option and per-row Type badge |
+| 2026-09-22 17:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Merged export and import into one manually paginated list |
+| 2026-09-22 17:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Per-row detail links resolved from shipment instance |
+| 2026-09-22 17:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Combined-list default and type filter coverage |
+| 2026-09-22 17:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Redesigned filter bar: full-width search, 5-col filters, count footer |
+| 2026-09-22 17:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Type-scoped assertions and placeholder-safe checks |
+| 2026-09-22 17:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Combined B/L list portal UAT checklist |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Added actual_arrival_at to import_shipments |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportShipment.php | Fillable and cast for actual_arrival_at |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Actual arrival field on BillingPayment step |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Sailing dates: departure and ETA on GateInCy, actual arrival on FinalChecking |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Import CSV export includes actual_arrival_at |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Completed import seeds actual arrival |
+| 2026-09-22 18:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Completed SPJM import arrives a day late |
+| 2026-09-22 18:25 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Clickable rows and Document date replaces ETA |
+| 2026-09-22 18:35 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Status filter limited to In Progress, Completed, Cancelled; per-page defaults to 50 |
+| 2026-09-22 18:35 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Colored status badges and per-page selector |
+| 2026-09-22 18:40 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Hidden Containers column |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Added shipment_mode to import_shipments |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportShipment.php | ShipmentMode fillable and cast |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Shipment mode after B/L on Checking document |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Import CSV export includes shipment_mode |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Import demo rows seeded FCL |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | SPJM import demo rows seeded FCL |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportConditionSeeder.php | Condition imports seeded FCL, one LCL |
+| 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | AJU number and Shipment mode columns, Document created header |

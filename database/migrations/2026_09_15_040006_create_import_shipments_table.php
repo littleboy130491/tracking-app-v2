@@ -24,6 +24,7 @@ return new class extends Migration
             $table->id();
             // Process 1 — Document received / Checking document.
             $table->string('bl_number', 100)->nullable()->index();
+            $table->string('shipment_mode', 20)->nullable();
             $table->foreignId('company_id')->constrained()->restrictOnDelete();
             $table->string('company_name_snapshot');
             $table->date('document_received_date')->nullable();
@@ -44,6 +45,7 @@ return new class extends Migration
             $table->string('port_of_discharge')->nullable();
             // Payment billing (arrival time / ETA) / Response billing.
             $table->timestamp('eta_at')->nullable();
+            $table->timestamp('actual_arrival_at')->nullable();
             $table->string('billing_response', 20)->nullable();
             // Upload all document.
             $table->text('goods_description')->nullable();

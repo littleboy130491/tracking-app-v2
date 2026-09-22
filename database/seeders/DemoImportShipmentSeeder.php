@@ -24,6 +24,7 @@ use App\Enums\BillingIssuanceStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ContainerStatus;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
 use App\Models\Company;
 use App\Models\HsCode;
@@ -49,6 +50,7 @@ class DemoImportShipmentSeeder extends Seeder
     {
         $sinar = $this->shipment('SIN', [
             'bl_number' => 'BL-IMP-0001',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0001',
             'shipping_line' => 'CMA CGM',
             'vessel_name' => 'MV Southern Cross',
@@ -89,6 +91,7 @@ class DemoImportShipmentSeeder extends Seeder
     {
         $imported = $this->shipment('JRD', [
             'bl_number' => 'BL-IMP-0002',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0002',
             'shipping_line' => 'ONE',
             'vessel_name' => 'MV One Meridian',
@@ -97,6 +100,8 @@ class DemoImportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'departure_date' => now()->subDays(18)->toDateString(),
             'eta_at' => now()->subDays(4),
+            // The vessel arrived as estimated; the timeline shows the actual.
+            'actual_arrival_at' => now()->subDays(4),
             'goods_description' => 'Household appliances',
             'packages' => '120 cartons',
             'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',

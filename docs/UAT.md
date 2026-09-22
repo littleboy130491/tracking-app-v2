@@ -11,6 +11,21 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Combined Bill of Ladings list in customer portal (2026-09-22)
+
+**Prerequisites**
+
+- `php artisan migrate:fresh --seed` (demo data).
+- Log in to the customer portal as `customer@example.com` / `password` (Dewi).
+
+- [ ] Open the portal home (`/portal`). Expected: **one** combined list showing both Export and Import B/Ls, newest first; each row has an **Export** or **Import** badge.
+- [ ] Check the **Type** filter defaults to **All**. Then switch it to **Export**. Expected: only export rows remain. Switch to **Import**. Expected: only import rows remain.
+- [ ] Search box: type a container number from an export shipment (e.g. `MSKU1234567`). Expected: the matching B/L row appears; a result count like "1 shipment found" is shown.
+- [ ] Set filters that yield no rows (e.g. search a nonsense string). Expected: "0 shipments found" and the empty-state message.
+- [ ] Click **Clear filters** after setting several filters. Expected: all inputs reset to All/blank and the full combined list returns.
+- [ ] Click a B/L number on an Import row. Expected: it opens the import detail page. Same for an Export row: opens the export detail page.
+- [ ] With 16+ visible shipments, use the pagination links. Expected: page 2 shows the next rows; the count reflects the total across both types.
+
 ## 0. SPJM milestone cannot skip the branch (2026-09-22)
 
 **Prerequisites**

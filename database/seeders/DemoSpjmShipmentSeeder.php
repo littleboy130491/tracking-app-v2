@@ -26,6 +26,7 @@ use App\Enums\BillingResponse;
 use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
 use App\Models\Company;
 use App\Models\HsCode;
@@ -50,6 +51,7 @@ class DemoSpjmShipmentSeeder extends Seeder
     {
         $completed = $this->shipment('SIN', [
             'bl_number' => 'BL-IMP-0003',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0003',
             'shipping_line' => 'Maersk',
             'vessel_name' => 'MV Straits Pioneer',
@@ -58,6 +60,8 @@ class DemoSpjmShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'departure_date' => now()->subDays(25)->toDateString(),
             'eta_at' => now()->subDays(9),
+            // Arrived one day late; the timeline shows the actual, not the ETA.
+            'actual_arrival_at' => now()->subDays(8),
             'goods_description' => 'Textile machinery',
             'packages' => '64 crates',
             'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',
@@ -114,6 +118,7 @@ class DemoSpjmShipmentSeeder extends Seeder
     {
         $fresh = $this->shipment('BJM', [
             'bl_number' => 'BL-IMP-0004',
+            'shipment_mode' => ShipmentMode::Fcl,
             'aju_number' => 'AJU-0004',
             'shipping_line' => 'PIL',
             'vessel_name' => 'MV Selatan Jaya',

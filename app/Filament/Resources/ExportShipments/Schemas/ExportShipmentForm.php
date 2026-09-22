@@ -22,6 +22,7 @@ use App\Enums\ShipmentMode;
 use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ExportContainer;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -73,6 +74,18 @@ class ExportShipmentForm
                                                 ->label('Shipment mode')
                                                 ->options(ShipmentMode::options()),
                                         ], $enum, ExportMilestone::CheckingBookingOrder),
+                                        // Sailing dates: the vessel schedule is known once
+                                        // the container gates in; actual arrival closes
+                                        // out at final checking.
+                                        ...ShipmentFields::gated([
+                                            DatePicker::make('departure_date'),
+                                            DateTimePicker::make('eta_at')
+                                                ->label('Arrival time / ETA'),
+                                        ], $enum, ExportMilestone::GateInCy),
+                                        ...ShipmentFields::gated([
+                                            DateTimePicker::make('actual_arrival_at')
+                                                ->label('Actual arrival'),
+                                        ], $enum, ExportMilestone::FinalChecking),
                                     ]),
                             ]),
                         ShipmentFields::containersTab(
