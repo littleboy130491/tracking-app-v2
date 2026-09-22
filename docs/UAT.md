@@ -24,6 +24,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Set filters that yield no rows (e.g. search a nonsense string). Expected: "0 shipments found" and the empty-state message.
 - [ ] Click **Clear filters** after setting several filters. Expected: all inputs reset to All/blank and the full combined list returns.
 - [ ] Click a B/L number on an Import row. Expected: it opens the import detail page. Same for an Export row: opens the export detail page.
+- [ ] On a detail page, check **Tracking progress**. Expected: the process steps in order — reached steps with datetimes, the current step marked latest, upcoming steps greyed as Pending.
 - [ ] With 16+ visible shipments, use the pagination links. Expected: page 2 shows the next rows; the count reflects the total across both types.
 
 ## 0. SPJM milestone cannot skip the branch (2026-09-22)

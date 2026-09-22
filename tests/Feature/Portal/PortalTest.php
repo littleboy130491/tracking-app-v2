@@ -298,7 +298,7 @@ class PortalTest extends TestCase
             ->assertSee('BL-EXP-0003')
             ->assertDontSee('BL-EXP-0001')
             ->assertSee('Latest place')
-            ->assertSee('Vessel arrival at port of discharge');
+            ->assertSee('Final checking shipment details');
     }
 
     public function test_the_company_filter_cannot_reveal_another_companys_shipments(): void

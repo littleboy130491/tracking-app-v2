@@ -2,11 +2,14 @@
 
 /**
  * File: app/Services/ShipmentTimeline.php
- * Responsibility: Builds the customer-visible journey for a shipment or container.
+ * Responsibility: Builds the customer-visible progress for a shipment or container.
  * What it does:
- * - Merges customer-visible activity logs with the shipment's own dated fields
- *   (pickup, stuffing, gate in/out, sailing dates, empty return) into one
- *   chronological list of ShipmentTimelineEntry, flagging the last as latest.
+ * - Shipments show their milestone steps in order: reached steps carry the
+ *   datetime from the milestone-change log trail (the first step falls back
+ *   to the document date), the current step is flagged latest and upcoming
+ *   steps are pending.
+ * - Containers merge their own dated fields with voyage dates and visible
+ *   logs into one chronological list, flagging the last as latest.
  * - ETA is marked as an estimate; everything else is marked actual.
  * How to use: `app(ShipmentTimeline::class)->forContainer($container)` in the portal.
  * How to extend: add a dated field as one more `dated()` candidate below.
@@ -14,13 +17,17 @@
 
 namespace App\Services;
 
+use App\Enums\ExportMilestone;
+use App\Enums\ImportMilestone;
 use App\Models\ActivityLog;
 use App\Models\ExportContainer;
 use App\Models\ExportShipment;
 use App\Models\ImportContainer;
 use App\Models\ImportShipment;
 use Carbon\CarbonInterface;
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class ShipmentTimeline
 {
@@ -49,18 +56,58 @@ class ShipmentTimeline
     }
 
     /**
-     * The shipment-level journey: voyage dates plus shipment-wide visible logs.
+     * The shipment-level progress: one row per milestone step, in order.
+     * Reached steps carry the datetime they were logged at (the first step
+     * falls back to the document date); upcoming steps are pending.
      *
      * @return list<ShipmentTimelineEntry>
      */
     public function forShipment(ExportShipment|ImportShipment $shipment): array
     {
-        $candidates = [];
+        $sequence = $shipment->milestoneSequence();
+        $position = $shipment->milestonePosition();
 
-        $this->pushVoyageDates($candidates, $shipment);
-        $this->pushVisibleLogs($candidates, $shipment, null);
+        // When each step was reached, from the milestone-change log trail.
+        // A revisited step keeps its most recent pass.
+        $reachedAt = ActivityLog::query()
+            ->where($shipment->activityLogShipmentKey(), $shipment->getKey())
+            ->where('event', 'milestone_changed')
+            ->orderBy('occurred_at')
+            ->get()
+            ->mapWithKeys(fn (ActivityLog $log) => [
+                (string) ($log->new_values['milestone'] ?? '') => $log->occurred_at,
+            ]);
 
-        return $this->toEntries($candidates);
+        $entries = [];
+
+        foreach ($sequence as $index => $milestone) {
+            $step = $index + 1;
+            $pending = $step > $position;
+            $at = $pending ? null : $reachedAt->get((string) $milestone->value);
+
+            if ($at === null && ! $pending && $index === 0) {
+                $at = $shipment->document_received_date ?? $shipment->created_at;
+            }
+
+            $entries[] = new ShipmentTimelineEntry(
+                title: $milestone instanceof HasLabel ? $milestone->getLabel() : Str::headline((string) $milestone->value),
+                occurredAt: $at ? $this->formatAt($at) : null,
+                isActual: true,
+                isLatest: ! $pending && $step === $position,
+                isPending: $pending,
+                sourceEvent: 'milestone:'.(string) $milestone->value,
+            );
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Datetimes keep their time; bare dates (document date) show date only.
+     */
+    private function formatAt(CarbonInterface $at): string
+    {
+        return $at->format('H:i') === '00:00' ? $at->format('d M Y') : $at->format('d M Y H:i');
     }
 
     /**
@@ -74,14 +121,17 @@ class ShipmentTimeline
     }
 
     /**
-     * The shipment's current position, for list rows like the reference's
-     * Latest Place / Latest Event columns.
+     * The shipment's current position: the latest reached step. Powers list
+     * rows like the dashboard's Latest Place / Latest Event columns.
      */
     public function latestForShipment(ExportShipment|ImportShipment $shipment): ?ShipmentTimelineEntry
     {
-        $entries = $this->forShipment($shipment);
+        $reached = array_values(array_filter(
+            $this->forShipment($shipment),
+            fn (ShipmentTimelineEntry $entry) => ! $entry->isPending,
+        ));
 
-        return $entries === [] ? null : end($entries);
+        return $reached === [] ? null : end($reached);
     }
 
     /**
@@ -106,8 +156,8 @@ class ShipmentTimeline
     }
 
     /**
-     * Shared sailing dates from the shipment header: actuals plus the ETA
-     * estimate.
+     * Shared sailing dates from the shipment header: actuals always, plus the
+     * ETA estimate once its milestone is reached.
      *
      * @param  list<array{at: CarbonInterface, title: string, location: ?string, detail: ?string, actual: bool, source: string}>  $candidates
      */
@@ -118,7 +168,7 @@ class ShipmentTimeline
         $this->dated($candidates, $shipment->departure_date, 'Vessel departure from port of loading', $shipment->port_of_loading, 'shipment:departure_date', $vessel ?: null);
         $this->dated($candidates, $shipment->actual_arrival_at, 'Vessel arrival at port of discharge', $shipment->port_of_discharge, 'shipment:actual_arrival_at', $vessel ?: null);
 
-        if ($shipment->eta_at && ! $shipment->actual_arrival_at) {
+        if ($shipment->eta_at && ! $shipment->actual_arrival_at && $this->etaEstimateUnlocked($shipment)) {
             $candidates[] = [
                 'at' => $shipment->eta_at,
                 'title' => 'Vessel arrival at port of discharge (estimate)',
@@ -128,6 +178,20 @@ class ShipmentTimeline
                 'source' => 'shipment:eta_at',
             ];
         }
+    }
+
+    /**
+     * Whether the ETA estimate may pose as progress: only once the milestone
+     * that unlocks the ETA field is reached — Gate in CY for export (where the
+     * vessel schedule is known), Payment billing for import.
+     */
+    private function etaEstimateUnlocked(ExportShipment|ImportShipment $shipment): bool
+    {
+        if ($shipment instanceof ExportShipment) {
+            return ExportMilestone::unlocked(null, $shipment->current_milestone, ExportMilestone::GateInCy);
+        }
+
+        return ImportMilestone::unlocked($shipment->billing_response, $shipment->current_milestone, ImportMilestone::BillingPayment);
     }
 
     /**

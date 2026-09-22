@@ -7,6 +7,8 @@
  * - Writes a small, realistic audit trail (shipment created/updated, HS codes,
  *   container added, milestone changes) on a few shipments, mixed between
  *   customer-visible and internal, plus a couple of notes.
+ * - Writes one customer-visible milestone_changed log per reached step on the
+ *   main demo shipments, a day apart, so Tracking progress shows datetimes.
  * - Goes through ActivityLogger, so the denormalized latest-event columns stay
  *   consistent with the rows.
  * - Looks shipments up by B/L number, so it depends on the shipment seeders.
@@ -18,10 +20,12 @@
 namespace Database\Seeders;
 
 use App\Enums\ImportMilestone;
+use App\Enums\ShipmentStatus;
 use App\Models\ExportShipment;
 use App\Models\ImportShipment;
 use App\Models\User;
 use App\Services\ActivityLogger;
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Database\Seeder;
 
 class DemoActivityLogSeeder extends Seeder
@@ -37,6 +41,10 @@ class DemoActivityLogSeeder extends Seeder
 
         $this->seedExportTrail($logger, 'BL-EXP-0006', $actor, $today);
         $this->seedImportTrail($logger, 'BL-IMP-0010', $actor, $today);
+        $this->seedMilestoneTrails($logger, [
+            'BL-EXP-0001', 'BL-EXP-0002', 'BL-EXP-0003', 'BL-EXP-0004', 'BL-EXP-0005',
+            'BL-IMP-0001', 'BL-IMP-0002', 'BL-IMP-0003', 'BL-IMP-0004',
+        ], $actor);
         $this->seedNotes();
     }
 
@@ -150,6 +158,56 @@ class DemoActivityLogSeeder extends Seeder
             customerVisible: false,
             actor: $actor,
         );
+    }
+
+    /**
+     * One customer-visible milestone_changed log per reached step on the main
+     * demo shipments, a day apart, so Tracking progress shows datetimes.
+     * Drafts, cancelled shipments and anything already carrying a trail are
+     * left alone.
+     *
+     * @param  list<string>  $blNumbers
+     */
+    private function seedMilestoneTrails(ActivityLogger $logger, array $blNumbers, ?User $actor): void
+    {
+        foreach ($blNumbers as $bl) {
+            $shipment = ExportShipment::query()->where('bl_number', $bl)->first()
+                ?? ImportShipment::query()->where('bl_number', $bl)->first();
+
+            if ($shipment === null
+                || $shipment->status === ShipmentStatus::Draft
+                || $shipment->status === ShipmentStatus::Cancelled
+                || $this->alreadySeeded($shipment)
+                || $shipment->activityLogs()->where('event', 'milestone_changed')->exists()
+            ) {
+                continue;
+            }
+
+            $sequence = $shipment->milestoneSequence();
+            $reached = array_slice($sequence, 0, $shipment->milestonePosition());
+            $at = today()->subDays(count($reached))->setTime(9, 15);
+            $previous = null;
+
+            foreach ($reached as $index => $milestone) {
+                $label = $milestone instanceof HasLabel ? $milestone->getLabel() : (string) $milestone->value;
+
+                $logger->record(
+                    shipment: $shipment,
+                    event: 'milestone_changed',
+                    entityType: $shipment::class,
+                    entityId: $shipment->getKey(),
+                    oldValues: ['milestone' => $previous],
+                    newValues: ['milestone' => $milestone->value, ...($index === 0 ? [self::MARKER => true] : [])],
+                    customerSummary: 'Progress moved to '.$label.'.',
+                    customerVisible: true,
+                    actor: $actor,
+                    occurredAt: $at,
+                );
+
+                $previous = $milestone->value;
+                $at = $at->copy()->addDay();
+            }
+        }
     }
 
     /**

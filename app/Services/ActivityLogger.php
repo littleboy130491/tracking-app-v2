@@ -22,6 +22,7 @@ use App\Models\ImportContainer;
 use App\Models\ImportShipment;
 use App\Models\Note;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -59,6 +60,7 @@ class ActivityLogger
         ?string $customerSummary = null,
         bool $customerVisible = false,
         ?User $actor = null,
+        ?CarbonInterface $occurredAt = null,
     ): ActivityLog {
         $links = [$shipment->activityLogShipmentKey() => $shipment->getKey()];
 
@@ -76,7 +78,7 @@ class ActivityLogger
             'new_values' => $newValues,
             'customer_summary' => $customerSummary,
             'is_customer_visible' => $customerVisible,
-            'occurred_at' => now(),
+            'occurred_at' => $occurredAt ?? now(),
         ]);
 
         $this->stampLatestEvent($shipment, $container, $event);

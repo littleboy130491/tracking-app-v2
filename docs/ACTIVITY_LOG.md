@@ -911,3 +911,15 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | SPJM import demo rows seeded FCL |
 | 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportConditionSeeder.php | Condition imports seeded FCL, one LCL |
 | 2026-09-22 18:55 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | AJU number and Shipment mode columns, Document created header |
+| 2026-09-22 19:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Reverted AJU and mode columns from table |
+| 2026-09-22 19:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Detail header: AJU, mode added; ETA replaced by Document created |
+| 2026-09-22 19:15 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/components/shipment-timeline.blade.php | Renamed Journey to Tracking progress, dropped actual/estimate visuals |
+| 2026-09-22 19:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Header trimmed to company, type, mode, AJU, container count, doc date |
+| 2026-09-22 19:30 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | ETA estimate gated on Gate in CY for export, Payment billing for import |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Shipment progress lists milestone steps with datetimes from the log trail |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimelineEntry.php | Pending flag for upcoming milestone steps |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/components/shipment-timeline.blade.php | Pending steps greyed in Tracking progress |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ActivityLogger.php | Optional backdated occurred_at on record |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoActivityLogSeeder.php | Day-apart milestone trails for main demo shipments |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Latest-journey assertion follows milestone steps |
+| 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Milestone log count assertion seed-independent |

@@ -341,6 +341,7 @@ class AdminPanelSmokeTest extends TestCase
     public function test_milestone_stepper_jumps_and_logs_each_change(): void
     {
         $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+        $loggedBefore = $export->activityLogs()->where('event', 'milestone_changed')->count();
 
         // Jumping forward skips the steps in between.
         $export->moveToMilestone(ExportMilestone::GateInCy);
@@ -359,7 +360,7 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertNull($export->completed_at);
 
         // Each real change lands in the activity log (the ignored jump did not).
-        $this->assertSame(3, $export->activityLogs()->where('event', 'milestone_changed')->count());
+        $this->assertSame($loggedBefore + 3, $export->activityLogs()->where('event', 'milestone_changed')->count());
     }
 
     public function test_stepper_moves_at_most_one_step_forward(): void

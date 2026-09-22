@@ -123,8 +123,6 @@
                 <tr>
                     <th class="px-4 py-3">B/L number</th>
                     <th class="px-4 py-3">Type</th>
-                    <th class="px-4 py-3">AJU number</th>
-                    <th class="px-4 py-3">Shipment mode</th>
                     <th class="px-4 py-3">Company</th>
                     <th class="px-4 py-3">Status</th>
                     <th class="px-4 py-3">Latest place</th>
@@ -152,8 +150,6 @@
                                 {{ $isExportRow ? 'Export' : 'Import' }}
                             </span>
                         </td>
-                        <td class="px-4 py-3">{{ $shipment->aju_number ?: '—' }}</td>
-                        <td class="px-4 py-3">{{ $shipment->shipment_mode?->label() ?? '—' }}</td>
                         <td class="px-4 py-3">{{ $shipment->company->name }}</td>
                         <td class="px-4 py-3">
                             @php($statusColor = match ($shipment->status) {
@@ -177,7 +173,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-4 py-8 text-center text-slate-500">
+                        <td colspan="7" class="px-4 py-8 text-center text-slate-500">
                             No shipments match your filters.
                         </td>
                     </tr>
