@@ -46,14 +46,11 @@ return new class extends Migration
             $table->string('tracking_position')->nullable();
             $table->string('tracking_position_url', 500)->nullable();
 
-            // Payment bahandle — gross weight.
+            // Billing response — gross weight and CBM / measurement.
             $table->decimal('gross_weight', 15, 3)->nullable();
-            $table->string('gross_weight_unit', 20)->nullable();
-            // Waiting change status SPJM to SPPB — CBM / measurement.
             $table->decimal('cbm', 15, 3)->nullable();
 
-            // Container arrived in factory — loading date and status.
-            $table->timestamp('factory_loading_at')->nullable();
+            // Container arrived in factory — loading status.
             $table->string('factory_loading_status', 30)->default('on_process');
 
             // Empty container returned — depot and return date.

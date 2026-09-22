@@ -1,7 +1,7 @@
 {{-- File: resources/views/livewire/customer/partials/shipment-summary.blade.php
      Responsibility: The customer-visible shipment facts grid.
-     What it does: shows type, status, company, vessel/voyage, ports, ETA and goods
-       description for one shipment (export or import).
+     What it does: shows type, status, company, vessel/voyage, ports and ETA for one
+       shipment; the goods description row is import-only.
      How to use: @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Export']).
      How to extend: add customer-visible fields here once they are published. --}}
 <div class="mt-6 grid gap-4 rounded-xl bg-white p-6 shadow-sm md:grid-cols-3">
@@ -34,8 +34,10 @@
         <div class="text-xs uppercase tracking-wide text-slate-500">ETA</div>
         <div class="font-medium">{{ $shipment->eta_at?->format('d M Y H:i') ?? '—' }}</div>
     </div>
-    <div class="md:col-span-3">
-        <div class="text-xs uppercase tracking-wide text-slate-500">Description of goods</div>
-        <div class="font-medium">{{ $shipment->goods_description ?: '—' }}</div>
-    </div>
+    @if ($typeLabel === 'Import')
+        <div class="md:col-span-3">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Description of goods</div>
+            <div class="font-medium">{{ $shipment->goods_description ?: '—' }}</div>
+        </div>
+    @endif
 </div>

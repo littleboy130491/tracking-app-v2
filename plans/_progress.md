@@ -248,3 +248,64 @@ Blocked: None
 - User decision: Container Size unlocks at Response billing; each container gets its own Description of goods, Packages and multiple HS codes that default from the shipment and can be overridden.
 - Step 1 used composer require + `php artisan boost:install --no-interaction`; Boost added guidelines/skills/MCP config.
 - Implementation complete: 30 AdminPanelSmokeTest tests pass (165 assertions); the add-item seeding hook lives in ShipmentFields::containersTab().
+
+---
+
+# Progress - Admin list date filters (Year / Month / date range)
+
+Goal: Add Year, Month and From/Until date-range filters on `created_at` to the four admin lists plus the two company shipment relation managers.
+Started: 2026-09-22 10:55
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Create the DateFilters interface skeleton - DONE - 10:58
+- [x] Step 2: Implement the three filters in DateFilters - DONE - 11:01
+- [x] Step 3: Wire into the two B/L tables + UAT - DONE - 11:01
+- [x] Step 4: Wire into the two container tables + UAT - DONE - 11:01
+- [x] Step 5: Wire into the two company relation managers + UAT - DONE - 11:01
+- [x] Step 6: Feature test TableDateFiltersTest + Pint - DONE - 11:10
+- [x] Step 7: Wrap up logs and verify - DONE - 11:10
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Final Summary (2026-09-22 11:10)
+
+- `DateFilters::make($modelClass)` returns the Year, Month and From/Until filters; wired into the 4 admin lists + 2 company relation managers (6 call sites).
+- `tests/Feature/Admin/TableDateFiltersTest.php`: 6 tests / 32 assertions, all passing; Pint clean.
+- Full suite: 144 passed (727 assertions). The first full run failed only because a concurrent session was mid-edit on the export `goods_description` removal; re-run after it settled was green.
+- UAT checklist added as section 0 in docs/UAT.md (10 items, incl. a tinker one-liner to backdate a B/L for two-year testing).
+
+## Notes
+
+- User decisions: admin panel only (the portal already has Year/Month) and filter on `created_at`.
+- User addition after plan approval: the Company -> Shipments relation managers get the same filters too.
+- Six call sites: Import/Export shipment tables, Import/Export container tables, Import/Export company relation managers.
+- Filter keys `created_year`, `created_month`, `created_between`; the range filter uses `whereDate` on both ends.
+- Filters combine with AND; Year options come from the model's own table (not company-scoped).
+
+---
+
+# Progress - Import cargo fields onto the Containers tab
+
+Goal: Move the import shipment's Description of goods, Packages and HS codes from Shipping Details to the Containers tab, above the repeater.
+Started: 2026-09-22 11:18
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Move the trio in ImportShipmentForm to the Containers tab header - DONE - 11:22
+- [x] Step 2: Verify AdminPanelSmokeTest - DONE - 11:22 (30 pass)
+- [x] Step 3: Update docs/UAT.md + check IMPORT.md - DONE - 11:23
+- [x] Step 4: Pint + full suite + logs - DONE - 11:24
+
+## Notes
+
+- Data stays on the shipment (no schema change); only the form placement moved, still gated at `Step 11: Response billing`.
+- Order on the Containers tab header: cargo trio first (Step 11), then the loading fields (Step 17).
+- Container seeding (`seedContainerCargo` + `ImportContainer::booted`) untouched and still covered by the smoke tests.
+- IMPORT.md names no tabs, so it needed no change.

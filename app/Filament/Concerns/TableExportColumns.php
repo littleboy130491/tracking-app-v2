@@ -90,7 +90,7 @@ class TableExportColumns
                 'aju_number', 'do_number', 'shipping_line', 'vessel_name', 'voyage_number',
                 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
                 'pickup_depot_name', 'stuffing_date', 'stuffing_destination',
-                'departure_date', 'eta_at', 'actual_arrival_at', 'goods_description',
+                'departure_date', 'eta_at', 'actual_arrival_at',
                 'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
                 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at',
             ]),
@@ -138,7 +138,7 @@ class TableExportColumns
     {
         return [
             ...self::fields([
-                'id', 'export_shipment_id', 'container_number', 'size', 'type', 'seal_number',
+                'id', 'export_shipment_id', 'container_number', 'size', 'seal_number',
                 'driver_name', 'license_number', 'driver_license_number',
                 'tracking_position', 'tracking_position_url', 'stuffing_status',
                 'port_of_loading', 'gate_in_cy_at', 'vgm_value',
@@ -164,8 +164,8 @@ class TableExportColumns
                 'description_of_goods', 'packages',
                 'driver_name', 'license_number', 'gate_out_cy_at',
                 'tracking_position', 'tracking_position_url',
-                'gross_weight', 'gross_weight_unit', 'cbm',
-                'factory_loading_at', 'factory_loading_status',
+                'gross_weight', 'cbm',
+                'factory_loading_status',
                 'return_depot_name', 'empty_returned_at', 'status', 'latest_event',
                 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
                 'created_at', 'updated_at', 'deleted_at',

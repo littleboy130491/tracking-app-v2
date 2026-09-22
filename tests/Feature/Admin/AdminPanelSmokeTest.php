@@ -751,4 +751,54 @@ class AdminPanelSmokeTest extends TestCase
             $container->hsCodes()->pluck('hs_codes.id')->sort()->values()->all(),
         );
     }
+
+    public function test_add_container_action_appends_a_row_and_seeds_its_cargo(): void
+    {
+        $admin = $this->admin();
+
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+        $shipmentHsCodeIds = $import->hsCodes()->pluck('hs_codes.id')->sort()->values()->all();
+
+        $this->assertNotEmpty($shipmentHsCodeIds);
+
+        $this->actingAs($admin);
+
+        $component = Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()]);
+
+        $initialCount = count($component->get('data.containers'));
+
+        // The repeater's add action must append a row (a custom seed callback
+        // previously replaced the append step, so nothing was added).
+        $component
+            ->call('mountAction', 'add', [], ['recordKey' => $import->getKey(), 'schemaComponent' => 'form.containers'])
+            ->call('callMountedAction')
+            ->assertHasNoFormErrors();
+
+        $containers = $component->get('data.containers');
+
+        $this->assertCount($initialCount + 1, $containers);
+
+        $key = array_key_last($containers);
+
+        $this->assertSame($import->goods_description, $containers[$key]['description_of_goods'] ?? null);
+        $this->assertSame($import->packages, $containers[$key]['packages'] ?? null);
+        $this->assertSame(
+            $shipmentHsCodeIds,
+            collect($containers[$key]['hsCodes'] ?? [])->map(fn ($id): int => (int) $id)->sort()->values()->all(),
+        );
+
+        $component
+            ->set("data.containers.{$key}.container_number", 'ADD-ACTION-CONT-1')
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $container = ImportContainer::query()->where('container_number', 'ADD-ACTION-CONT-1')->firstOrFail();
+
+        $this->assertSame($import->goods_description, $container->description_of_goods);
+        $this->assertSame($import->packages, $container->packages);
+        $this->assertSame(
+            $shipmentHsCodeIds,
+            $container->hsCodes()->pluck('hs_codes.id')->sort()->values()->all(),
+        );
+    }
 }

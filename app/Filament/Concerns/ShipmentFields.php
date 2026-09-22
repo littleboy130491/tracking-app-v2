@@ -236,24 +236,50 @@ class ShipmentFields
             ]);
 
         if ($seedItemState) {
-            // Seeds a newly added item from the parent shipment, so its
-            // relationship fields (e.g. HS codes) persist on save.
+            // Adds the item the way Filament's default add action does (append
+            // an empty row, then fill it), then seeds that new row from the
+            // parent shipment so its relationship fields (e.g. HS codes)
+            // persist on save. Replacing the handler without the append step
+            // made "Add to containers" a no-op, so keep both steps here.
             $repeater->addAction(function (Action $action) use ($seedItemState): Action {
                 return $action->action(function (Repeater $component) use ($seedItemState): void {
-                    $shipment = $component->getRecord();
-
-                    if (! $shipment instanceof ImportShipment) {
-                        return;
-                    }
+                    $newUuid = $component->generateUuid();
 
                     $items = $component->getRawState();
-                    $key = array_key_last($items);
 
-                    if ($key === null) {
+                    if ($newUuid) {
+                        $items[$newUuid] = [];
+                    } else {
+                        $items[] = [];
+                    }
+
+                    $component->rawState($items);
+
+                    $key = $newUuid ?? array_key_last($items);
+                    $childSchema = $component->getChildSchema($key);
+
+                    if (! $childSchema) {
                         return;
                     }
 
-                    $component->getChildSchema($key)->rawState($seedItemState([], $shipment));
+                    $childSchema->fill();
+
+                    $shipment = $component->getRecord();
+
+                    if ($shipment instanceof ImportShipment) {
+                        // Merge over the filled defaults so seeded cargo does
+                        // not wipe per-field defaults (e.g. factory status).
+                        $childSchema->rawState([
+                            ...(array) $childSchema->getRawState(),
+                            ...$seedItemState([], $shipment),
+                        ]);
+                    }
+
+                    $component->collapsed(false, shouldMakeComponentCollapsible: false);
+
+                    $component->callAfterStateUpdated();
+
+                    $component->shouldPartiallyRenderAfterActionsCalled() ? $component->partiallyRender() : null;
                 });
             });
         }

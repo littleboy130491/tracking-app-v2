@@ -102,7 +102,6 @@ class ShipmentTimeline
         }
 
         $this->dated($candidates, $container->gate_out_cy_at, 'Gate out from terminal for delivery', null, 'container:gate_out_cy_at');
-        $this->dated($candidates, $container->factory_loading_at, 'Loading in factory', null, 'container:factory_loading_at');
         $this->dated($candidates, $container->empty_returned_at, 'Empty container returned', $container->return_depot_name, 'container:empty_returned_at');
     }
 

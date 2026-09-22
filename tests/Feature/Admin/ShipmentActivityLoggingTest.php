@@ -223,7 +223,6 @@ class ShipmentActivityLoggingTest extends TestCase
                 'export_shipment_id' => $export->getKey(),
                 'container_number' => 'AUDIT-CONT-NEW',
                 'size' => '40',
-                'type' => 'HC',
                 'stuffing_status' => 'on_process',
             ])
             ->call('create')
@@ -238,7 +237,6 @@ class ShipmentActivityLoggingTest extends TestCase
 
         $this->assertSame('AUDIT-CONT-NEW', $log->new_values['container_number']);
         $this->assertSame('40', $log->new_values['size']);
-        $this->assertSame('HC', $log->new_values['type']);
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertArrayNotHasKey('id', $log->new_values);
         $this->assertArrayNotHasKey('export_shipment_id', $log->new_values);

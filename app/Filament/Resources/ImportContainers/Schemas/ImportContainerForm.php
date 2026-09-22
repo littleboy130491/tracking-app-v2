@@ -4,9 +4,9 @@
  * File: app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php
  * Responsibility: Admin form for a standalone import container.
  * What it does:
- * - Selects the parent import shipment, then edits the import container
- *   fields (identity, driver, photos, gate out, tracking, weights,
- *   factory loading/return and status) per IMPORT.md.
+ * - Edits the container fields (identity, size, gross weight, CBM, cargo,
+ *   driver, photos, gate out, tracking, factory loading/return and status)
+ *   per IMPORT.md.
  * - Milestone gating happens on the shipment form's repeater; the standalone
  *   form edits the same fields freely.
  * How to use: Rendered by the import container create/edit pages.
@@ -47,6 +47,8 @@ class ImportContainerForm
                     ->schema([
                         ...ContainerFields::importIdentity(),
                         ...ContainerFields::importSize(),
+                        ...ContainerFields::importWeights(),
+                        ...ContainerFields::importCbm(),
                         ...ContainerFields::importCargo(),
                     ]),
                 Section::make('Driver')
@@ -62,12 +64,6 @@ class ImportContainerForm
                 Section::make('Tracking')
                     ->columns(3)
                     ->schema(ContainerFields::importTracking()),
-                Section::make('Weights & measurement')
-                    ->columns(3)
-                    ->schema([
-                        ...ContainerFields::importWeights(),
-                        ...ContainerFields::importCbm(),
-                    ]),
                 Section::make('Factory loading & return')
                     ->columns(3)
                     ->schema([

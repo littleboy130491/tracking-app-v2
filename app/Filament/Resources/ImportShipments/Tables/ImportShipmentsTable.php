@@ -5,8 +5,8 @@
  * Responsibility: Admin list of import shipments.
  * What it does:
  * - Shows the identifying and status columns plus the customs billing
- *   response, with filters for status, response and company, and a
- *   soft-delete filter.
+ *   response, with filters for status, response, company and created date,
+ *   plus a soft-delete filter.
  * - Lists each container number as a badge linking to that container's edit page.
  * - Offers a CSV header action, restricted to admin/super_admin via
  *   User::canExportTables().
@@ -20,6 +20,7 @@ namespace App\Filament\Resources\ImportShipments\Tables;
 
 use App\Enums\BillingResponse;
 use App\Enums\ShipmentStatus;
+use App\Filament\Concerns\DateFilters;
 use App\Filament\Concerns\PrunableTableHeaderAction;
 use App\Filament\Concerns\TableExportColumns;
 use App\Filament\Resources\ImportContainers\ImportContainerResource;
@@ -112,6 +113,7 @@ class ImportShipmentsTable
                     ->relationship('company', 'name', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query))
                     ->searchable()
                     ->preload(),
+                ...DateFilters::make(ImportShipment::class),
                 TrashedFilter::make(),
             ])
             ->recordActions([

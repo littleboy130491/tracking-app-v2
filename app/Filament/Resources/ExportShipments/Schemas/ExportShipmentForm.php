@@ -72,8 +72,6 @@ class ExportShipmentForm
                                             Select::make('shipment_mode')
                                                 ->label('Shipment mode')
                                                 ->options(ShipmentMode::options()),
-                                            Textarea::make('goods_description')
-                                                ->columnSpanFull(),
                                         ], $enum, ExportMilestone::CheckingBookingOrder),
                                     ]),
                             ]),

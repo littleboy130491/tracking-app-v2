@@ -30,20 +30,19 @@ Arrival Time / ETA -> field
 Response Billing (SPPB/AP/SPJK/SPJM) -> progress
 No. Container -> field (relationship, repeater)
 No. Container -> subfield-container
-No. AJU -> field
 Response Billing -> field
 Size Container -> subfield-container
 Description of Goods -> field (shipment level, seeded to each container, overridable)
 Packages -> field (shipment level, seeded to each container, overridable)
 Hscode -> field (shipment level, multiple per container, overridable)
 Tambahan Step SPJM -> progress (conditional: Response Billing = SPJM)
+Gross Weight (kg) -> subfield-container (Response Billing)
+CBM / Measurement -> subfield-container (Response Billing)
 Upload All Document -> progress
 Waiting Process Bahandle -> progress
 Payment Bahandle -> progress
-Gross Weight -> subfield-container
 Container Inspection -> progress
 Waiting Change Status of SPJM to SPPB -> progress
-CBM / Measurement -> subfield-container
 Container Shipping Schedule -> progress
 
 FINAL - Process 3

@@ -31,7 +31,7 @@ use Filament\Schemas\Components\Section;
 class ContainerFields
 {
     /**
-     * Export container identity: number, size, type and seal.
+     * Export container identity: number, size and seal.
      *
      * @return list<Field>
      */
@@ -47,9 +47,6 @@ class ContainerFields
             Select::make('size')
                 ->label('Container Size')
                 ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
-            Select::make('type')
-                ->label('Container Type')
-                ->options(['GP' => 'GP', 'HC' => 'HC', 'RF' => 'RF']),
             TextInput::make('seal_number')
                 ->maxLength(100),
         ];
@@ -327,7 +324,7 @@ class ContainerFields
     }
 
     /**
-     * Import: gross weight recorded at the bahandle payment step.
+     * Import: gross weight in kilograms, recorded with the billing response.
      *
      * @return list<Field>
      */
@@ -335,14 +332,13 @@ class ContainerFields
     {
         return [
             TextInput::make('gross_weight')
+                ->label('Gross weight (kg)')
                 ->numeric(),
-            TextInput::make('gross_weight_unit')
-                ->maxLength(20),
         ];
     }
 
     /**
-     * Import: CBM / measurement, recorded when the SPJM status changes to SPPB.
+     * Import: CBM / measurement, recorded with the billing response.
      *
      * @return list<Field>
      */
@@ -356,15 +352,13 @@ class ContainerFields
     }
 
     /**
-     * Import: factory loading date and status.
+     * Import: factory loading status.
      *
      * @return list<Field>
      */
     public static function importFactoryLoading(): array
     {
         return [
-            DateTimePicker::make('factory_loading_at')
-                ->label('Loading in factory'),
             Select::make('factory_loading_status')
                 ->label('Loading in factory status')
                 ->options(FactoryLoadingStatus::options())

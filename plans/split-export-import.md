@@ -64,7 +64,7 @@
 | `departure_date` | Both | |
 | `eta_at` | Both | |
 | `actual_arrival_at` | Both | |
-| `goods_description` | Both | |
+| `goods_description` | Import | removed from export (2026-09-22) |
 | `depot_closing_at` | Export | |
 | `cy_closing_at` | Export | |
 | `pickup_depot_name` | Export | |

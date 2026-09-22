@@ -139,7 +139,6 @@ erDiagram
         date departure_date
         timestamp eta_at
         timestamp actual_arrival_at
-        text goods_description
         string status "draft | in_progress | completed | cancelled"
         string current_milestone "ExportMilestone position"
         string latest_event
@@ -186,7 +185,6 @@ erDiagram
         int export_shipment_id FK
         string container_number "unique per shipment"
         string size
-        string type
         string seal_number
         string driver_name
         string license_number "vehicle / truck"
@@ -219,9 +217,7 @@ erDiagram
         string tracking_position "driver position text"
         string tracking_position_url "validated URL"
         decimal gross_weight
-        string gross_weight_unit
         decimal cbm
-        timestamp factory_loading_at
         string factory_loading_status
         string return_depot_name
         timestamp empty_returned_at

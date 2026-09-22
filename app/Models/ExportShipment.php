@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'aju_number', 'do_number', 'shipping_line', 'vessel_name',
     'voyage_number', 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
     'pickup_depot_name', 'stuffing_date', 'stuffing_destination',
-    'departure_date', 'eta_at', 'actual_arrival_at', 'goods_description',
+    'departure_date', 'eta_at', 'actual_arrival_at',
     'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
     'created_by', 'updated_by',
 ])]

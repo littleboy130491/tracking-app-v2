@@ -34,8 +34,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'description_of_goods', 'packages',
     'driver_name', 'license_number', 'gate_out_cy_at',
     'tracking_position', 'tracking_position_url',
-    'gross_weight', 'gross_weight_unit', 'cbm',
-    'factory_loading_at', 'factory_loading_status',
+    'gross_weight', 'cbm',
+    'factory_loading_status',
     'return_depot_name', 'empty_returned_at',
     'status', 'latest_event', 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
 ])]
@@ -109,7 +109,6 @@ class ImportContainer extends Model
             'gate_out_cy_at' => 'datetime',
             'gross_weight' => 'decimal:3',
             'cbm' => 'decimal:3',
-            'factory_loading_at' => 'datetime',
             'empty_returned_at' => 'datetime',
             'latest_event_at' => 'datetime',
             'completed_at' => 'datetime',

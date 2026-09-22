@@ -7,11 +7,13 @@
  * - Customer section above the tabs, then the milestone stepper on edit.
  * - Shipping Details: one field group per IMPORT.md milestone (document
  *   checking, PIB confirmation, billing/THC/DO data and sailing dates), each
- *   disabled until its milestone is reached. Description of goods, packages
- *   and HS codes unlock with the billing response (Step 11).
- * - Containers: the loading header fields (terminal name, date of loading,
- *   loading destination) above the import container repeater; each item
- *   carries its own cargo fields and HS codes, seeded from the shipment.
+ *   disabled until its milestone is reached.
+ * - Containers: the shipment-level cargo fields (description of goods,
+ *   packages, HS codes — unlocked with the billing response) and the loading
+ *   header fields (terminal name, date of loading, loading destination) above
+ *   the import container repeater; each item carries its own cargo, size,
+ *   gross weight and CBM fields (all unlocked with the billing response),
+ *   seeded from the shipment.
  * - Status, Notes and Activity log tabs.
  * How to use: Rendered by the import shipment create and edit pages.
  * How to extend: add a field inside the Shipping Details grid and wrap it in
@@ -110,17 +112,6 @@ class ImportShipmentForm
                                             Select::make('billing_response')
                                                 ->options(BillingResponse::options()),
                                         ], $enum, ImportMilestone::ResponseBilling),
-                                        // Step 11 — cargo details, unlocked with the
-                                        // billing response: the shipment-level values
-                                        // seed each container and stay overridable.
-                                        ...ShipmentFields::gated([
-                                            Textarea::make('goods_description')
-                                                ->label('Description of goods')
-                                                ->columnSpanFull(),
-                                            TextInput::make('packages')
-                                                ->maxLength(255),
-                                            ShipmentFields::hsCodesField(),
-                                        ], $enum, ImportMilestone::ResponseBilling),
                                     ]),
                             ]),
                         ShipmentFields::containersTab(
@@ -129,6 +120,8 @@ class ImportShipmentForm
                             [
                                 ...ShipmentFields::gated(ContainerFields::importIdentity(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importSize(), $enum, ImportMilestone::ResponseBilling, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importWeights(), $enum, ImportMilestone::ResponseBilling, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importCbm(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importCargo(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::photos(ImportContainer::class), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importGateOut(), $enum, ImportMilestone::GateOutCy, '../../'),
@@ -136,13 +129,24 @@ class ImportShipmentForm
                                 Grid::make(2)
                                     ->columnSpanFull()
                                     ->schema(ShipmentFields::gated(ContainerFields::importTracking(), $enum, ImportMilestone::OnTheWayToFactory, '../../')),
-                                ...ShipmentFields::gated(ContainerFields::importWeights(), $enum, ImportMilestone::PaymentBehandle, '../../'),
-                                ...ShipmentFields::gated(ContainerFields::importCbm(), $enum, ImportMilestone::WaitingChangeStatusSppb, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importFactoryLoading(), $enum, ImportMilestone::ArrivedAtFactory, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importReturn(), $enum, ImportMilestone::EmptyReturned, '../../'),
                             ],
                             ImportMilestone::ResponseBilling,
                             [
+                                Grid::make(2)->schema([
+                                    // Shipment-level cargo details, unlocked with
+                                    // the billing response: these values seed each
+                                    // container and stay overridable.
+                                    ...ShipmentFields::gated([
+                                        Textarea::make('goods_description')
+                                            ->label('Description of goods')
+                                            ->columnSpanFull(),
+                                        TextInput::make('packages')
+                                            ->maxLength(255),
+                                        ShipmentFields::hsCodesField(),
+                                    ], $enum, ImportMilestone::ResponseBilling),
+                                ]),
                                 Grid::make(2)->schema([
                                     // Loading data unlocks with the delivery
                                     // schedule, which is the first step after the

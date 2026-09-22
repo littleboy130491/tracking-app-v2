@@ -27,7 +27,6 @@ return new class extends Migration
             $table->foreignId('export_shipment_id')->constrained()->cascadeOnDelete();
             $table->string('container_number', 30);
             $table->string('size', 20)->nullable();
-            $table->string('type', 30)->nullable();
             $table->string('seal_number', 100)->nullable();
 
             $table->string('driver_name')->nullable();

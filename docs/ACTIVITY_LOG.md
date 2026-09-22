@@ -810,3 +810,60 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 00:05 | opencode (mimo-v2.6-flash) | CREATE | docs/agent-templates.md | Moved long templates out of AGENTS.md |
 | 2026-09-22 00:05 | opencode (mimo-v2.6-flash) | UPDATE | AGENTS.md | Replaced templates with pointers to agent-templates.md |
 | 2026-09-22 00:10 | opencode (mimo-v2.6-flash) | UPDATE | AGENTS.md | Simplified UAT section to brief checklist rules |
+| 2026-09-22 10:58 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Concerns/DateFilters.php | Interface skeleton for the shared date filters |
+| 2026-09-22 10:58 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Started the admin date-filter plan |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/DateFilters.php | Implemented the Year, Month and range filters |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Added the created-date filters to the import B/L list |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Added the created-date filters to the export B/L list |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Added the created-date filters to the import container list |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Added the created-date filters to the export container list |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Added the created-date filters to the company tab |
+| 2026-09-22 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Added the created-date filters to the company tab |
+| 2026-09-22 11:10 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Admin/TableDateFiltersTest.php | Year, month and range tests for the six lists |
+| 2026-09-22 11:10 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Date-filter checklist for the admin lists |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_export_shipments_table.php | Removed goods_description column |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportShipment.php | Removed goods_description from fillable |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Removed goods_description field |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Dropped goods_description from export CSV columns |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Removed export goods_description seed values |
+| 2026-09-22 11:08 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Made goods description row import-only |
+| 2026-09-22 11:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Removed goods_description from export shipments entity |
+| 2026-09-22 11:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/split-export-import.md | Marked goods_description as import-only |
+| 2026-09-22 11:12 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Updated export Shipping Details expectations |
+| 2026-09-22 11:15 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added export B/L CSV check for removed goods description |
+| 2026-09-22 11:23 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Import cargo fields now expected on the Containers tab |
+| 2026-09-22 11:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Moved cargo fields to the Containers tab header |
+| 2026-09-22 11:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Fix Add-to-containers no-op; preserve append then seed cargo |
+| 2026-09-22 11:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Regression test for add-container action |
+| 2026-09-22 11:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added Add-to-containers verification checklist |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Gross weight (kg) after size; drop unit field |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Move weight+CBM after size at Response billing |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php | Weight+CBM into Container section after size |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportContainer.php | Drop gross_weight_unit from fillable |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | Drop gross_weight_unit column, re-localize weight/CBM |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Remove gross_weight_unit from import container export |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Remove gross_weight_unit seed value |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Remove gross_weight_unit seed values |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-container-detail.blade.php | Show Gross weight (kg) without unit suffix |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Remove gross_weight_unit from import containers |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | IMPORT.md | Gross weight/CBM attach at Response billing |
+| 2026-09-22 11:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Updated container field order and milestones |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Drop Loading-in-factory date; drop export container type |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ImportContainer.php | Remove factory_loading_at from fillable/casts |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportContainer.php | Remove type from fillable |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Remove Loading-in-factory timeline entry |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Drop factory_loading_at and export container type |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Add company filter, clickable company column |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Add company filter, clickable company column, drop Type column |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | Drop factory_loading_at column |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | Drop type column |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Remove container type seeding |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Remove factory_loading_at seed value |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Remove factory_loading_at seed values |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/export-container-detail.blade.php | Show Size only |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-container-detail.blade.php | Show Size only |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Show Size only |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Drop container type from audit test |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Drop factory_loading_at and export container type |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Drop Container Type and Loading-in-factory date |
+| 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added container company filter and dropped-field checks |

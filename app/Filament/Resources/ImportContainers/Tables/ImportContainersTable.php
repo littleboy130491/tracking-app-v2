@@ -4,8 +4,9 @@
  * File: app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php
  * Responsibility: Admin list of import containers.
  * What it does:
- * - Shows the container identity, its shipment and status, with filters for
- *   status and shipment plus a soft-delete filter.
+ * - Shows the container identity, its shipment and status (company links to
+ *   the company edit page), with filters for status, company, shipment and
+ *   created date plus a soft-delete filter.
  * - Offers a CSV header action, restricted to admin/super_admin via
  *   User::canExportTables().
  * - Offers a "Prune old data" header action for the same roles, deleting
@@ -17,8 +18,12 @@
 namespace App\Filament\Resources\ImportContainers\Tables;
 
 use App\Enums\ContainerStatus;
+use App\Filament\Concerns\DateFilters;
 use App\Filament\Concerns\PrunableTableHeaderAction;
 use App\Filament\Concerns\TableExportColumns;
+use App\Filament\Resources\Companies\CompanyResource;
+use App\Models\Company;
+use App\Models\ImportContainer;
 use App\Models\ImportShipment;
 use App\Models\User;
 use Filament\Actions\BulkActionGroup;
@@ -52,6 +57,10 @@ class ImportContainersTable
                 TextColumn::make('shipment.company.name')
                     ->label('Company')
                     ->searchable()
+                    ->sortable()
+                    ->url(fn (ImportContainer $record): ?string => $record->shipment?->company === null
+                        ? null
+                        : CompanyResource::getUrl('edit', ['record' => $record->shipment->company]))
                     ->toggleable(),
                 TextColumn::make('size')
                     ->placeholder('—')
@@ -70,12 +79,24 @@ class ImportContainersTable
             ->defaultSort('container_number')
             ->filters([
                 SelectFilter::make('status')->options(ContainerStatus::options()),
+                SelectFilter::make('company')
+                    ->label('Company')
+                    ->options(fn (): array => Company::query()
+                        ->whereIn('id', User::scopeToAssignedCompanies(Company::query())->pluck('id'))
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all())
+                    ->query(fn (Builder $query, array $data): Builder => blank($data['value'])
+                        ? $query
+                        : $query->whereHas('shipment', fn (Builder $shipment): Builder => $shipment->where('company_id', $data['value'])))
+                    ->searchable(),
                 SelectFilter::make('import_shipment_id')
                     ->label('Shipment')
                     ->relationship('shipment', 'bl_number', modifyQueryUsing: fn (Builder $query): Builder => User::scopeToAssignedCompanies($query, 'company_id'))
                     ->getOptionLabelFromRecordUsing(fn (ImportShipment $record): string => $record->pickerLabel())
                     ->searchable()
                     ->preload(),
+                ...DateFilters::make(ImportContainer::class),
                 TrashedFilter::make(),
             ])
             ->recordActions([

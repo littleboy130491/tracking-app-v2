@@ -35,7 +35,7 @@
                             {{ $container->container_number }}
                         </a>
                     </td>
-                    <td class="px-4 py-3">{{ trim(($container->size ?? '').' '.($container->type ?? '')) ?: '—' }}</td>
+                    <td class="px-4 py-3">{{ $container->size ?: '—' }}</td>
                     @if ($showSeal)
                         <td class="px-4 py-3">{{ $container->seal_number ?: '—' }}</td>
                     @endif

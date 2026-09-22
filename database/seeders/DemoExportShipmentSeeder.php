@@ -54,15 +54,14 @@ class DemoExportShipmentSeeder extends Seeder
             'port_of_loading' => 'Jakarta (IDJKT)',
             'port_of_discharge' => 'Singapore (SGSIN)',
             'eta_at' => now()->addDays(10),
-            'goods_description' => 'Furniture parts',
         ], [
             'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
 
         $this->hsCodes($nusantara, '9403.60');
 
-        $this->container($nusantara, 'MSKU1234567', '40', 'HC', 'SL-0001');
-        $this->container($nusantara, 'MSKU1234568', '40', 'GP', 'SL-0002');
+        $this->container($nusantara, 'MSKU1234567', '40', 'SL-0001');
+        $this->container($nusantara, 'MSKU1234568', '40', 'SL-0002');
 
         $borneo = $this->shipment('BJM', [
             'bl_number' => 'BL-EXP-0002',
@@ -73,14 +72,13 @@ class DemoExportShipmentSeeder extends Seeder
             'port_of_loading' => 'Balikpapan (IDBPN)',
             'port_of_discharge' => 'Kaohsiung (TWKHH)',
             'eta_at' => now()->addDays(14),
-            'goods_description' => 'Processed timber',
         ], [
             'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
 
         $this->hsCodes($borneo, '4407.99');
 
-        $this->container($borneo, 'PILU4455661', '40', 'GP', 'SL-0005');
+        $this->container($borneo, 'PILU4455661', '40', 'SL-0005');
     }
 
     /**
@@ -104,7 +102,6 @@ class DemoExportShipmentSeeder extends Seeder
             'departure_date' => now()->subDays(20)->toDateString(),
             'eta_at' => now()->subDays(6),
             'actual_arrival_at' => now()->subDays(6),
-            'goods_description' => 'Nickel ore concentrate',
             'pickup_depot_name' => 'Depot Makassar Utama',
             'stuffing_date' => now()->subDays(24),
             'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',
@@ -116,7 +113,7 @@ class DemoExportShipmentSeeder extends Seeder
 
         $this->hsCodes($exported, '2604.00');
 
-        $this->container($exported, 'EGHU6677881', '40', 'GP', 'SL-0006', [
+        $this->container($exported, 'EGHU6677881', '40', 'SL-0006', [
             'driver_name' => 'Andi Pratama',
             'license_number' => 'DD 8123 KK',
             'tracking_position' => 'Passed Maros checkpoint',
@@ -181,7 +178,7 @@ class DemoExportShipmentSeeder extends Seeder
      *
      * @param  array<string, mixed>  $initial
      */
-    private function container(ExportShipment $shipment, string $number, string $size, string $type, string $seal, array $initial = []): void
+    private function container(ExportShipment $shipment, string $number, string $size, string $seal, array $initial = []): void
     {
         $container = ExportContainer::query()->firstOrNew([
             'export_shipment_id' => $shipment->getKey(),
@@ -190,7 +187,6 @@ class DemoExportShipmentSeeder extends Seeder
 
         $container->fill([
             'size' => $size,
-            'type' => $type,
             'seal_number' => $seal,
         ]);
 

@@ -6,6 +6,7 @@
  * What it does:
  * - Lists the company's import shipments read-only; "Open" jumps to the full
  *   shipment edit page. Container numbers link to the container edit page.
+ * - Filters by status, response and created date (year / month / range).
  * How to use: Rendered on the company edit page.
  * How to extend: Add columns/filters to mirror ImportShipmentsTable.
  */
@@ -14,6 +15,7 @@ namespace App\Filament\Resources\Companies\RelationManagers;
 
 use App\Enums\BillingResponse;
 use App\Enums\ShipmentStatus;
+use App\Filament\Concerns\DateFilters;
 use App\Filament\Resources\ImportContainers\ImportContainerResource;
 use App\Filament\Resources\ImportShipments\ImportShipmentResource;
 use App\Models\ImportShipment;
@@ -94,6 +96,7 @@ class ImportShipmentsRelationManager extends RelationManager
                     ->options(ShipmentStatus::options()),
                 SelectFilter::make('billing_response')
                     ->options(BillingResponse::options()),
+                ...DateFilters::make(ImportShipment::class),
                 TrashedFilter::make(),
             ])
             ->recordActions([

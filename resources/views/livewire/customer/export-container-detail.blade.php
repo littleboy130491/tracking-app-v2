@@ -15,8 +15,8 @@
 
     <div class="mt-6 grid gap-4 rounded-xl bg-white p-6 shadow-sm md:grid-cols-3">
         <div>
-            <div class="text-xs uppercase tracking-wide text-slate-500">Size / type</div>
-            <div class="font-medium">{{ trim(($container->size ?? '').' '.($container->type ?? '')) ?: '—' }}</div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Size</div>
+            <div class="font-medium">{{ $container->size ?: '—' }}</div>
         </div>
         <div>
             <div class="text-xs uppercase tracking-wide text-slate-500">Seal number</div>

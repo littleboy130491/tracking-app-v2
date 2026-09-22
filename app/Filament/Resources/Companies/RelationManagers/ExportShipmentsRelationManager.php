@@ -6,6 +6,7 @@
  * What it does:
  * - Lists the company's export shipments read-only; "Open" jumps to the full
  *   shipment edit page. Container numbers link to the container edit page.
+ * - Filters by status and created date (year / month / range).
  * How to use: Rendered on the company edit page.
  * How to extend: Add columns/filters to mirror ExportShipmentsTable.
  */
@@ -13,6 +14,7 @@
 namespace App\Filament\Resources\Companies\RelationManagers;
 
 use App\Enums\ShipmentStatus;
+use App\Filament\Concerns\DateFilters;
 use App\Filament\Resources\ExportContainers\ExportContainerResource;
 use App\Filament\Resources\ExportShipments\ExportShipmentResource;
 use App\Models\ExportShipment;
@@ -86,6 +88,7 @@ class ExportShipmentsRelationManager extends RelationManager
             ->filters([
                 SelectFilter::make('status')
                     ->options(ShipmentStatus::options()),
+                ...DateFilters::make(ExportShipment::class),
                 TrashedFilter::make(),
             ])
             ->recordActions([

@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'export_shipment_id', 'container_number', 'size', 'type', 'seal_number',
+    'export_shipment_id', 'container_number', 'size', 'seal_number',
     'driver_name', 'license_number', 'driver_license_number',
     'tracking_position', 'tracking_position_url',
     'stuffing_status',
