@@ -806,3 +806,7 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-21 18:40 | Devin (Fusion) | UPDATE | docs/ERD.md | Import cargo columns and container HS code pivot |
 | 2026-09-21 18:40 | Devin (Fusion) | UPDATE | docs/UAT.md | Import cargo and tracking URL checklist |
 | 2026-09-21 18:40 | Devin (Fusion) | UPDATE | RECOMMENDATION_PLAN.md | Tracking URL and cargo placement findings synced |
+| 2026-09-22 00:00 | opencode (mimo-v2.6-flash) | UPDATE | AGENTS.md | Removed Laravel Boost guidelines block |
+| 2026-09-22 00:05 | opencode (mimo-v2.6-flash) | CREATE | docs/agent-templates.md | Moved long templates out of AGENTS.md |
+| 2026-09-22 00:05 | opencode (mimo-v2.6-flash) | UPDATE | AGENTS.md | Replaced templates with pointers to agent-templates.md |
+| 2026-09-22 00:10 | opencode (mimo-v2.6-flash) | UPDATE | AGENTS.md | Simplified UAT section to brief checklist rules |
