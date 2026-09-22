@@ -16,6 +16,8 @@
 
 namespace App\Filament\Resources\ImportShipments\Pages;
 
+use App\Enums\BillingResponse;
+use App\Enums\ImportMilestone;
 use App\Filament\Resources\ImportShipments\ImportShipmentResource;
 use App\Models\ImportContainer;
 use App\Services\ActivityLogger;
@@ -63,7 +65,14 @@ class EditImportShipment extends EditRecord
                     return;
                 }
 
-                $sequence = $this->record->milestoneSequence();
+                // Use the billing response currently in the form, not the saved
+                // one: picking SPJM inserts the extra customs steps, so a jump
+                // that skips them must be rejected at click time too.
+                $response = $enum === ImportMilestone::class
+                    ? BillingResponse::tryFrom((string) ($this->data['billing_response'] ?? ''))
+                    : null;
+
+                $sequence = $enum::sequence($response);
                 $currentIndex = array_search($this->record->current_milestone, $sequence, true);
                 $targetIndex = array_search($target, $sequence, true);
 

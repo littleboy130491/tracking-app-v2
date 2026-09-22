@@ -404,6 +404,71 @@ class AdminPanelSmokeTest extends TestCase
         $this->assertSame(ImportMilestone::ContainerShippingSchedule, $sppb->current_milestone);
     }
 
+    public function test_choosing_spjm_clamps_a_milestone_that_skipped_the_branch(): void
+    {
+        $shipment = ImportShipment::query()->where('bl_number', 'BL-IMP-0012')->firstOrFail();
+
+        // Saved as non-SPJM sitting on the branch point.
+        $shipment->forceFill([
+            'billing_response' => BillingResponse::Ap,
+            'current_milestone' => ImportMilestone::ResponseBilling,
+        ])->save();
+
+        // Picking SPJM while the milestone already jumped past the branch must
+        // pull the milestone back to Response billing, not skip the SPJM steps.
+        $shipment->billing_response = BillingResponse::Spjm;
+        $shipment->current_milestone = ImportMilestone::ContainerShippingSchedule;
+        $shipment->save();
+
+        $this->assertSame(ImportMilestone::ResponseBilling, $shipment->refresh()->current_milestone);
+    }
+
+    public function test_leaving_spjm_clamps_a_milestone_on_an_spjm_only_step(): void
+    {
+        $shipment = ImportShipment::query()->where('bl_number', 'BL-IMP-0012')->firstOrFail();
+
+        $shipment->forceFill([
+            'billing_response' => BillingResponse::Spjm,
+            'current_milestone' => ImportMilestone::WaitingProcessBehandle,
+        ])->save();
+
+        // Switching off SPJM orphans the SPJM-only step, so reset to the branch.
+        $shipment->billing_response = BillingResponse::Sppb;
+        $shipment->save();
+
+        $this->assertSame(ImportMilestone::ResponseBilling, $shipment->refresh()->current_milestone);
+    }
+
+    public function test_stepper_jump_uses_the_live_billing_response(): void
+    {
+        $admin = $this->admin();
+
+        $shipment = ImportShipment::query()->where('bl_number', 'BL-IMP-0012')->firstOrFail();
+        $shipment->forceFill([
+            'billing_response' => BillingResponse::Ap,
+            'current_milestone' => ImportMilestone::ResponseBilling,
+        ])->save();
+
+        $this->actingAs($admin);
+
+        // With SPJM selected in the form (not yet saved), jumping straight to
+        // Container shipping schedule must be refused.
+        Livewire::test(EditImportShipment::class, ['record' => $shipment->getRouteKey()])
+            ->set('data.billing_response', BillingResponse::Spjm->value)
+            ->mountAction('jumpToMilestone', ['milestone' => ImportMilestone::ContainerShippingSchedule->value])
+            ->callMountedAction();
+
+        $this->assertSame(ImportMilestone::ResponseBilling, $shipment->refresh()->current_milestone);
+
+        // A non-SPJM response allows the same jump.
+        Livewire::test(EditImportShipment::class, ['record' => $shipment->getRouteKey()])
+            ->set('data.billing_response', BillingResponse::Ap->value)
+            ->mountAction('jumpToMilestone', ['milestone' => ImportMilestone::ContainerShippingSchedule->value])
+            ->callMountedAction();
+
+        $this->assertSame(ImportMilestone::ContainerShippingSchedule, $shipment->refresh()->current_milestone);
+    }
+
     public function test_stepper_rows_hold_at_most_ten_steps(): void
     {
         // The SPJM import sequence has 21 steps: 10 + (response billing + the

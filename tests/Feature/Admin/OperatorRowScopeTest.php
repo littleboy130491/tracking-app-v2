@@ -61,16 +61,19 @@ class OperatorRowScopeTest extends TestCase
             ->assertCanNotSeeTableRecords($hidden);
     }
 
-    public function test_operator_sees_no_import_shipments_when_none_are_assigned(): void
+    public function test_operator_only_sees_assigned_companies_import_shipments(): void
     {
         $this->actingAs($this->operator);
 
-        // The seeded imports belong to SIN and JRD; the operator only covers
-        // NUS and SNI.
-        $this->assertNotEmpty(ImportShipment::query()->get());
+        $visible = ImportShipment::query()->whereHas('company', fn ($query) => $query->whereIn('code', ['NUS', 'SNI']))->get();
+        $hidden = ImportShipment::query()->whereHas('company', fn ($query) => $query->whereNotIn('code', ['NUS', 'SNI']))->get();
+
+        $this->assertNotEmpty($visible);
+        $this->assertNotEmpty($hidden);
 
         Livewire::test(ListImportShipments::class)
-            ->assertCanNotSeeTableRecords(ImportShipment::query()->get());
+            ->assertCanSeeTableRecords($visible)
+            ->assertCanNotSeeTableRecords($hidden);
     }
 
     public function test_admin_sees_every_shipment(): void

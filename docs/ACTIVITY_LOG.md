@@ -867,3 +867,17 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Drop factory_loading_at and export container type |
 | 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Drop Container Type and Loading-in-factory date |
 | 2026-09-22 12:06 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added container company filter and dropped-field checks |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoExportConditionSeeder.php | Export states: draft, early, cancelled, LCL/air |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoImportConditionSeeder.php | Import states: draft, early, AP/SPJK, cancelled |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoContainerConditionSeeder.php | Containers covering every status |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoAttachmentSeeder.php | Placeholder container photos via GD |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | CREATE | database/seeders/DemoActivityLogSeeder.php | Demo audit trail and notes |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DatabaseSeeder.php | Register the five condition seeders |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Concerns/ActsAsShipment.php | Clamp milestone when billing response changes |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Pages/EditImportShipment.php | Jump guard uses live billing response |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | SPJM clamp and live-response jump tests |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Seeders/SeederIdempotencyTest.php | Snapshot notes and media |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/NotesPanelTest.php | Scope note/log queries to own records |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/OperatorRowScopeTest.php | Assert import scoping with seeded data |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Pick container without seeded media |
+| 2026-09-22 15:59 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Added SPJM clamp and condition-seeder checks |

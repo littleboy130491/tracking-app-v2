@@ -11,6 +11,25 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. SPJM milestone cannot skip the branch (2026-09-22)
+
+**Prerequisites**
+
+- Admin panel; log in as `admin@example.com` / `password`.
+- `php artisan migrate:fresh --seed` (demo data).
+
+- [ ] Open import B/L `BL-IMP-0012` (response **AP**, sitting on **Response billing**). In **Shipping Details**, set **Billing response** to **SPJM** (do not save), then in the stepper click the next step (**Container shipping schedule**). Expected: the jump is refused — the milestone stays on **Response billing**.
+- [ ] Add a step: with response **AP** saved on **Response billing**, click the next step. Expected: it moves to **Container shipping schedule** (a non-SPJM response has no SPJM steps).
+- [ ] Open an SPJM shipment (`BL-IMP-0001`) sitting on an SPJM-only step, change the response off SPJM and Save. Expected: the milestone resets to **Response billing**.
+
+## 0. Demo condition seeders (2026-09-22)
+
+- [ ] Run `php artisan migrate:fresh --seed`. Expected: seeding finishes and re-running `php artisan db:seed` adds nothing (idempotent).
+- [ ] Bill of Ladings → Export. Expected: rows covering draft, early milestones, cancelled and LCL/air modes (e.g. `BL-EXP-DRAFT`, `BL-EXP-0006`); the draft does **not** appear in the customer portal.
+- [ ] Bill of Ladings → Import. Expected: rows covering draft, checking document, AP and SPJK responses (e.g. `BL-IMP-0010`, `BL-IMP-0012`, `BL-IMP-0013`).
+- [ ] Containers → Export/Import. Expected: containers in **pending**, **in_progress**, **completed** and **cancelled** states.
+- [ ] Open `CMAU7654321` (import) or `MSKU1234567` (export). Expected: the photo slots show demo placeholder images; on an import shipment's **Activity log** tab a demo trail is visible, with internal entries hidden in the portal.
+
 ## 0. Containers tables — company filter + clickable company (2026-09-22)
 
 **Prerequisites**

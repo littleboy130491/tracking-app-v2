@@ -20,7 +20,9 @@ use App\Models\ExportContainer;
 use App\Models\ExportShipment;
 use App\Models\ImportContainer;
 use App\Models\ImportShipment;
+use App\Models\Note;
 use App\Models\User;
+use Awcodes\Curator\Models\Media;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -81,6 +83,8 @@ class SeederIdempotencyTest extends TestCase
             'export_containers' => ExportContainer::query()->count(),
             'import_containers' => ImportContainer::query()->count(),
             'activity_logs' => ActivityLog::query()->count(),
+            'notes' => Note::query()->count(),
+            'media' => Media::query()->count(),
             'completed_shipments' => ExportShipment::query()->where('status', ShipmentStatus::Completed)->count()
                 + ImportShipment::query()->where('status', ShipmentStatus::Completed)->count(),
         ];

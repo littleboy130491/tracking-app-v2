@@ -16,6 +16,7 @@
 
 namespace App\Models\Concerns;
 
+use App\Enums\BillingResponse;
 use App\Enums\ExportMilestone;
 use App\Enums\ImportMilestone;
 use App\Enums\ShipmentStatus;
@@ -40,6 +41,69 @@ trait ActsAsShipment
             $shipment->document_received_date ??= today();
             $shipment->document_received_by ??= auth()->id();
         });
+
+        static::saving(function (Model $shipment): void {
+            $shipment->reconcileMilestoneWithResponse();
+        });
+    }
+
+    /**
+     * Keeps the milestone consistent with the billing response on save. The
+     * response decides which milestones exist: while it is SPJM the additional
+     * customs steps are part of the sequence, otherwise they are dropped. A
+     * response change that would skip those steps (e.g. picking SPJM while the
+     * milestone is already at Container shipping schedule, or moving off SPJM
+     * while sitting on an SPJM-only step) is pulled back to Response billing so
+     * the branch cannot be bypassed.
+     */
+    public function reconcileMilestoneWithResponse(): void
+    {
+        $enum = static::milestoneEnum();
+
+        if (! defined($enum.'::ResponseBilling')) {
+            return;
+        }
+
+        /** @var BackedEnum|null $current */
+        $current = $this->current_milestone;
+
+        if ($current === null) {
+            return;
+        }
+
+        // The response this save is replacing (null when unchanged); the
+        // response now being saved.
+        $newResponse = $this->billing_response ?? null;
+
+        if (! $this->isDirty('billing_response')) {
+            // No response change: only guard against an unreachable milestone
+            // for the response in effect.
+            if (! in_array($current, $this->milestoneSequence(), true)) {
+                $this->current_milestone = $enum::ResponseBilling;
+            }
+
+            return;
+        }
+
+        $oldResponse = $this->getOriginal('billing_response');
+        $spjm = BillingResponse::Spjm;
+
+        // Entering SPJM with the milestone already past the branch would skip
+        // the extra customs steps; leaving SPJM while sitting on one of them
+        // would orphan the milestone. Both reset to the branch point.
+        if ($newResponse === $spjm && $oldResponse !== $spjm) {
+            $responseBillingIndex = array_search($enum::ResponseBilling, $this->milestoneSequence(), true);
+
+            if ($responseBillingIndex !== false && array_search($current, $this->milestoneSequence(), true) > $responseBillingIndex) {
+                $this->current_milestone = $enum::ResponseBilling;
+            }
+
+            return;
+        }
+
+        if ($oldResponse === $spjm && $newResponse !== $spjm && in_array($current, $this->milestoneSequence(), true) === false) {
+            $this->current_milestone = $enum::ResponseBilling;
+        }
     }
 
     /**

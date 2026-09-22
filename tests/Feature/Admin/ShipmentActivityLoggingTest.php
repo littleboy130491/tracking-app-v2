@@ -245,7 +245,9 @@ class ShipmentActivityLoggingTest extends TestCase
 
     public function test_container_attachment_picker_syncs_media_rows(): void
     {
-        $container = ExportContainer::query()->firstOrFail();
+        $container = ExportContainer::query()
+            ->whereDoesntHave('attachments')
+            ->firstOrFail();
         $media = fn (array $extra = []): Attachment => Attachment::query()->create([
             'disk' => 'public',
             'name' => 'doc.pdf',

@@ -60,11 +60,14 @@ class NotesPanelTest extends TestCase
             ->assertSee('Booking confirmed with the agent.')
             ->assertSee('Admin');
 
-        $note = Note::query()->firstOrFail();
+        $note = Note::query()->where('body', 'Booking confirmed with the agent.')->firstOrFail();
         $this->assertSame($this->admin->getKey(), $note->author_id);
         $this->assertTrue($note->noteable->is($shipment));
 
-        $log = ActivityLog::query()->where('event', 'note_created')->firstOrFail();
+        $log = ActivityLog::query()
+            ->where('event', 'note_created')
+            ->where('new_values->body', 'Booking confirmed with the agent.')
+            ->firstOrFail();
         $this->assertSame($shipment->getKey(), $log->export_shipment_id);
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertSame(['body' => 'Booking confirmed with the agent.'], $log->new_values);
@@ -95,7 +98,7 @@ class NotesPanelTest extends TestCase
             ->set('body', 'First version')
             ->call('addNote');
 
-        $note = Note::query()->firstOrFail();
+        $note = Note::query()->where('body', 'First version')->firstOrFail();
 
         $component
             ->call('startEditing', $note->getKey())
@@ -105,7 +108,10 @@ class NotesPanelTest extends TestCase
 
         $this->assertSame('Second version', $note->refresh()->body);
 
-        $updateLog = ActivityLog::query()->where('event', 'note_updated')->firstOrFail();
+        $updateLog = ActivityLog::query()
+            ->where('event', 'note_updated')
+            ->where('new_values->body', 'Second version')
+            ->firstOrFail();
         $this->assertSame(['body' => 'First version'], $updateLog->old_values);
         $this->assertSame(['body' => 'Second version'], $updateLog->new_values);
 
@@ -113,7 +119,10 @@ class NotesPanelTest extends TestCase
 
         $this->assertNull(Note::query()->find($note->getKey()));
 
-        $deleteLog = ActivityLog::query()->where('event', 'note_deleted')->firstOrFail();
+        $deleteLog = ActivityLog::query()
+            ->where('event', 'note_deleted')
+            ->where('old_values->body', 'Second version')
+            ->firstOrFail();
         $this->assertSame(['body' => 'Second version'], $deleteLog->old_values);
     }
 

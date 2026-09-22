@@ -29,6 +29,11 @@ class DatabaseSeeder extends Seeder
             DemoExportShipmentSeeder::class,
             DemoImportShipmentSeeder::class,
             DemoSpjmShipmentSeeder::class,
+            DemoExportConditionSeeder::class,
+            DemoImportConditionSeeder::class,
+            DemoContainerConditionSeeder::class,
+            DemoAttachmentSeeder::class,
+            DemoActivityLogSeeder::class,
         ]);
     }
 }
