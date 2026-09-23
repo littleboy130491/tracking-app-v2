@@ -25,9 +25,12 @@
 
     @include('livewire.customer.partials.sailing-information', ['sailing' => $sailing])
 
-    <div class="mt-6 rounded-xl bg-white p-6 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">Draft PIB confirmation</h2>
-        <p class="mt-1 text-sm text-slate-500">
+    <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
+            <h2 class="flex items-center gap-2 font-semibold text-slate-900">Draft PIB confirmation</h2>
+        </div>
+        <div class="px-4 py-4 sm:px-6">
+        <p class="text-sm text-slate-500">
             Current status: <strong>{{ $draftPibConfirmed ? 'Confirmed' : 'Waiting for your confirmation' }}</strong>
         </p>
 
@@ -84,6 +87,7 @@
                 </ul>
             </div>
         @endif
+        </div>
     </div>
 
     @include('components.shipment-timeline', ['entries' => $timeline])

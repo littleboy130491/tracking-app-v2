@@ -545,3 +545,39 @@ Blocked: None
 - Keep field labels smaller than their values; values use the milestone `text-sm` scale.
 - Removed only the desktop vertical border; retained mobile's horizontal separator.
 - Updated the desktop manual check for the missing divider and text-size proportion.
+
+---
+
+# Progress - B/L detail consistency (Option B)
+
+Goal: Unify B/L detail top-bottom around container line progress style
+Started: 2026-09-23 19:00
+
+## Plan Checklist
+
+- [x] Step 1: Unify card shell + headers + spacing - DONE - 19:05
+- [ ] Step 2: Restyle shipment timeline to container vertical line - TODO
+- [ ] Step 3: Normalize pills, colors, typography - TODO
+- [ ] Step 4: Fold PIB block + verify + UAT - TODO
+
+## Current Focus
+
+Working on: Step 1 done, awaiting approval for Step 2
+Next: resources/views/components/shipment-timeline.blade.php
+Blocked: None
+
+## Notes
+
+- PortalTest 53 passed after Step 1. Shell is now mt-6 overflow-hidden rounded-xl bg-white shadow-sm + border-b header px-4 py-3 sm:px-6.
+
+- [x] Step 2: Restyle shipment timeline to container vertical line - DONE - 19:15
+- [x] Step 3: Normalize pills, colors, typography - DONE - 19:15
+- [x] Step 4: Fold PIB block + verify + UAT - DONE - 19:15
+
+## Verification
+
+- `php artisan test --filter=PortalTest` - 53 passed (352 assertions).
+
+- [x] Timeline fields right-side - DONE - 19:30
+
+- [x] Container fields right-side - DONE - 19:35

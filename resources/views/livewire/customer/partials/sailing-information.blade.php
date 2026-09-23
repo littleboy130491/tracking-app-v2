@@ -21,8 +21,11 @@
     ], filled(...));
 @endphp
 @if ($sailing !== [])
-<div class="mt-6 rounded-xl bg-white p-6 shadow-sm">
-    <h2 class="font-semibold text-slate-900">Sailing information</h2>
+<div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
+        <h2 class="flex items-center gap-2 font-semibold text-slate-900">Sailing information</h2>
+    </div>
+    <div class="px-4 py-4 sm:px-6">
     @if ($hasOrigin || $hasDestination)
         <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
             @if ($hasOrigin)
@@ -64,5 +67,6 @@
             @endforeach
         </dl>
     @endif
+    </div>
 </div>
 @endif

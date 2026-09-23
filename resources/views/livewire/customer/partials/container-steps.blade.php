@@ -1,9 +1,9 @@
 {{-- File: resources/views/livewire/customer/partials/container-steps.blade.php
      Responsibility: One container's step-by-step journey inside the accordion.
      What it does: renders each container milestone of the B/L as done (accent
-       check), current (brand circle with ping halo + card) or upcoming (grey),
-       with the admin fields that step unlocks; cancelled and not-started
-       states get a small callout.
+       check), current (brand circle with ping halo + card) or upcoming (grey);
+       milestone facts sit on the left, populated field values on the right
+       on wider screens; cancelled and not-started states get a small callout.
      How to use: @include('livewire.customer.partials.container-steps', ['progress' => $progress]).
      How to extend: step data is App\Services\ContainerProgress, built by
        ShipmentTimeline::forContainers(). --}}
@@ -30,8 +30,7 @@
                     @endif
                     <span class="relative flex h-7 w-7 shrink-0 items-center justify-center">
                         @if ($step->isLatest)
-                            <span aria-hidden="true" class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-300 opacity-60"></span>
-                            <span class="relative flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-xs font-semibold text-white ring-4 ring-brand-100">{{ $loop->iteration }}</span>
+                            <span class="relative flex h-7 w-7 items-center justify-center rounded-full bg-accent-500 text-xs font-semibold text-white">{{ $loop->iteration }}</span>
                         @elseif ($step->isPending)
                             <span class="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 bg-white text-xs font-medium text-slate-400">{{ $loop->iteration }}</span>
                         @else
@@ -42,23 +41,25 @@
                             </span>
                         @endif
                     </span>
-                    <div @class(['min-w-0 flex-1', 'rounded-lg border border-brand-200 bg-brand-50 p-3' => $step->isLatest])>
+                    <div @class(['min-w-0 flex-1', 'grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] md:gap-6' => $step->fields !== []])>
+                        <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
                             <p class="text-sm font-medium {{ $step->isPending ? 'text-slate-400' : 'text-slate-900' }}">
                                 {{ $step->title }}
                             </p>
                             @if ($step->isLatest)
-                                <span class="rounded-full bg-brand-500 px-2 py-0.5 text-xs font-medium text-white">Current</span>
+                                <span class="rounded bg-accent-100 px-1.5 py-0.5 text-xs font-medium text-accent-600">Latest</span>
                             @elseif ($step->isPending)
                                 <span class="text-xs font-medium text-slate-400">Upcoming</span>
                             @endif
                             <span class="sr-only">{{ $step->isPending ? 'Upcoming step' : ($step->isLatest ? 'Current step' : 'Completed step') }}</span>
                         </div>
                         @if (! $step->isPending && $step->occurredAt)
-                            <p class="mt-0.5 text-xs {{ $step->isLatest ? 'text-brand-700' : 'text-slate-500' }}">{{ $step->occurredAt }}</p>
+                            <p class="mt-0.5 text-xs text-slate-500">{{ $step->occurredAt }}</p>
                         @endif
+                        </div>
                         @if ($step->fields !== [])
-                            <dl class="mt-2 grid gap-2 sm:grid-cols-2">
+                            <dl class="grid min-w-0 content-start gap-2 border-t border-slate-200 pt-2 md:border-t-0 md:border-l md:pl-4 md:pt-0">
                                 @foreach ($step->fields as $field)
                                     <div class="min-w-0">
                                         <dt class="text-xs font-medium text-slate-500">{{ $field['label'] }}</dt>

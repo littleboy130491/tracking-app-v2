@@ -1069,3 +1069,19 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoActivityLogSeeder.php | Trails skip step 1; seeded dates aligned to step times |
 | 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimeline.php | Summary tiles gated on unlocking milestone |
 | 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Added locked-summary-tiles test |
+| 2026-09-23 19:00 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Unified card shell + Shipment overview header |
+| 2026-09-23 19:00 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Unified card shell + header/body padding |
+| 2026-09-23 19:00 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Normalized header to shared flex style |
+| 2026-09-23 19:00 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Normalized header padding to shared style |
+| 2026-09-23 19:00 | Muse Spark | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | PIB block to shared card shell + header |
+| 2026-09-23 19:15 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Vertical line nodes matching container progress |
+| 2026-09-23 19:15 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Pill palette + label typography normalized |
+| 2026-09-23 19:15 | Muse Spark | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | PIB body spacing to shared card rhythm |
+| 2026-09-23 19:15 | Muse Spark | UPDATE | docs/UAT.md | B/L detail consistency checklist |
+| 2026-09-23 19:30 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Fields to right column with divider |
+| 2026-09-23 19:35 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Fields to right column matching timeline |
+| 2026-09-23 19:40 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Latest badge green, blue removed |
+| 2026-09-23 19:40 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Latest badge green, blue removed |
+| 2026-09-23 19:45 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Removed latest box highlight |
+| 2026-09-23 19:45 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Removed latest box highlight |
+| 2026-09-23 20:00 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Plain table columns, blue links, dividers |

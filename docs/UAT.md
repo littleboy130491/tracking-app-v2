@@ -11,6 +11,14 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. B/L detail consistency (2026-09-23)
+
+- [ ] Open Export B/L detail. Expected: Shipment overview, Sailing, Tracking progress, Containers all share same card shell + header padding.
+- [ ] Check Tracking progress vs Container progress. Expected: same vertical line, numbered nodes, Current card style, Upcoming grey.
+- [ ] Check pills. Expected: Completed green, In Progress amber, Cancelled red, same in overview + containers.
+- [ ] Open Import B/L. Expected: Draft PIB block uses same card style; Your messages still works.
+- [ ] Resize to mobile. Expected: no overflow, grids stack.
+
 ## 0. Portal containers, sailing card and summary (2026-09-23)
 
 **Prerequisites**
