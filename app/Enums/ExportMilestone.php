@@ -99,4 +99,21 @@ enum ExportMilestone: string implements HasLabel
 
         return $currentIndex !== false && $currentIndex >= $requiredIndex;
     }
+
+    /**
+     * Whether this milestone is a container journey step in the customer
+     * portal — the milestones that unlock container fields in the admin.
+     */
+    public function isContainerStep(): bool
+    {
+        return match ($this) {
+            self::PickupEmptyContainer,
+            self::OnTheWayToFactory,
+            self::StuffingPebNpe,
+            self::CheckingPebNpe,
+            self::GateInCy,
+            self::FinalChecking => true,
+            default => false,
+        };
+    }
 }

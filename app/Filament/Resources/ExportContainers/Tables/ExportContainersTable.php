@@ -5,8 +5,8 @@
  * Responsibility: Admin list of export containers.
  * What it does:
  * - Shows the container identity, its shipment and the export statuses
- *   (company links to the company edit page), with filters for status,
- *   stuffing, company, shipment and created date plus a soft-delete filter.
+ *   (company links to the company edit page), with filters for stuffing,
+ *   company, shipment and created date plus a soft-delete filter.
  * - Offers a CSV header action, restricted to admin/super_admin via
  *   User::canExportTables().
  * - Offers a "Prune old data" header action for the same roles, deleting
@@ -17,7 +17,6 @@
 
 namespace App\Filament\Resources\ExportContainers\Tables;
 
-use App\Enums\ContainerStatus;
 use App\Enums\StuffingStatus;
 use App\Filament\Concerns\DateFilters;
 use App\Filament\Concerns\PrunableTableHeaderAction;
@@ -72,11 +71,6 @@ class ExportContainersTable
                     ->placeholder('—')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (ContainerStatus $state): string => $state->label())
-                    ->color(fn (ContainerStatus $state): string => $state->color())
-                    ->sortable(),
                 TextColumn::make('stuffing_status')
                     ->label('Stuffing')
                     ->badge()
@@ -89,7 +83,6 @@ class ExportContainersTable
             ])
             ->defaultSort('container_number')
             ->filters([
-                SelectFilter::make('status')->options(ContainerStatus::options()),
                 SelectFilter::make('company')
                     ->label('Company')
                     ->options(fn (): array => Company::query()

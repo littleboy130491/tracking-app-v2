@@ -46,19 +46,14 @@ class DemoImportConditionSeeder extends Seeder
      */
     private function seedDraftShipment(): void
     {
-        $shipment = $this->shipment('BJM', [
+        // Drafts sit on the first milestone, so only the B/L number exists —
+        // the shipping fields are still locked in the admin.
+        $this->shipment('BJM', [
             'bl_number' => 'BL-IMP-DRAFT',
-            'shipping_line' => 'PIL',
-            'vessel_name' => 'MV Borneo Star',
-            'voyage_number' => 'V-D01',
-            'port_of_loading' => 'Singapore (SGSIN)',
-            'port_of_discharge' => 'Balikpapan (IDBPN)',
         ], [
             'status' => ShipmentStatus::Draft,
             'current_milestone' => ImportMilestone::DocumentReceived,
         ]);
-
-        $this->hsCodes($shipment, '4407.99');
     }
 
     /**
@@ -68,47 +63,25 @@ class DemoImportConditionSeeder extends Seeder
      */
     private function seedEarlyMilestones(): void
     {
-        $checking = $this->shipment('NUS', [
+        // Checking document: only the B/L number and shipment mode are
+        // unlocked — everything else lands on later milestones.
+        $this->shipment('NUS', [
             'bl_number' => 'BL-IMP-0010',
             'shipment_mode' => ShipmentMode::Fcl,
-            'aju_number' => 'AJU-0004',
-            'shipping_line' => 'Maersk',
-            'vessel_name' => 'MV Ocean Trader',
-            'voyage_number' => 'V-411',
-            'port_of_loading' => 'Shanghai (CNSHA)',
-            'port_of_discharge' => 'Jakarta (IDJKT)',
-            'goods_description' => 'Machinery spare parts',
-            'packages' => '40 crates',
-            'billing_issuance_status' => BillingIssuanceStatus::NotIssued,
         ], [
             'current_milestone' => ImportMilestone::CheckingDocument,
         ]);
 
-        $this->hsCodes($checking, '8504.40');
-
-        $draftPib = $this->shipment('SNI', [
+        // Checking draft PIB: the shipping line and vessel name are known;
+        // billing, sailing and cargo fields are still locked, and the
+        // containers repeater opens at Response billing.
+        $this->shipment('SNI', [
             'bl_number' => 'BL-IMP-0011',
             'shipment_mode' => ShipmentMode::Fcl,
-            'aju_number' => 'AJU-0005',
             'shipping_line' => 'Evergreen',
             'vessel_name' => 'MV Ever Legend',
-            'voyage_number' => 'V-512',
-            'port_of_loading' => 'Busan (KRPUS)',
-            'port_of_discharge' => 'Makassar (IDUPG)',
-            'goods_description' => 'Nickel processing equipment',
-            'packages' => '18 units',
-            'confirmation_checklist' => true,
-            'billing_issuance_status' => BillingIssuanceStatus::Issued,
         ], [
             'current_milestone' => ImportMilestone::CheckingDraftPib,
-        ]);
-
-        $this->hsCodes($draftPib, '2604.00');
-
-        $this->container($draftPib, 'EGHU9105005', '40', [
-            'description_of_goods' => 'Nickel processing equipment',
-            'packages' => '18 units',
-            'status' => ContainerStatus::Pending,
         ]);
     }
 
@@ -180,22 +153,15 @@ class DemoImportConditionSeeder extends Seeder
      */
     private function seedCancelledShipment(): void
     {
-        $shipment = $this->shipment('JRD', [
+        $this->shipment('JRD', [
             'bl_number' => 'BL-IMP-0014',
             'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'SITC',
             'vessel_name' => 'MV SITC Haiphong',
-            'voyage_number' => 'V-808',
-            'port_of_loading' => 'Qingdao (CNTAO)',
-            'port_of_discharge' => 'Surabaya (IDSUB)',
-            'goods_description' => 'Cancelled order goods',
-            'packages' => '10 cartons',
         ], [
             'status' => ShipmentStatus::Cancelled,
             'current_milestone' => ImportMilestone::WaitingConfirmation,
         ]);
-
-        $this->hsCodes($shipment, '8450.11');
     }
 
     /**

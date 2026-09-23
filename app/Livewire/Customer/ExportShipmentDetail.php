@@ -4,8 +4,10 @@
  * File: app/Livewire/Customer/ExportShipmentDetail.php
  * Responsibility: Customer view of one export shipment, its containers and journey.
  * What it does:
- * - Shows the customer-visible shipment facts, the shipment-level journey
- *   timeline and the list of containers (each opens the container page).
+ * - Shows the customer-visible shipment facts, the sailing card (fields
+ *   lifted from reached timeline steps), the shipment-level journey
+ *   timeline and the container accordions (summary + per-step progress
+ *   from ShipmentTimeline::forContainers()).
  * How to use: route customer.export-shipments.show.
  * How to extend: surface more customer-visible fields as they are added.
  */
@@ -34,11 +36,22 @@ class ExportShipmentDetail extends Component
     public function render(): View
     {
         $shipment = $this->shipment();
+        $containers = $shipment->containers()
+            ->with([
+                'attachments' => fn ($query) => $query->where('is_customer_visible', true),
+            ])
+            ->orderBy('container_number')
+            ->get();
+
+        $timeline = app(ShipmentTimeline::class);
+        $entries = $timeline->forShipment($shipment);
 
         return view('livewire.customer.export-shipment-detail', [
             'shipment' => $shipment,
-            'containers' => $shipment->containers()->orderBy('container_number')->get(),
-            'timeline' => app(ShipmentTimeline::class)->forShipment($shipment),
+            'containers' => $containers,
+            'containerProgress' => $timeline->forContainers($shipment, $containers),
+            'timeline' => $entries,
+            'sailing' => $timeline->sailingInformation($entries),
         ]);
     }
 

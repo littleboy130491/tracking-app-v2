@@ -11,6 +11,48 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Portal containers, sailing card and summary (2026-09-23)
+
+**Prerequisites**
+
+- `php artisan migrate:fresh --seed` (demo data).
+- Portal: log in as `customer@example.com` / `password` (Dewi, assigned to NUS, SIN and BJM).
+
+- [ ] Open Export B/L `BL-EXP-0005`. Expected: a **Sailing information** card under the summary shows Jakarta (IDJKT) → Singapore (SGSIN) with vessel MV Ocean Voyager, voyage V-330 and line Maersk — no arrival line yet; in **Containers**, `MSKU9002004` carries a `Seal SL-0105` chip and reads "Latest: Container on the way to factory" with the logged time above the mini progress bar.
+- [ ] Expand `MSKU9002004` on `BL-EXP-0005`. Expected: done steps are green checks, the current step is a highlighted brand-blue card with a "Current" badge, upcoming steps are greyed with no field values, and the step fields show Driver name, Vehicle / Truck Number and Tracking position.
+- [ ] Open Import B/L `BL-IMP-0003` and expand `MSKU7788991`. Expected: the row reads "Latest: Empty container returned" with a full green bar and a `Gross weight 14250.000 kg` chip; the sailing card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Actual arrival** (no ETA line); the "Open tracking link" field opens a new tab.
+- [ ] Open Import B/L `BL-IMP-0001`. Expected: the summary shows an **In Progress** status pill, **Document received date** and no "Completed at"; each container row reads "Not started" (the note inside says the journey starts at Container inspection) except `CMAU7654324`, which reads "Cancelled" with the red note; `CMAU7654321` shows its photos while `CMAU7654323`'s internal-only photos stay hidden. Keep a container expanded, send a **Request revision** message and resize to mobile width — the container stays open and nothing overflows.
+- [ ] Portal home (`/portal`). Expected: the table has **POD / Vessel arrival** (`BL-IMP-0001` shows Surabaya (IDSUB) with "ETA 28 Sep 2026 10:34") and **Document received date** columns, no "Latest place" column, and `—` for rows with nothing reached.
+
+## 0. Draft PIB revision notes (2026-09-23)
+
+**Prerequisites**
+
+- `php artisan migrate:fresh --seed` (demo data).
+- Portal: log in as `customer@example.com` / `password` (Dewi, assigned to SIN).
+- Admin: log in as `admin@example.com` / `password`.
+
+- [ ] Portal → open `BL-IMP-0001` → **Draft PIB confirmation** → type a message in "Need a change? Tell us what to revise" → **Request revision**. Expected: "Your revision request has been sent." and the message appears under **Your messages** with a "Sent …" time.
+- [ ] Reload the page. Expected: the message is still listed under **Your messages** — it was saved, not just flashed.
+- [ ] Admin → Bill of Ladings → Import → open `BL-IMP-0001` → **Notes** tab. Expected: the customer's message is listed with the customer's name as author, on an **amber card** with a **Customer** tag; office notes keep the plain style.
+- [ ] Same shipment → **Shipping Details** tab → below **Confirmation checklist**. Expected: an amber strip "The customer sent you a note." with a **View in Notes tab** link; clicking it switches to the Notes tab without a page reload.
+- [ ] Tick **Confirmation checklist** on a shipment and Save → below the field shows **"Confirmed by {your admin name}"**. Untick and Save → the line disappears. When the customer confirms from the portal instead, it shows the **customer's** name.
+- [ ] Add an office note in that same **Notes** tab, then reload the portal page. Expected: the office note does **not** appear under **Your messages** — only the customer's own notes show.
+- [ ] `sari@java-retail.test` opens `BL-IMP-0002` (already confirmed). Expected: the revision box is not offered; if she had sent messages earlier they would still be listed.
+
+## 0. Portal shipment fields in Tracking progress (2026-09-23)
+
+**Prerequisites**
+
+- `php artisan migrate:fresh --seed` (demo data).
+- Log in to the customer portal as `agus@borneo.test` / `password` (Agus, assigned to JRD and SNI).
+
+- [ ] Portal home → open Import B/L `BL-IMP-0002` at desktop width → **Tracking progress**. Expected: milestone title and date are on the left, fields are on the right without a vertical divider, and values match the milestone text size while labels stay smaller.
+- [ ] Resize the same page to a narrow/mobile width. Expected: fields stack below their milestone without horizontal overflow.
+- [ ] Open Export B/L `BL-EXP-0003` at desktop width → **Tracking progress**. Expected: booking, pickup/stuffing, AJU, sailing and arrival fields appear to the right of their matching milestones with no vertical divider.
+- [ ] Open Import B/L `BL-IMP-0001` → **Tracking progress**. Expected: **Response billing** fields appear to the right; future steps remain **Pending** without field values.
+- [ ] Compare a B/L’s **Tracking progress** with its **Containers** section. Expected: container-specific values stay outside the shipment timeline.
+
 ## 0. Combined Bill of Ladings list in customer portal (2026-09-22)
 
 **Prerequisites**
@@ -305,11 +347,11 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Portal**
 
 - [ ] Log in as `customer@example.com` → portal home has a **Type** dropdown (Export / Import) next to the company/status filters; Export lists NUS/BJM exports; selecting Import lists the SIN import.
-- [ ] Open `BL-EXP-0001` → Export shipment page: facts, journey, containers table (container links open in a new tab).
+- [ ] Open `BL-EXP-0001` → Export shipment page: summary, sailing information, tracking progress, and containers that expand in place.
 - [ ] Open `BL-IMP-0001` → Import shipment page: facts, **Draft PIB confirmation** with Confirm / Request revision, journey, containers.
-- [ ] Open an export container page (`MSKU1234567`) and an import container page (`CMAU7654321`). Expected: per-type facts (export: tracking/VGM/final check; import: gate-out/weights/return) + Sailing information + Journey.
+- [ ] On `BL-EXP-0001` and `BL-IMP-0001`, expand a container row (`MSKU1234567`, `CMAU7654321`). Expected: summary tiles, customer-visible photos and the per-step journey with the admin field labels (export: driver/tracking/stuffing/VGM/final check; import: gate-out/driver/weights/return).
 - [ ] `sari@java-retail.test` opens `BL-IMP-0002` (already confirmed): the Confirm and Request revision actions are **not** offered.
-- [ ] A **draft** shipment (Status = Draft) is **not** listed in the portal, and opening its shipment or container URL returns **404**. Advance it past **Document received** → it becomes In progress and appears (with its container pages).
+- [ ] A **draft** shipment (Status = Draft) is **not** listed in the portal, and opening its shipment URL returns **404**. Advance it past **Document received** → it becomes In progress and appears with its containers.
 
 **Audit**
 
@@ -475,21 +517,21 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - Run `php artisan migrate:fresh --seed` first.
 - Customer portal: `http://localhost:8000/login` — use a seeded customer email (e.g. `customer@example.com`); OTP codes appear on the verify screen when `OTPZ_EXPOSE_IN_DEV=true`.
 
-**Container page**
+**Sailing information**
 
-- [ ] Portal → open a shipment → open a container in a new tab. Expected: a **Sailing information** block shows vessel, line, POL/departure and POD/arrival (actual) or ETA (estimate).
-- [ ] Same page → **Journey** section. Expected: oldest-first rows with time + place; the last row carries a `latest` badge; an ETA-only arrival carries an `estimate` badge.
-- [ ] Open the completed export container `EGHU6677881`. Expected: journey reads gate-in → final check → departure → arrival.
-- [ ] Open a container with no dates yet. Expected: journey shows "No journey events have been recorded for this shipment yet."
+- [ ] Portal → open `BL-IMP-0003`. Expected: a **Sailing information** card shows Shanghai (CNSHA) → Surabaya (IDSUB) with the departure date and **Actual arrival**, plus vessel, voyage and shipping line; no ETA line once the actual arrival exists.
+- [ ] Portal → open `BL-IMP-0001` (still sailing). Expected: the card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA** instead of an actual arrival; on `BL-EXP-0005` (earlier milestone) the card shows the route and vessel but no arrival line — values whose milestone is not reached never appear.
+- [ ] Expand `MSKU7788991` on `BL-IMP-0003`. Expected: the container's step-by-step journey reads inspection → gate out → factory → empty return with its logged times.
+- [ ] Open `BL-IMP-0001` (containers not started). Expected: each container row reads "Not started" and the journey inside begins with "Container inspection" marked upcoming.
 
 **Shipment page**
 
-- [ ] Portal → open a shipment. Expected: a **Journey** section sits above the containers table with the shipment-level voyage dates plus visible log entries (e.g. milestone moves, PIB confirmation).
+- [ ] Portal → open a shipment. Expected: a **Tracking progress** section sits below the sailing card with the shipment-level milestone fields beside their steps; upcoming steps stay pending with no values.
 
 **Dashboard list**
 
-- [ ] Portal home → shipment table. Expected: **Latest place** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
-- [ ] With **Type = Export**, search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `BL-EXP-0003` matches; its latest event reads "Vessel arrival at port of discharge".
+- [ ] Portal home → shipment table. Expected: **POD / Vessel arrival** and **Latest event** (+ time) columns appear per row; rows with no journey yet show `—`.
+- [ ] With **Type = Export**, search `EGHU6677881` (as `agus@borneo.test`, who manages SNI). Expected: only `BL-EXP-0003` matches; its latest event reads "Final checking shipment details".
 
 ## 10. Shipment Progress milestones & audit (2026-09-16, updated)
 

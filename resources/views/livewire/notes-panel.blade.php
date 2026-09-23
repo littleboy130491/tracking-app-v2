@@ -29,7 +29,7 @@
         @forelse ($notes as $note)
             <div
                 wire:key="note-{{ $note->id }}"
-                class="rounded-lg border border-gray-200 p-3 dark:border-white/10"
+                class="rounded-lg border border-gray-200 p-3 dark:border-white/10{{ $note->author?->isCustomer() ? ' notes-panel-note--customer' : '' }}"
             >
                 @if ($editingId === $note->id)
                     <div class="notes-panel-composer">
@@ -59,6 +59,9 @@
 
                     <div class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <span>{{ $note->author?->name ?? 'Deleted user' }}</span>
+                        @if ($note->author?->isCustomer())
+                            <span class="notes-panel-customer-tag">Customer</span>
+                        @endif
                         <span>·</span>
                         <span title="{{ $note->created_at->toDayDateTimeString() }}">
                             {{ $note->created_at->diffForHumans() }}

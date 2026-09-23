@@ -198,7 +198,7 @@ class TableExportAndPruneTest extends TestCase
         }
 
         // Relationships are present too.
-        foreach (['company.name', 'containers.container_number', 'hsCodes.code', 'creator.name'] as $relation) {
+        foreach (['company.name', 'containers.container_number'] as $relation) {
             $this->assertContains($relation, $exportShipmentColumns);
         }
 

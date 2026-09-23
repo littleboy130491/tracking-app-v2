@@ -219,6 +219,145 @@ Notes:
 
 ---
 
+# Progress - Portal container accordions
+
+Goal: Show each container's applicable admin fields inline on the bill of lading page.
+Started: 2026-09-23 12:20
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Eager-load customer-visible attachments and import HS codes - DONE - 12:20
+  - [x] Import query loads visible attachments and HS codes
+  - [x] Export query loads visible attachments
+- [x] Step 2: Replace container links with expandable accordion sections - DONE - 12:35
+  - [x] Convert the shared list to keyboard-accessible native accordions
+  - [x] Remove obsolete route props from both shipment page includes
+    - [x] Import include
+    - [x] Export include
+  - [x] Add portal UAT checks for expand/collapse and same-page behavior
+  - [x] Add a portal feature test for import/export accordion markup and removed links
+- [x] Step 3: Render the matching import/export admin fields - DONE - 12:50
+  - [x] Mirror each type's Filament groups and field labels in the expanded panel
+  - [x] Show only customer-visible photo attachments in their matching slots
+  - [x] Add regression coverage for type-specific fields and hidden internal photos
+  - [x] Update the portal UAT checklist for full field parity
+- [x] Step 4: Update UAT and verify portal behavior - DONE - 13:03
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Verification
+
+- `php artisan test --filter=PortalTest` - 38 passed (159 assertions).
+- PHP syntax checks passed for both shipment detail components.
+- After Step 2, `php artisan test --filter=PortalTest` - 39 passed (172 assertions).
+- After Step 3, `php artisan test --filter=PortalTest` - 40 passed (234 assertions).
+- `php artisan test` - 155 passed (868 assertions).
+- `npm run build` passed; Vite noted the optional `fontaine` package is not installed.
+- `git diff --check` passed.
+
+## Final Summary (2026-09-23 13:03)
+
+- Replaced standalone container detail links with same-page, keyboard-accessible accordions.
+- Expanded sections show Import/Export fields matching their Filament admin forms, with customer-visible photos only.
+- Automated tests, production frontend build, and whitespace checks passed; manual UAT remains for the user.
+
+## Notes
+
+- Keep separate Import and Export field sets aligned to their Filament forms.
+- Show only customer-visible attachments; keep internal Notes out of the portal.
+- Follow the project workflow: complete one approved step, then pause for feedback.
+
+---
+
+# Progress - Portal container summary + progress steps
+
+Goal: Redesign the portal Containers section into a summary card plus a step-by-step container journey per B/L milestone.
+Started: 2026-09-23 13:31
+
+## Plan Checklist
+
+- [x] Step 1: Backend — isContainerStep() enums, ContainerProgress DTO, forContainers(), component wiring - DONE - 13:33
+- [x] Step 2: Clickable container row (status pill, state text, mini progress bar) - DONE - 13:36
+- [x] Step 3: Section 1 container summary (tiles, Track live, photos, last update) - DONE - 13:36
+- [x] Step 4: Section 2 container progress stepper (container-steps partial) - DONE - 13:36
+- [x] Step 5: PortalTest updates + new tests, UAT rewrite - DONE - 13:45
+
+## Current Focus
+
+All steps complete. Verified: pint clean, PortalTest 46/46, npm build ok, full suite 161/161.
+Screenshots saved under /tmp/container-ui/ (export, import, import-done at 1280px + 390px).
+Blocked: None
+
+## Final Summary
+
+Container rows are native `<details>` accordions with status pill, "Now/Next/Not started/Journey complete" state text and a mini progress bar. Expanded body = summary tiles + photos + last update, then a done/current/upcoming stepper fed by ShipmentTimeline::forContainers() (steps follow the B/L milestone, fields hidden while pending, http/https-only tracking links). PortalTest covers step states, SPJM branch, completion, not-started, URL safety and cancelled containers; docs/UAT.md section 0 rewritten.
+
+---
+
+# Progress - Remove unused code/data + reference adoption
+
+Goal: delete unused portal container pages/columns/pivots, reseed, and adopt the reference layout (sailing card, latest-step rows, POD column).
+Started: 2026-09-23 17:10
+
+## Plan Checklist
+
+- [x] Step 1: Remove unused code — container pages/routes, dead timeline methods, ShipmentMilestone/ShipmentType enums, welcome view, PortalTest trims - DONE - 17:10
+- [x] Step 2: Drop created_by/updated_by/latest_event/is_customer_visible/export HS pivot/export container status+completed; seeder gating cleanup; migrate:fresh --seed OK; ERD/README updated - DONE - 17:45
+- [x] Step 3: latestReached()/sailingInformation() helpers, sailing card, Latest-step row text + gated chips, summary Status/Completed tiles, dashboard POD column - DONE - 17:40
+- [x] Step 4: UAT rewrite, activity log, pint clean, narrow set 136/136 (512M — see note), tests updated - DONE - 17:49
+
+## Current Focus
+
+Working on: none — plan complete
+Next: None
+Blocked: None
+Note: the prescribed narrow-set order OOMs at the default 128M CLI limit
+(AdminPanelSmokeTest runs last and memory accumulates); same set is green via
+`php -d memory_limit=512M vendor/bin/phpunit`.
+
+## Final Summary (2026-09-23 17:56)
+
+- Step 1 deleted the standalone container pages/routes, dead ShipmentTimeline
+  methods, ShipmentMilestone/ShipmentType enums and welcome.blade.php.
+- Step 2 dropped created_by/updated_by, latest_event/latest_event_at,
+  export_shipment_hs_code, export_containers status+completed_at and
+  activity_logs.is_customer_visible (attachments keep their own flag); seeders
+  now respect admin milestone gating; `migrate:fresh --seed` succeeded.
+- Step 3 added `latestReached()`/`sailingInformation()` on ShipmentTimeline,
+  a gated sailing card, "Latest: {title}" rows with seal/weight chips, summary
+  Status/Completed tiles and a dashboard "POD / Vessel arrival" column.
+- Step 4: UAT rewritten, Pint clean, narrow set 136 tests/762 assertions green
+  (512M phpunit), full suite 167 tests/966 assertions green, `npm run build`
+  OK, stale-reference grep clean except attachment is_customer_visible.
+- Screenshots saved under /tmp/cleanup-ui/ (export-0005, import-0003,
+  dashboard at 1280px and 390px).
+
+### Follow-up (2026-09-23 18:18)
+
+- `DemoActivityLogSeeder` now logs only transitions (steps 2..n; marker on
+  the first written log, step-1 shipments skipped) and aligns seeded dates
+  to the trail: document_received_date = first step's date, a completed
+  shipment's completed_at = last step's time, and filled container
+  timestamps (gate out/in CY, empty returned, final checked, container
+  completed_at) move to their step's time — never invented. Writes use
+  forceFill + saveQuietly.
+- `ShipmentTimeline::containerSummaryFields()` gates every tile on the B/L
+  milestone that unlocks it (export size/seal at Pickup empty container;
+  import cargo tiles at Response billing, Completed at at Empty returned).
+- New PortalTest case covers locked vs unlocked summary tiles; narrow set
+  55/355 and full suite 168/978 green. Fix along the way: write
+  document_received_date as a date string — a datetime in the `date` column
+  made the field look dirty on the next admin save.
+- UAT top section re-checked: still holds (no date-dependent wording broke;
+  ETA expectations come from untouched sailing fields).
+
+---
+
 # Progress - Import tracking URL and field placement
 
 Goal: Rename the import manual tracking input to a validated URL and move cargo fields to the Response billing step.
@@ -309,3 +448,100 @@ Status: COMPLETE
 - Order on the Containers tab header: cargo trio first (Step 11), then the loading fields (Step 17).
 - Container seeding (`seedContainerCargo` + `ImportContainer::booted`) untouched and still covered by the smoke tests.
 - IMPORT.md names no tabs, so it needed no change.
+
+---
+
+# Progress - Portal tracking progress step fields
+
+Goal: Show populated shipment-level Filament fields under their matching steps in portal tracking progress.
+Started: 2026-09-23 11:59
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Add typed field values to shipment timeline entries - DONE - 11:59
+- [x] Step 2: Render step fields in the shared portal timeline - DONE - 12:01
+- [x] Step 3: Add portal UAT checklist and finish activity log - DONE - 12:03
+
+## Current Focus
+
+Working on: none — plan complete
+Next: None
+Blocked: None
+
+## Final Summary (2026-09-23 12:03)
+
+- Added typed shipment-level field values to reached Import and Export timeline milestones.
+- Rendered values below their steps; omitted blank values and kept container fields in the Containers section.
+- Added portal UAT coverage; PHP syntax checks and `git diff --check` passed.
+
+## Notes
+
+- Scope approved: shipment-level fields only; container-specific values remain in the existing Containers section.
+- The shared timeline serves both Import and Export shipment detail pages.
+- Added the typed timeline field-value payload to `ShipmentTimelineEntry`.
+- Mapped populated shipment-level fields to matching Import and Export milestones.
+- Rendered the values as escaped, responsive label/value pairs under each reached step.
+
+---
+
+# Progress - Right-side portal tracking fields
+
+Goal: Align milestone details on the left and related fields on the right in the portal timeline.
+Started: 2026-09-23 12:07
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Place fields in a responsive right-hand column - DONE - 12:07
+- [x] Step 2: Update portal UAT for desktop and mobile layout - DONE - 12:07
+- [x] Step 3: Finish activity log and review - DONE - 12:09
+
+## Current Focus
+
+Working on: none — plan complete
+Next: None
+Blocked: None
+
+## Final Summary (2026-09-23 12:09)
+
+- Moved populated milestone fields to a right-hand column on medium and wider layouts.
+- Kept fields below milestone details on mobile; updated the UAT checklist for both layouts.
+- `git diff --check` passed; no automated tests were run.
+
+## Notes
+
+- Approved layout: milestone title and date stay left; populated fields sit right on wider screens and stack on mobile.
+- The timeline now uses a responsive two-column row when milestone fields exist.
+- Updated the manual checklist for desktop right alignment and mobile stacking.
+
+---
+
+# Progress - Tracking progress border and font refinement
+
+Goal: Remove the vertical divider and align field-value text size with milestone text.
+Started: 2026-09-23 12:11
+Status: COMPLETE
+
+## Plan Checklist
+
+- [x] Step 1: Remove the divider and normalize value text size - DONE - 12:11
+- [x] Step 2: Update the desktop UAT expectation - DONE - 12:11
+- [x] Step 3: Finish activity log and review - DONE - 12:12
+
+## Current Focus
+
+Working on: none — plan complete
+Next: None
+Blocked: None
+
+## Final Summary (2026-09-23 12:12)
+
+- Removed the vertical separator and set field values to the milestone `text-sm` size.
+- Updated the portal UAT checklist; `git diff --check` passed.
+
+## Notes
+
+- Keep field labels smaller than their values; values use the milestone `text-sm` scale.
+- Removed only the desktop vertical border; retained mobile's horizontal separator.
+- Updated the desktop manual check for the missing divider and text-size proportion.

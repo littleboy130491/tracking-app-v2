@@ -37,7 +37,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'gross_weight', 'cbm',
     'factory_loading_status',
     'return_depot_name', 'empty_returned_at',
-    'status', 'latest_event', 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
+    'status', 'completed_at',
 ])]
 class ImportContainer extends Model
 {
@@ -110,7 +110,6 @@ class ImportContainer extends Model
             'gross_weight' => 'decimal:3',
             'cbm' => 'decimal:3',
             'empty_returned_at' => 'datetime',
-            'latest_event_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

@@ -215,7 +215,6 @@ trait ActsAsShipment
             oldValues: ['milestone' => $from?->value],
             newValues: ['milestone' => $target->value],
             customerSummary: 'Progress moved to '.$target->getLabel(),
-            customerVisible: true,
         );
     }
 }

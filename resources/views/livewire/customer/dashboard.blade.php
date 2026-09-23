@@ -3,7 +3,7 @@
      What it does: binds the filter inputs (type, company, number, status, year,
        month) to the Dashboard component state and renders the combined
        paginated shipments (export + import) with their type badge, company,
-       latest journey place/event and a detail link.
+       status, POD / vessel arrival, latest reached milestone and a detail link.
      How to use: rendered by App\Livewire\Customer\Dashboard.
      How to extend: add columns once more customer-visible fields exist. --}}
 <div>
@@ -125,9 +125,9 @@
                     <th class="px-4 py-3">Type</th>
                     <th class="px-4 py-3">Company</th>
                     <th class="px-4 py-3">Status</th>
-                    <th class="px-4 py-3">Latest place</th>
+                    <th class="px-4 py-3">POD / Vessel arrival</th>
                     <th class="px-4 py-3">Latest event</th>
-                    <th class="px-4 py-3">Document created</th>
+                    <th class="px-4 py-3">Document received date</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -146,7 +146,7 @@
                             </a>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $isExportRow ? 'bg-brand-50 text-brand-700' : 'bg-slate-100 text-slate-700' }}">
+                            <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ $isExportRow ? 'bg-brand-50 text-brand-700' : 'bg-green-50 text-green-700' }}">
                                 {{ $isExportRow ? 'Export' : 'Import' }}
                             </span>
                         </td>
@@ -161,8 +161,25 @@
                                 {{ $shipment->status->label() }}
                             </span>
                         </td>
-                        @php($entry = $latest[$shipment->getKey()] ?? null)
-                        <td class="px-4 py-3">{{ $entry?->location ?? '—' }}</td>
+                        @php($rowKey = $shipment::class.':'.$shipment->getKey())
+                        @php($entry = $latest[$rowKey] ?? null)
+                        @php($sail = $sailing[$rowKey] ?? [])
+                        <td class="px-4 py-3">
+                            @if (filled($sail['Port of discharge'] ?? null))
+                                {{ $sail['Port of discharge'] }}
+                                @if (filled($sail['Actual arrival'] ?? null))
+                                    <span class="block text-xs text-slate-500">{{ $sail['Actual arrival'] }}</span>
+                                @elseif (filled($sail['Arrival time / ETA'] ?? null))
+                                    <span class="block text-xs text-slate-500">ETA {{ $sail['Arrival time / ETA'] }}</span>
+                                @endif
+                            @elseif (filled($sail['Actual arrival'] ?? null))
+                                {{ $sail['Actual arrival'] }}
+                            @elseif (filled($sail['Arrival time / ETA'] ?? null))
+                                ETA {{ $sail['Arrival time / ETA'] }}
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             {{ $entry?->title ?? '—' }}
                             @if ($entry)

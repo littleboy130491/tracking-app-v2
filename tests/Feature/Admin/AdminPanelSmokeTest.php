@@ -199,6 +199,61 @@ class AdminPanelSmokeTest extends TestCase
         );
     }
 
+    public function test_the_import_edit_page_flags_customer_notes(): void
+    {
+        $admin = $this->admin();
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+        $customer = User::query()->where('email', 'customer@example.com')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        // Only office notes so far: the flag stays hidden.
+        $import->notes()->create(['body' => 'Office note', 'author_id' => $admin->getKey()]);
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertDontSee('bl-note-flag', false);
+
+        // A note authored by a customer account raises it, with a link that
+        // jumps to the Notes tab.
+        $import->notes()->create([
+            'body' => 'Please change the HS code.',
+            'author_id' => $customer->getKey(),
+        ]);
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertSee('The customer sent you a note.')
+            ->assertSee('data-bl-tab-goto="Notes"', false);
+    }
+
+    public function test_the_confirmation_checklist_records_who_confirmed(): void
+    {
+        $admin = $this->admin();
+        // BL-IMP-0001 sits past Step 5, so the toggle is editable.
+        $import = ImportShipment::query()->where('bl_number', 'BL-IMP-0001')->firstOrFail();
+
+        $this->actingAs($admin);
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertDontSee('Confirmed by')
+            ->fillForm(['confirmation_checklist' => true])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame($admin->getKey(), $import->refresh()->confirmed_by);
+
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->assertSee('Confirmed by '.$admin->name);
+
+        // Unchecking clears the stamp.
+        Livewire::test(EditImportShipment::class, ['record' => $import->getRouteKey()])
+            ->fillForm(['confirmation_checklist' => false])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertNull($import->refresh()->confirmed_by);
+        $this->assertFalse($import->confirmation_checklist);
+    }
+
     public function test_admin_can_open_the_shipment_edit_pages(): void
     {
         $admin = $this->admin();

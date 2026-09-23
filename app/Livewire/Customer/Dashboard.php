@@ -11,8 +11,9 @@
  *   month (spec.md).
  * - Merges the export and import tables in PHP (they are separate tables) and
  *   paginates the combined result manually.
- * - Adds each shipment's latest journey entry so the list shows Latest Place
- *   and Latest Event like the reference tracker.
+ * - Adds each shipment's latest reached milestone (Latest Event) and its
+ *   reached sailing fields (POD / Vessel arrival), both from
+ *   ShipmentTimeline::forShipment() so admin milestone gating applies.
  * - Privileged staff (admin/super_admin) see every shipment; customers stay
  *   scoped to their assigned companies.
  * How to use: full-page Livewire component on route customer.dashboard.
@@ -100,14 +101,24 @@ class Dashboard extends Component
         );
         $shipments->withPath(request()->url());
 
+        // One forShipment() call per row feeds both the Latest event column
+        // and the POD / Vessel arrival column, so milestone gating matches the
+        // detail pages exactly. Keys carry the class name because the two
+        // shipment tables have overlapping ids.
         $timeline = app(ShipmentTimeline::class);
-        $latest = $shipments->getCollection()->mapWithKeys(
-            fn (ExportShipment|ImportShipment $shipment) => [$shipment->getKey() => $timeline->latestForShipment($shipment)],
-        );
+        $latest = collect();
+        $sailing = collect();
+        foreach ($shipments->getCollection() as $shipment) {
+            $entries = $timeline->forShipment($shipment);
+            $key = $shipment::class.':'.$shipment->getKey();
+            $latest[$key] = $timeline->latestReached($entries);
+            $sailing[$key] = $timeline->sailingInformation($entries);
+        }
 
         return view('livewire.customer.dashboard', [
             'shipments' => $shipments,
             'latest' => $latest,
+            'sailing' => $sailing,
             // Each row links to its own process detail page; the view resolves
             // the route name/param from the shipment instance.
             'companies' => $viewAll

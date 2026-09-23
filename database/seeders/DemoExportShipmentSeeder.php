@@ -18,7 +18,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ContainerStatus;
 use App\Enums\ExportMilestone;
 use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
@@ -26,7 +25,6 @@ use App\Enums\StuffingStatus;
 use App\Models\Company;
 use App\Models\ExportContainer;
 use App\Models\ExportShipment;
-use App\Models\HsCode;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -53,12 +51,9 @@ class DemoExportShipmentSeeder extends Seeder
             'voyage_number' => 'V-001',
             'port_of_loading' => 'Jakarta (IDJKT)',
             'port_of_discharge' => 'Singapore (SGSIN)',
-            'eta_at' => now()->addDays(10),
         ], [
             'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
-
-        $this->hsCodes($nusantara, '9403.60');
 
         $this->container($nusantara, 'MSKU1234567', '40', 'SL-0001');
         $this->container($nusantara, 'MSKU1234568', '40', 'SL-0002');
@@ -71,12 +66,9 @@ class DemoExportShipmentSeeder extends Seeder
             'voyage_number' => 'V-310',
             'port_of_loading' => 'Balikpapan (IDBPN)',
             'port_of_discharge' => 'Kaohsiung (TWKHH)',
-            'eta_at' => now()->addDays(14),
         ], [
             'current_milestone' => ExportMilestone::PickupEmptyContainer,
         ]);
-
-        $this->hsCodes($borneo, '4407.99');
 
         $this->container($borneo, 'PILU4455661', '40', 'SL-0005');
     }
@@ -111,8 +103,6 @@ class DemoExportShipmentSeeder extends Seeder
             'current_milestone' => ExportMilestone::FinalChecking,
         ]);
 
-        $this->hsCodes($exported, '2604.00');
-
         $this->container($exported, 'EGHU6677881', '40', 'SL-0006', [
             'driver_name' => 'Andi Pratama',
             'license_number' => 'DD 8123 KK',
@@ -123,8 +113,6 @@ class DemoExportShipmentSeeder extends Seeder
             'vgm_value' => 30250,
             'final_checked' => true,
             'final_checked_at' => now()->subDays(22),
-            'status' => ContainerStatus::Completed,
-            'completed_at' => now()->subDays(23),
         ]);
     }
 
@@ -160,16 +148,6 @@ class DemoExportShipmentSeeder extends Seeder
         $shipment->save();
 
         return $shipment;
-    }
-
-    /**
-     * Attach HS codes to a shipment; sync is idempotent.
-     */
-    private function hsCodes(ExportShipment $shipment, string ...$codes): void
-    {
-        $ids = HsCode::query()->whereIn('code', $codes)->pluck('id');
-
-        $shipment->hsCodes()->sync($ids);
     }
 
     /**

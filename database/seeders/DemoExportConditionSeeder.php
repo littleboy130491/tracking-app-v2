@@ -17,7 +17,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\ContainerStatus;
 use App\Enums\ExportMilestone;
 use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
@@ -25,7 +24,6 @@ use App\Enums\StuffingStatus;
 use App\Models\Company;
 use App\Models\ExportContainer;
 use App\Models\ExportShipment;
-use App\Models\HsCode;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -44,20 +42,14 @@ class DemoExportConditionSeeder extends Seeder
      */
     private function seedDraftShipment(): void
     {
-        $shipment = $this->shipment('JRD', [
+        // Drafts sit on the first milestone, so only the B/L number exists —
+        // the booking fields are still locked in the admin.
+        $this->shipment('JRD', [
             'bl_number' => 'BL-EXP-DRAFT',
-            'shipment_mode' => ShipmentMode::Lcl,
-            'shipping_line' => 'Samudera',
-            'vessel_name' => 'MV Nusantara Line',
-            'voyage_number' => 'V-D01',
-            'port_of_loading' => 'Surabaya (IDSUB)',
-            'port_of_discharge' => 'Port Klang (MYPKG)',
         ], [
             'status' => ShipmentStatus::Draft,
             'current_milestone' => ExportMilestone::DocumentReceived,
         ]);
-
-        $this->hsCodes($shipment, '9403.60');
     }
 
     /**
@@ -67,7 +59,7 @@ class DemoExportConditionSeeder extends Seeder
      */
     private function seedEarlyAndMidMilestones(): void
     {
-        $booking = $this->shipment('BJM', [
+        $this->shipment('BJM', [
             'bl_number' => 'BL-EXP-0004',
             'shipment_mode' => ShipmentMode::Fcl,
             'shipping_line' => 'Evergreen',
@@ -75,15 +67,8 @@ class DemoExportConditionSeeder extends Seeder
             'voyage_number' => 'V-204',
             'port_of_loading' => 'Balikpapan (IDBPN)',
             'port_of_discharge' => 'Shanghai (CNSHA)',
-            'eta_at' => now()->addDays(21),
         ], [
             'current_milestone' => ExportMilestone::CheckingBookingOrder,
-        ]);
-
-        $this->hsCodes($booking, '4407.99');
-
-        $this->container($booking, 'EGHU9001001', '40', 'SL-0101', [
-            'status' => ContainerStatus::Pending,
         ]);
 
         $hauling = $this->shipment('NUS', [
@@ -95,18 +80,14 @@ class DemoExportConditionSeeder extends Seeder
             'port_of_loading' => 'Jakarta (IDJKT)',
             'port_of_discharge' => 'Singapore (SGSIN)',
             'pickup_depot_name' => 'Depot Tanjung Priok',
-            'eta_at' => now()->addDays(7),
         ], [
             'current_milestone' => ExportMilestone::OnTheWayToFactory,
         ]);
-
-        $this->hsCodes($hauling, '8504.40');
 
         $this->container($hauling, 'MSKU9002002', '40', 'SL-0102', [
             'driver_name' => 'Rudi Hartono',
             'license_number' => 'B 9021 XY',
             'tracking_position' => 'Leaving depot, en route to factory',
-            'status' => ContainerStatus::InProgress,
         ]);
     }
 
@@ -132,11 +113,8 @@ class DemoExportConditionSeeder extends Seeder
             'current_milestone' => ExportMilestone::CheckingPebNpe,
         ]);
 
-        $this->hsCodes($shipment, '2604.00');
-
         $this->container($shipment, 'AIRU9003003', '20', 'SL-0103', [
             'stuffing_status' => StuffingStatus::OnProcess,
-            'status' => ContainerStatus::Cancelled,
         ]);
     }
 
@@ -172,16 +150,6 @@ class DemoExportConditionSeeder extends Seeder
         $shipment->save();
 
         return $shipment;
-    }
-
-    /**
-     * Attach HS codes to a shipment; sync is idempotent.
-     */
-    private function hsCodes(ExportShipment $shipment, string ...$codes): void
-    {
-        $ids = HsCode::query()->whereIn('code', $codes)->pluck('id');
-
-        $shipment->hsCodes()->sync($ids);
     }
 
     /**

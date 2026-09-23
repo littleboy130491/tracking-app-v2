@@ -26,10 +26,8 @@ erDiagram
     COMPANIES ||--o{ IMPORT_SHIPMENTS : owns
     EXPORT_SHIPMENTS ||--o{ EXPORT_CONTAINERS : contains
     IMPORT_SHIPMENTS ||--o{ IMPORT_CONTAINERS : contains
-    EXPORT_SHIPMENTS ||--o{ EXPORT_SHIPMENT_HS_CODE : declares
     IMPORT_SHIPMENTS ||--o{ IMPORT_SHIPMENT_HS_CODE : declares
     IMPORT_CONTAINERS ||--o{ IMPORT_CONTAINER_HS_CODE : declares
-    HS_CODES ||--o{ EXPORT_SHIPMENT_HS_CODE : "attached via"
     HS_CODES ||--o{ IMPORT_SHIPMENT_HS_CODE : "attached via"
     HS_CODES ||--o{ IMPORT_CONTAINER_HS_CODE : "attached via"
 
@@ -141,10 +139,7 @@ erDiagram
         timestamp actual_arrival_at
         string status "draft | in_progress | completed | cancelled"
         string current_milestone "ExportMilestone position"
-        string latest_event
         timestamp completed_at
-        int created_by FK
-        int updated_by FK
         timestamp deleted_at "soft delete"
     }
 
@@ -173,10 +168,7 @@ erDiagram
         text loading_destination
         string status "draft | in_progress | completed | cancelled"
         string current_milestone "ImportMilestone position"
-        string latest_event
         timestamp completed_at
-        int created_by FK
-        int updated_by FK
         timestamp deleted_at "soft delete"
     }
 
@@ -197,10 +189,6 @@ erDiagram
         decimal vgm_value "always kg"
         bool final_checked
         timestamp final_checked_at
-        string status
-        string latest_event
-        timestamp completed_at
-        int created_by FK
         timestamp deleted_at "soft delete"
     }
 
@@ -222,9 +210,7 @@ erDiagram
         string return_depot_name
         timestamp empty_returned_at
         string status
-        string latest_event
         timestamp completed_at
-        int created_by FK
         timestamp deleted_at "soft delete"
     }
 
@@ -232,12 +218,6 @@ erDiagram
         int id PK
         string code "unique"
         text description
-    }
-
-    EXPORT_SHIPMENT_HS_CODE {
-        int id PK
-        int export_shipment_id FK
-        int hs_code_id FK
     }
 
     IMPORT_SHIPMENT_HS_CODE {
@@ -265,7 +245,6 @@ erDiagram
         json old_values
         json new_values
         text customer_summary
-        bool is_customer_visible
         timestamp occurred_at
     }
 
@@ -297,9 +276,9 @@ erDiagram
 - **Excluded (Laravel internals):** `cache`, `jobs`, `sessions`, `password_reset_tokens` — framework plumbing, not domain data.
 - **Split by process:** Export and Import have their own shipment and container tables; there is no `shipment_type` column. Any row that links to a shipment carries `export_shipment_id` or `import_shipment_id` (exactly one), and any row that links to a container carries `export_container_id` or `import_container_id` matching the shipment's process.
 - **`CURATOR` is the attachments table.** `App\Models\Attachment` extends Curator's media model; the shipment/container links, `category`, `is_customer_visible` and `uploaded_by` were added to it and the old `attachments` table was dropped.
-- **Audit FKs:** every `created_by` / `updated_by` / `actor_id` / `uploaded_by` / `author_id` column references `users.id`. Only `ACTIVITY_LOGS`, `CURATOR` and `NOTES` draw their user edges; the rest are omitted to keep the diagram readable.
+- **Audit FKs:** every `actor_id` / `uploaded_by` / `author_id` column references `users.id`. Only `ACTIVITY_LOGS`, `CURATOR` and `NOTES` draw their user edges; the rest are omitted to keep the diagram readable.
 - **Polymorphic pivots:** `model_has_roles` / `model_has_permissions` have no real FK to `users` (`model_type` + `model_id`); dotted lines mark that. In practice only `users` rows appear there. `NOTES` uses the same polymorphic pattern for its target.
 - **Cardinality:** `|o` on the left means the child's FK is nullable (e.g. an `activity_log` may have no container link when the entry is shipment-scoped, or no shipment link when it is about a company or user).
-- **Composite unique keys:** `company_user (company_id, user_id)`, `export_shipment_hs_code (export_shipment_id, hs_code_id)`, `import_shipment_hs_code (import_shipment_id, hs_code_id)`, `import_container_hs_code (import_container_id, hs_code_id)`, `export_containers (export_shipment_id, container_number)`, `import_containers (import_shipment_id, container_number)`.
+- **Composite unique keys:** `company_user (company_id, user_id)`, `import_shipment_hs_code (import_shipment_id, hs_code_id)`, `import_container_hs_code (import_container_id, hs_code_id)`, `export_containers (export_shipment_id, container_number)`, `import_containers (import_shipment_id, container_number)`.
 - **Import cargo fields:** the shipment's `goods_description`, `packages` and HS codes unlock at the Response billing step; each import container carries its own `description_of_goods`, `packages` and HS-code pivot rows, seeded from the shipment and overridable.
 - **Soft deletes:** `EXPORT_SHIPMENTS`, `IMPORT_SHIPMENTS`, `EXPORT_CONTAINERS`, `IMPORT_CONTAINERS`, `USERS`, `COMPANIES` and `HS_CODES` carry a nullable `deleted_at`. Admin/super_admin may soft-delete and restore; only super_admin may permanently delete (`forceDelete`) or prune. A soft-deleted user cannot authenticate or reach the admin panel.

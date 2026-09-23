@@ -23,9 +23,10 @@ locked until that step is reached, with a click-to-jump stepper and advance/regr
   and records every change, who made it and when.
 - **Customer portal** (`/portal`) — passwordless sign-in with an emailed one-time code, greeting, a **Type**
   dropdown (Export / Import) beside the filters (company / number / status / year / month), the shipments of
-  the companies the user manages, per-process detail pages with containers opening in a new tab, and
-  draft-PIB confirmation for imports — once a draft is confirmed the confirm and revision actions are no
-  longer offered.
+  the companies the user manages, per-process detail pages where each container expands in place into a
+  summary and a step-by-step journey, a sailing information card gated by the same milestones as the admin,
+  and draft-PIB confirmation for imports — once a draft is confirmed the confirm and revision actions are
+  no longer offered.
 
 ## Tech stack
 
@@ -161,10 +162,8 @@ shipment.
 | `/admin` | admin, operator | Filament admin panel. |
 | `/login` | guests | Portal sign-in (email step). |
 | `/portal` | customers | Shipment dashboard with a Type (Export/Import) dropdown and filters. |
-| `/portal/export-shipments/{id}` | customers | Export shipment detail + journey + containers. |
+| `/portal/export-shipments/{id}` | customers | Export shipment detail: summary, sailing card, tracking progress + inline containers. |
 | `/portal/import-shipments/{id}` | customers | Import shipment detail; draft-PIB confirmation (hidden once confirmed). |
-| `/portal/export-containers/{id}` | customers | Export container detail (facts + journey). |
-| `/portal/import-containers/{id}` | customers | Import container detail (facts + journey). |
 
 ## How shipment tracking works
 

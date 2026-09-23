@@ -99,12 +99,6 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertCount(1, $log->old_values);
         $this->assertCount(1, $log->new_values);
         $this->assertArrayNotHasKey('updated_at', $log->new_values);
-        $this->assertArrayNotHasKey('updated_by', $log->new_values);
-        $this->assertFalse($log->is_customer_visible);
-
-        // Every recorded event stamps the denormalized latest-event columns.
-        $this->assertSame('shipment_updated', $export->refresh()->latest_event);
-        $this->assertNotNull($export->latest_event_at);
     }
 
     public function test_unchanged_shipment_save_creates_no_activity(): void
@@ -240,7 +234,6 @@ class ShipmentActivityLoggingTest extends TestCase
         $this->assertSame($this->admin->getKey(), $log->actor_id);
         $this->assertArrayNotHasKey('id', $log->new_values);
         $this->assertArrayNotHasKey('export_shipment_id', $log->new_values);
-        $this->assertFalse($log->is_customer_visible);
     }
 
     public function test_container_attachment_picker_syncs_media_rows(): void

@@ -14,11 +14,12 @@
 
     @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Export'])
 
+    @include('livewire.customer.partials.sailing-information', ['sailing' => $sailing])
+
     @include('components.shipment-timeline', ['entries' => $timeline])
 
     @include('livewire.customer.partials.shipment-containers', [
         'containers' => $containers,
-        'routeName' => 'customer.export-containers.show',
-        'routeParam' => 'exportContainer',
+        'containerProgress' => $containerProgress,
     ])
 </div>

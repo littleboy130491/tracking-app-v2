@@ -12,9 +12,13 @@
     - Each step is addressable (id="bl-ms-step-N") and a delegated click
       handler scrolls to + pulses it when a locked field's helper text
       (data-bl-ms-goto="N") is clicked.
+    - A second delegated handler activates a form tab when a trigger with
+      data-bl-tab-goto="Tab label" is clicked (the customer-note flag on the
+      import form jumps to the Notes tab this way).
     - Styles are scoped in this file (the .bl-ms prefix) because the admin
       panel ships precompiled CSS — app Tailwind classes are not generated.
-    Props: $sequence (ShipmentMilestone[]), $current (?ShipmentMilestone),
+    Props: $sequence (ExportMilestone[]|ImportMilestone[]),
+           $current (ExportMilestone|ImportMilestone|null),
            $editable (bool — false on the create page, where there is no record).
 --}}
 <style>
@@ -153,6 +157,29 @@
             void target.offsetWidth;
             target.classList.add('flash');
             setTimeout(() => target.classList.remove('flash'), 3000);
+        });
+    }
+
+    // Clicked from a field-level flag (e.g. "The customer sent you a note" on
+    // the import form): activate the named Filament tab and bring it into
+    // view. Delegated so it survives Livewire re-renders of the form.
+    if (! window.__blTabGotoBound) {
+        window.__blTabGotoBound = true;
+
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('[data-bl-tab-goto]');
+            if (! trigger) return;
+
+            const label = trigger.getAttribute('data-bl-tab-goto');
+            const tabs = document.querySelectorAll('.fi-tabs [role="tab"], .fi-tabs-item');
+            const target = Array.from(tabs).find(function (tab) {
+                return tab.textContent.replace(/\s+/g, ' ').trim().startsWith(label);
+            });
+            if (! target) return;
+
+            event.preventDefault();
+            target.click();
+            target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
     }
 </script>

@@ -165,4 +165,22 @@ enum ImportMilestone: string implements HasLabel
             default => false,
         };
     }
+
+    /**
+     * Whether this milestone is a container journey step in the customer
+     * portal — the milestones that unlock container fields in the admin.
+     * Inspection is SPJM-only, so sequence() already drops it for non-SPJM.
+     */
+    public function isContainerStep(): bool
+    {
+        return match ($this) {
+            self::Inspection,
+            self::ContainerShippingSchedule,
+            self::GateOutCy,
+            self::OnTheWayToFactory,
+            self::ArrivedAtFactory,
+            self::EmptyReturned => true,
+            default => false,
+        };
+    }
 }

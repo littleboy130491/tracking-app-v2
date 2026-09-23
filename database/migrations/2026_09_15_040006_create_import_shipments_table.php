@@ -58,12 +58,8 @@ return new class extends Migration
 
             $table->string('status', 30)->default('draft');
             $table->string('current_milestone', 40)->default('document_received');
-            $table->string('latest_event', 40)->nullable();
-            $table->timestamp('latest_event_at')->nullable();
             $table->timestamp('completed_at')->nullable();
 
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
 

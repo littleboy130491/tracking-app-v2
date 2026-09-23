@@ -1,7 +1,7 @@
 {{-- File: resources/views/livewire/customer/import-shipment-detail.blade.php
      Responsibility: Customer view of one import shipment, its journey, containers and draft PIB.
      What it does: shows shipment facts, the draft-PIB confirmation actions, the
-       journey timeline and the container list.
+       customer's own notes, the journey timeline and the container list.
      How to use: rendered by App\Livewire\Customer\ImportShipmentDetail.
      How to extend: add customer-visible fields as they are published. --}}
 <div>
@@ -23,6 +23,8 @@
 
     @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Import'])
 
+    @include('livewire.customer.partials.sailing-information', ['sailing' => $sailing])
+
     <div class="mt-6 rounded-xl bg-white p-6 shadow-sm">
         <h2 class="text-lg font-semibold text-slate-900">Draft PIB confirmation</h2>
         <p class="mt-1 text-sm text-slate-500">
@@ -31,7 +33,7 @@
 
         @if ($draftPibConfirmed)
             <p class="mt-4 rounded-md bg-accent-100 p-3 text-sm text-accent-600">
-                This draft PIB is confirmed — no action is needed. Please contact us if something still has to change.
+                This draft PIB is confirmed. Please contact us if something still has to change.
             </p>
         @else
             <div class="mt-4 flex flex-wrap items-start gap-3">
@@ -63,13 +65,31 @@
                 </button>
             </div>
         @endif
+
+        @if ($ownNotes->isNotEmpty())
+            <div class="mt-6 border-t border-slate-200 pt-4">
+                <h3 class="text-sm font-medium text-slate-700">Your messages</h3>
+                <ul class="mt-2 space-y-2">
+                    @foreach ($ownNotes as $note)
+                        <li class="rounded-md bg-slate-50 p-3">
+                            <p class="whitespace-pre-line text-sm text-slate-700">{{ $note->body }}</p>
+                            <p
+                                class="mt-1 text-xs text-slate-400"
+                                title="{{ $note->created_at->toDayDateTimeString() }}"
+                            >
+                                Sent {{ $note->created_at->diffForHumans() }}
+                            </p>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </div>
 
     @include('components.shipment-timeline', ['entries' => $timeline])
 
     @include('livewire.customer.partials.shipment-containers', [
         'containers' => $containers,
-        'routeName' => 'customer.import-containers.show',
-        'routeParam' => 'importContainer',
+        'containerProgress' => $containerProgress,
     ])
 </div>

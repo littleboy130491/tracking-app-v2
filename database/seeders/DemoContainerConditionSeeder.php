@@ -2,11 +2,10 @@
 
 /**
  * File: database/seeders/DemoContainerConditionSeeder.php
- * Responsibility: Seeds containers that cover every container status.
+ * Responsibility: Seeds extra containers on the demo shipments.
  * What it does:
- * - Attaches containers in `pending`, `in_progress`, `completed` and
- *   `cancelled` to existing demo shipments, so each container status badge,
- *   colour and filter has data on both the export and import sides.
+ * - Adds containers to live export and import shipments; the import rows
+ *   carry the statuses (in progress, cancelled) the admin can set there.
  * - Looks its shipments up by B/L number, so it depends on the shipment
  *   seeders running first.
  * - Idempotent: container numbers are unique per shipment and progress fields
@@ -33,8 +32,8 @@ class DemoContainerConditionSeeder extends Seeder
     }
 
     /**
-     * Extra export containers: a pending and an in-progress one on a live
-     * shipment, each carrying the progress fields its status implies.
+     * Extra export containers on a live shipment: one just registered, one
+     * already on the way to the factory.
      */
     private function seedExportContainers(): void
     {
@@ -44,15 +43,12 @@ class DemoContainerConditionSeeder extends Seeder
             return;
         }
 
-        $this->exportContainer($shipment, 'MSKU9002003', '40', 'SL-0104', [
-            'status' => ContainerStatus::Pending,
-        ]);
+        $this->exportContainer($shipment, 'MSKU9002003', '40', 'SL-0104');
 
         $this->exportContainer($shipment, 'MSKU9002004', '40', 'SL-0105', [
             'driver_name' => 'Bayu Setiawan',
             'license_number' => 'B 7788 QW',
             'tracking_position' => 'At factory, stuffing next',
-            'status' => ContainerStatus::InProgress,
         ]);
     }
 

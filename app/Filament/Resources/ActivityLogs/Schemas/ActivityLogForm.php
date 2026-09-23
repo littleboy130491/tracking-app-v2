@@ -15,7 +15,6 @@ use App\Models\ActivityLog;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -38,8 +37,6 @@ class ActivityLogForm
                         TextInput::make('entity_id')
                             ->disabled(),
                         DateTimePicker::make('occurred_at')
-                            ->disabled(),
-                        Toggle::make('is_customer_visible')
                             ->disabled(),
                     ]),
                 Section::make('Context')

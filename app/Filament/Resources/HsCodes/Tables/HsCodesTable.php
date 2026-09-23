@@ -4,7 +4,7 @@
  * File: app/Filament/Resources/HsCodes/Tables/HsCodesTable.php
  * Responsibility: Admin table for HS codes.
  * What it does:
- * - Lists each code, its description and how many shipments use it.
+ * - Lists each code, its description and how many import shipments use it.
  * - Offers a CSV header action, restricted to admin/super_admin via
  *   User::canExportTables().
  * - Offers a "Prune old data" header action, restricted to super_admin,
@@ -43,10 +43,6 @@ class HsCodesTable
                 TextColumn::make('description')
                     ->limit(80)
                     ->searchable(),
-                TextColumn::make('export_shipments_count')
-                    ->label('Export shipments')
-                    ->counts('exportShipments')
-                    ->sortable(),
                 TextColumn::make('import_shipments_count')
                     ->label('Import shipments')
                     ->counts('importShipments')

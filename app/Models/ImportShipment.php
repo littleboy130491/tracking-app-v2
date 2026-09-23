@@ -19,7 +19,6 @@ use App\Enums\BillingResponse;
 use App\Enums\ImportMilestone;
 use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
-use App\Enums\ShipmentType;
 use App\Models\Concerns\ActsAsShipment;
 use App\Models\Concerns\HasNotes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -38,12 +37,28 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'port_of_loading', 'departure_date', 'port_of_discharge',
     'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
     'packages', 'terminal_name', 'loading_date', 'loading_destination',
-    'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
-    'created_by', 'updated_by',
+    'status', 'current_milestone', 'completed_at',
 ])]
 class ImportShipment extends Model
 {
     use ActsAsShipment, HasFactory, HasNotes, SoftDeletes;
+
+    /**
+     * Stamps who set the confirmation checklist — a portal customer or an
+     * office user — whenever the value changes; clearing it drops the stamp.
+     * Runs on every save path (portal, Filament, tinker) so no caller can
+     * forget it. Seeder/console saves simply store null.
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (ImportShipment $shipment): void {
+            if (! $shipment->isDirty('confirmation_checklist')) {
+                return;
+            }
+
+            $shipment->confirmed_by = $shipment->confirmation_checklist ? auth()->id() : null;
+        });
+    }
 
     /**
      * @return class-string<ImportMilestone>
@@ -51,11 +66,6 @@ class ImportShipment extends Model
     public static function milestoneEnum(): string
     {
         return ImportMilestone::class;
-    }
-
-    public function shipmentType(): ShipmentType
-    {
-        return ShipmentType::Import;
     }
 
     /**
@@ -83,7 +93,6 @@ class ImportShipment extends Model
             'loading_date' => 'date',
             'eta_at' => 'datetime',
             'actual_arrival_at' => 'datetime',
-            'latest_event_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
@@ -131,24 +140,18 @@ class ImportShipment extends Model
     /**
      * @return BelongsTo<User, $this>
      */
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function updater(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    /**
-     * @return BelongsTo<User, $this>
-     */
     public function documentReceivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'document_received_by');
+    }
+
+    /**
+     * The user who set the confirmation checklist.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
     }
 }

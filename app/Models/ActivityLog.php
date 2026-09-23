@@ -5,8 +5,7 @@
  * Responsibility: One append-only audit entry.
  * What it does:
  * - Records the event, actor, changed values and a customer-safe summary.
- * - Links to an export/import shipment and (optionally) one of its containers;
- *   `is_customer_visible` limits what the portal may read.
+ * - Links to an export/import shipment and (optionally) one of its containers.
  * How to use: Written by App\Services\ActivityLogger in the same transaction as
  *   the change; never updated or deleted afterwards.
  * How to extend: Add new `event` values as new actions get logged.
@@ -22,17 +21,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable([
     'export_shipment_id', 'import_shipment_id', 'export_container_id', 'import_container_id',
     'actor_id', 'event', 'entity_type', 'entity_id', 'old_values', 'new_values',
-    'customer_summary', 'is_customer_visible', 'occurred_at',
+    'customer_summary', 'occurred_at',
 ])]
 class ActivityLog extends Model
 {
     use HasFactory;
-
-    /** Columns linking an entry to a shipment; exactly one is set. */
-    public const SHIPMENT_KEYS = ['export_shipment_id', 'import_shipment_id'];
-
-    /** Columns linking an entry to a container; at most one is set. */
-    public const CONTAINER_KEYS = ['export_container_id', 'import_container_id'];
 
     /**
      * @return array<string, string>
@@ -42,7 +35,6 @@ class ActivityLog extends Model
         return [
             'old_values' => 'array',
             'new_values' => 'array',
-            'is_customer_visible' => 'boolean',
             'occurred_at' => 'datetime',
         ];
     }

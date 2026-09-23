@@ -30,8 +30,10 @@ use App\Filament\Concerns\ContainerFields;
 use App\Filament\Concerns\ShipmentFields;
 use App\Models\ImportContainer;
 use App\Models\ImportShipment;
+use App\Models\Role;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -40,6 +42,8 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class ImportShipmentForm
 {
@@ -82,6 +86,24 @@ class ImportShipmentForm
                                             Toggle::make('confirmation_checklist')
                                                 ->label('Confirmation checklist'),
                                         ], $enum, ImportMilestone::WaitingConfirmation),
+                                        // Who set the toggle: the model's saving
+                                        // hook stamps confirmed_by on every path
+                                        // (portal customer or office user).
+                                        Placeholder::make('confirmed_by_display')
+                                            ->hiddenLabel()
+                                            ->columnSpanFull()
+                                            ->visible(fn (?ImportShipment $record): bool => $record?->confirmed_by !== null)
+                                            ->content(fn (?ImportShipment $record): string => 'Confirmed by '.$record->confirmedBy?->name),
+                                        // Revision requests from the portal land
+                                        // as customer-authored notes; flag them
+                                        // here so they are seen while deciding on
+                                        // the draft PIB (ungated: a note can
+                                        // arrive before Step 5).
+                                        Placeholder::make('customer_note_flag')
+                                            ->hiddenLabel()
+                                            ->columnSpanFull()
+                                            ->visible(fn (?ImportShipment $record): bool => self::customerNoteCount($record) > 0)
+                                            ->content(fn (?ImportShipment $record): HtmlString => self::customerNoteFlag($record)),
                                         // Step 6 — Final sending PIB to custom (issuing billing).
                                         ...ShipmentFields::gated([
                                             TextInput::make('aju_number')
@@ -205,5 +227,41 @@ class ImportShipmentForm
         }
 
         return $data;
+    }
+
+    /**
+     * Notes on this shipment written by a customer account — e.g. a draft-PIB
+     * revision request sent from the portal.
+     */
+    private static function customerNoteCount(?ImportShipment $record): int
+    {
+        if ($record === null) {
+            return 0;
+        }
+
+        return $record->notes()
+            ->whereHas('author', fn (Builder $query): Builder => $query->role(Role::CUSTOMER))
+            ->count();
+    }
+
+    /**
+     * The amber banner under Confirmation checklist. Its link carries
+     * data-bl-tab-goto="Notes"; the delegated handler in the milestone-stepper
+     * blade activates that tab without a page reload.
+     */
+    private static function customerNoteFlag(?ImportShipment $record): HtmlString
+    {
+        $count = self::customerNoteCount($record);
+
+        $label = $count === 1
+            ? 'The customer sent you a note.'
+            : "The customer sent you {$count} notes.";
+
+        return new HtmlString(
+            '<div class="bl-note-flag">'
+            .'<span>'.e($label).'</span>'
+            .'<button type="button" class="bl-note-flag-link" data-bl-tab-goto="Notes">View in Notes tab</button>'
+            .'</div>'
+        );
     }
 }

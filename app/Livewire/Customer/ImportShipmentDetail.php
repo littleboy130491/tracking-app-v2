@@ -4,12 +4,17 @@
  * File: app/Livewire/Customer/ImportShipmentDetail.php
  * Responsibility: Customer view of one import shipment, its containers and journey.
  * What it does:
- * - Shows the customer-visible shipment facts, the shipment-level journey
- *   timeline and the list of containers (each opens the container page).
+ * - Shows the customer-visible shipment facts, the sailing card (fields
+ *   lifted from reached timeline steps), the shipment-level journey
+ *   timeline and the container accordions (summary + per-step progress
+ *   from ShipmentTimeline::forContainers()).
  * - The customer can confirm the draft PIB (sets the confirmation checklist)
- *   or request a revision, which writes back to the shipment and the activity
- *   log. Once the draft is confirmed those actions are neither offered nor
- *   accepted: the guard is here, not only in the view.
+ *   or request a revision, which stores a customer-authored note on the
+ *   shipment and writes the activity log. Once the draft is confirmed those
+ *   actions are neither offered nor accepted: the guard is here, not only
+ *   in the view.
+ * - Lists the customer's own notes on the shipment; notes written by anyone
+ *   else (e.g. the office) stay internal and are never shown here.
  * How to use: route customer.import-shipments.show.
  * How to extend: surface more customer-visible fields as they are added.
  */
@@ -61,7 +66,6 @@ class ImportShipmentDetail extends Component
             entityId: $shipment->getKey(),
             newValues: ['confirmation_checklist' => true],
             customerSummary: 'Draft PIB confirmed by the customer.',
-            customerVisible: true,
         );
 
         $this->message = 'Thank you — the draft PIB has been confirmed.';
@@ -80,8 +84,14 @@ class ImportShipmentDetail extends Component
 
         $this->validate(['revisionNotes' => ['required', 'string', 'max:1000']]);
 
-        // The checklist only holds confirmed/not-confirmed; the request itself
-        // is recorded on the activity log, where the office reads it.
+        // The request is stored as a customer-authored note on the shipment, so
+        // the office sees it in the shipment's Notes tab and the customer can
+        // see their own messages on this page.
+        $shipment->notes()->create([
+            'body' => $this->revisionNotes,
+            'author_id' => auth()->id(),
+        ]);
+
         app(ActivityLogger::class)->record(
             shipment: $shipment,
             event: 'draft_pib_revision_requested',
@@ -89,7 +99,6 @@ class ImportShipmentDetail extends Component
             entityId: $shipment->getKey(),
             newValues: ['notes' => $this->revisionNotes],
             customerSummary: 'The customer requested a revision of the draft PIB.',
-            customerVisible: true,
         );
 
         $this->revisionNotes = '';
@@ -99,12 +108,27 @@ class ImportShipmentDetail extends Component
     public function render(): View
     {
         $shipment = $this->shipment();
+        $containers = $shipment->containers()
+            ->with([
+                'attachments' => fn ($query) => $query->where('is_customer_visible', true),
+                'hsCodes',
+            ])
+            ->orderBy('container_number')
+            ->get();
+
+        $timeline = app(ShipmentTimeline::class);
+        $entries = $timeline->forShipment($shipment);
 
         return view('livewire.customer.import-shipment-detail', [
             'shipment' => $shipment,
-            'containers' => $shipment->containers()->orderBy('container_number')->get(),
+            'containers' => $containers,
+            'containerProgress' => $timeline->forContainers($shipment, $containers),
             'draftPibConfirmed' => $this->isDraftPibConfirmed($shipment),
-            'timeline' => app(ShipmentTimeline::class)->forShipment($shipment),
+            // Only the customer's own notes: office notes on the shipment
+            // are internal and must not leak into the portal.
+            'ownNotes' => $shipment->notes()->where('author_id', auth()->id())->latest()->get(),
+            'timeline' => $entries,
+            'sailing' => $timeline->sailingInformation($entries),
         ]);
     }
 

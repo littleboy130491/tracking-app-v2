@@ -5,7 +5,7 @@
  * Responsibility: Builds the full CSV column set for each prunable resource table.
  * What it does:
  * - Lists every stored field plus the relationship fields (company, shipment,
- *   containers, HS codes, roles, creator/updater, portal dates) so a CSV holds
+ *   containers, HS codes, roles, received-by) so a CSV holds
  *   the complete record, not just the on-screen columns.
  * - Flattens related rows into a single cell (comma separated / newline safe).
  * How to use: `TableExportColumns::for(TableExportColumns::EXPORT_SHIPMENTS)`
@@ -91,16 +91,13 @@ class TableExportColumns
                 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
                 'pickup_depot_name', 'stuffing_date', 'stuffing_destination',
                 'departure_date', 'eta_at', 'actual_arrival_at',
-                'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
-                'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at',
+                'status', 'current_milestone', 'completed_at',
+                'created_at', 'updated_at', 'deleted_at',
             ]),
             Column::make('company.name')->heading('Company'),
             Column::make('documentReceivedBy.name')->heading('Document received by'),
-            Column::make('creator.name')->heading('Created by'),
-            Column::make('updater.name')->heading('Updated by'),
             self::relationColumn('containers.container_number', 'Container numbers', fn ($record): string => $record->containers->pluck('container_number')->filter()->implode(', ')),
             self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->implode(', ')),
-            self::relationColumn('hsCodes.code', 'HS codes', fn ($record): string => $record->hsCodes->pluck('code')->implode(', ')),
         ];
     }
 
@@ -118,13 +115,11 @@ class TableExportColumns
                 'port_of_loading', 'departure_date', 'port_of_discharge',
                 'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
                 'packages', 'terminal_name', 'loading_date', 'loading_destination',
-                'status', 'current_milestone', 'latest_event', 'latest_event_at', 'completed_at',
-                'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at',
+                'status', 'current_milestone', 'completed_at',
+                'created_at', 'updated_at', 'deleted_at',
             ]),
             Column::make('company.name')->heading('Company'),
             Column::make('documentReceivedBy.name')->heading('Document received by'),
-            Column::make('creator.name')->heading('Created by'),
-            Column::make('updater.name')->heading('Updated by'),
             self::relationColumn('containers.container_number', 'Container numbers', fn ($record): string => $record->containers->pluck('container_number')->filter()->implode(', ')),
             self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->implode(', ')),
             self::relationColumn('hsCodes.code', 'HS codes', fn ($record): string => $record->hsCodes->pluck('code')->implode(', ')),
@@ -142,8 +137,7 @@ class TableExportColumns
                 'driver_name', 'license_number', 'driver_license_number',
                 'tracking_position', 'tracking_position_url', 'stuffing_status',
                 'port_of_loading', 'gate_in_cy_at', 'vgm_value',
-                'final_checked', 'final_checked_at', 'status', 'latest_event',
-                'latest_event_at', 'completed_at', 'created_by', 'updated_by',
+                'final_checked', 'final_checked_at',
                 'created_at', 'updated_at', 'deleted_at',
             ]),
             Column::make('shipment.bl_number')->heading('Shipment B/L number'),
@@ -166,8 +160,8 @@ class TableExportColumns
                 'tracking_position', 'tracking_position_url',
                 'gross_weight', 'cbm',
                 'factory_loading_status',
-                'return_depot_name', 'empty_returned_at', 'status', 'latest_event',
-                'latest_event_at', 'completed_at', 'created_by', 'updated_by',
+                'return_depot_name', 'empty_returned_at', 'status',
+                'completed_at',
                 'created_at', 'updated_at', 'deleted_at',
             ]),
             Column::make('shipment.bl_number')->heading('Shipment B/L number'),
@@ -216,7 +210,6 @@ class TableExportColumns
     {
         return [
             ...self::fields(['id', 'code', 'description', 'created_at', 'updated_at']),
-            self::relationColumn('export_shipments_count', 'Export B/Ls', fn ($record): string => (string) $record->exportShipments()->count()),
             self::relationColumn('import_shipments_count', 'Import B/Ls', fn ($record): string => (string) $record->importShipments()->count()),
         ];
     }

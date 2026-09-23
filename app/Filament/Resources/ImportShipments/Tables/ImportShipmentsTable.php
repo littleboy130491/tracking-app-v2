@@ -44,7 +44,7 @@ class ImportShipmentsTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['containers', 'hsCodes', 'company', 'creator', 'updater', 'documentReceivedBy']))
+            ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['containers', 'hsCodes', 'company', 'documentReceivedBy']))
             ->columns([
                 TextColumn::make('bl_number')
                     ->label('B/L number')

@@ -8,7 +8,7 @@
  *   to the export/import shipment and (optionally) one of its containers.
  * - Can snapshot shipment data (shipment, containers, HS codes) and record
  *   only the fields that actually changed between two snapshots.
- * - Stores a customer-safe summary plus the visibility flag the portal reads.
+ * - Stores a customer-safe summary the portal can quote.
  * How to use: call `record()` inside the same transaction as the change it logs.
  * How to extend: add new event names; never update or delete existing rows.
  */
@@ -39,10 +39,6 @@ class ActivityLogger
         'created_at',
         'updated_at',
         'deleted_at',
-        'created_by',
-        'updated_by',
-        'latest_event',
-        'latest_event_at',
     ];
 
     /**
@@ -58,7 +54,6 @@ class ActivityLogger
         ?array $oldValues = null,
         ?array $newValues = null,
         ?string $customerSummary = null,
-        bool $customerVisible = false,
         ?User $actor = null,
         ?CarbonInterface $occurredAt = null,
     ): ActivityLog {
@@ -77,11 +72,8 @@ class ActivityLogger
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'customer_summary' => $customerSummary,
-            'is_customer_visible' => $customerVisible,
             'occurred_at' => $occurredAt ?? now(),
         ]);
-
-        $this->stampLatestEvent($shipment, $container, $event);
 
         return $log;
     }
@@ -107,11 +99,9 @@ class ActivityLogger
                         + ['attachments' => $container->attachments->pluck('id')->sort()->values()->all()],
                 ])
                 ->all(),
-            'hs_codes' => $shipment->hsCodes()
-                ->orderBy('code')
-                ->pluck('code')
-                ->values()
-                ->all(),
+            'hs_codes' => $shipment instanceof ImportShipment
+                ? $shipment->hsCodes()->orderBy('code')->pluck('code')->values()->all()
+                : [],
         ];
     }
 
@@ -299,34 +289,10 @@ class ActivityLogger
             'old_values' => $oldValues,
             'new_values' => $newValues,
             'customer_summary' => null,
-            'is_customer_visible' => false,
             'occurred_at' => now(),
         ]);
 
-        if ($noteable instanceof ExportShipment || $noteable instanceof ImportShipment) {
-            $this->stampLatestEvent($noteable, null, $event);
-        } elseif ($noteable instanceof ExportContainer || $noteable instanceof ImportContainer) {
-            $this->stampLatestEvent($noteable->shipment, $noteable, $event);
-        }
-
         return $log;
-    }
-
-    /**
-     * Keeps the denormalized latest-event columns current. Every recorded
-     * event stamps the shipment; container-level events also stamp the
-     * container itself, so lists can show "what happened last" without
-     * touching the log table.
-     */
-    private function stampLatestEvent(
-        ExportShipment|ImportShipment $shipment,
-        ExportContainer|ImportContainer|null $container,
-        string $event,
-    ): void {
-        $stamp = ['latest_event' => $event, 'latest_event_at' => now()];
-
-        $shipment->forceFill($stamp)->save();
-        $container?->forceFill($stamp)->save();
     }
 
     /** @return array<string, mixed> */

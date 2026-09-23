@@ -160,6 +160,25 @@ class NotesPanelTest extends TestCase
         $this->assertNull($companyLog->export_container_id);
     }
 
+    public function test_customer_notes_are_marked_in_the_panel(): void
+    {
+        $shipment = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
+        $customer = User::query()->where('email', 'customer@example.com')->firstOrFail();
+
+        $shipment->notes()->create(['body' => 'Customer note', 'author_id' => $customer->getKey()]);
+        $shipment->notes()->create(['body' => 'Office note', 'author_id' => $this->admin->getKey()]);
+
+        $this->actingAs($this->admin);
+
+        // Only the customer-authored card carries the amber marker and tag.
+        $html = Livewire::test(NotesPanel::class, ['record' => $shipment])
+            ->assertSee('notes-panel-note--customer', false)
+            ->assertSee('notes-panel-customer-tag', false)
+            ->html();
+
+        $this->assertSame(1, substr_count($html, 'notes-panel-note--customer'));
+    }
+
     public function test_operator_cannot_reach_notes_on_an_unassigned_shipment(): void
     {
         $hidden = ExportShipment::query()

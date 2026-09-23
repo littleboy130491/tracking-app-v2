@@ -64,7 +64,6 @@ class DemoAttachmentSeeder extends Seeder
                 'export_container_id' => null,
                 'category' => $category->value,
                 'is_customer_visible' => $customerVisible,
-                'uploaded_by' => $container->created_by,
             ]);
         }
     }
@@ -90,7 +89,6 @@ class DemoAttachmentSeeder extends Seeder
                 'export_container_id' => $container->getKey(),
                 'category' => $category->value,
                 'is_customer_visible' => $customerVisible,
-                'uploaded_by' => $container->created_by,
             ]);
         }
     }

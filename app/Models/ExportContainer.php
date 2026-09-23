@@ -13,7 +13,6 @@
 
 namespace App\Models;
 
-use App\Enums\ContainerStatus;
 use App\Enums\StuffingStatus;
 use App\Models\Concerns\ActsAsContainer;
 use App\Models\Concerns\HasNotes;
@@ -31,7 +30,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'stuffing_status',
     'port_of_loading', 'gate_in_cy_at', 'vgm_value',
     'final_checked', 'final_checked_at',
-    'status', 'latest_event', 'latest_event_at', 'completed_at', 'created_by', 'updated_by',
 ])]
 class ExportContainer extends Model
 {
@@ -66,13 +64,10 @@ class ExportContainer extends Model
     {
         return [
             'stuffing_status' => StuffingStatus::class,
-            'status' => ContainerStatus::class,
             'vgm_value' => 'decimal:3',
             'gate_in_cy_at' => 'datetime',
             'final_checked' => 'boolean',
             'final_checked_at' => 'datetime',
-            'latest_event_at' => 'datetime',
-            'completed_at' => 'datetime',
         ];
     }
 

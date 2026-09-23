@@ -36,7 +36,6 @@ return new class extends Migration
             $table->json('old_values')->nullable();
             $table->json('new_values')->nullable();
             $table->text('customer_summary')->nullable();
-            $table->boolean('is_customer_visible')->default(false);
             $table->timestamp('occurred_at');
             $table->timestamps();
 

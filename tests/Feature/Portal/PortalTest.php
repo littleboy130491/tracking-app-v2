@@ -7,7 +7,9 @@
  * - Covers login routing, the no-registration OTP rule, the signed verify step
  *   (including posting through the rendered form), the attempt rate limiter,
  *   the Export/Import dashboard tabs, per-customer scoping, shipment/container
- *   search, latest journey columns and the import PIB confirmation.
+ *   search, Import/Export container summary + progress steps, row chips, the
+ *   sailing information card, the POD / Vessel arrival dashboard column and
+ *   the import PIB confirmation and revision notes.
  * - Also asserts the seeded many-to-many between companies and portal users.
  * How to use: `php artisan test --filter=PortalTest`.
  * How to extend: add a test per new portal screen or rule.
@@ -15,6 +17,8 @@
 
 namespace Tests\Feature\Portal;
 
+use App\Enums\BillingResponse;
+use App\Enums\ContainerStatus;
 use App\Enums\ExportMilestone;
 use App\Enums\ImportMilestone;
 use App\Enums\ShipmentStatus;
@@ -22,11 +26,15 @@ use App\Livewire\Customer\Dashboard;
 use App\Livewire\Customer\ExportShipmentDetail;
 use App\Livewire\Customer\ImportShipmentDetail;
 use App\Models\ActivityLog;
+use App\Models\Attachment;
 use App\Models\Company;
 use App\Models\ExportShipment;
+use App\Models\HsCode;
 use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ShipmentTimeline;
+use App\Services\ShipmentTimelineEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -297,7 +305,9 @@ class PortalTest extends TestCase
             ->set('number', 'EGHU6677881')
             ->assertSee('BL-EXP-0003')
             ->assertDontSee('BL-EXP-0001')
-            ->assertSee('Latest place')
+            ->assertSee('POD / Vessel arrival')
+            ->assertSee('Document received date')
+            ->assertDontSee('Latest place')
             ->assertSee('Final checking shipment details');
     }
 
@@ -347,7 +357,7 @@ class PortalTest extends TestCase
             ->assertSee('BL-IMP-0002');
     }
 
-    public function test_an_admin_may_open_any_customers_shipment_and_container(): void
+    public function test_an_admin_may_open_any_customers_shipment(): void
     {
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
         $export = ExportShipment::query()->where('bl_number', 'BL-EXP-0001')->firstOrFail();
@@ -358,21 +368,13 @@ class PortalTest extends TestCase
         $this->actingAs($admin)
             ->get(route('customer.export-shipments.show', ['exportShipment' => $export]))
             ->assertOk()
-            ->assertSee('BL-EXP-0001');
+            ->assertSee('BL-EXP-0001')
+            ->assertSee($exportContainer->container_number);
 
         $this->actingAs($admin)
             ->get(route('customer.import-shipments.show', ['importShipment' => $import]))
             ->assertOk()
-            ->assertSee('BL-IMP-0001');
-
-        $this->actingAs($admin)
-            ->get(route('customer.export-containers.show', ['exportContainer' => $exportContainer]))
-            ->assertOk()
-            ->assertSee($exportContainer->container_number);
-
-        $this->actingAs($admin)
-            ->get(route('customer.import-containers.show', ['importContainer' => $importContainer]))
-            ->assertOk()
+            ->assertSee('BL-IMP-0001')
             ->assertSee($importContainer->container_number);
     }
 
@@ -383,7 +385,6 @@ class PortalTest extends TestCase
 
         $active = $this->exportShipmentFor($company, 'BL-PORTAL-ACTIVE');
         $draft = $this->exportShipmentFor($company, 'BL-PORTAL-DRAFT', ShipmentStatus::Draft);
-        $draftContainer = $draft->containers()->firstOrFail();
 
         $this->assertNotSame($active->getKey(), $draft->getKey());
 
@@ -393,13 +394,9 @@ class PortalTest extends TestCase
             ->assertSee('BL-PORTAL-ACTIVE')
             ->assertDontSee('BL-PORTAL-DRAFT');
 
-        // Drafts stay closed by URL too, for the shipment and its containers.
+        // Drafts stay closed by URL too.
         $this->actingAs($user)
             ->get(route('customer.export-shipments.show', ['exportShipment' => $draft->getKey()]))
-            ->assertNotFound();
-
-        $this->actingAs($user)
-            ->get(route('customer.export-containers.show', ['exportContainer' => $draftContainer->getKey()]))
             ->assertNotFound();
 
         // Admins browse the portal as the customer sees it, so drafts stay hidden.
@@ -417,10 +414,6 @@ class PortalTest extends TestCase
             ->get(route('customer.dashboard'))
             ->assertOk()
             ->assertSee('BL-PORTAL-DRAFT');
-
-        $this->actingAs($user)
-            ->get(route('customer.export-containers.show', ['exportContainer' => $draftContainer->getKey()]))
-            ->assertOk();
     }
 
     public function test_a_customer_sees_only_their_own_shipments(): void
@@ -447,25 +440,568 @@ class PortalTest extends TestCase
             ->assertOk();
     }
 
-    public function test_a_container_page_is_scoped_to_the_customers_shipments(): void
+    public function test_shipment_pages_render_container_details_without_new_tab_links(): void
     {
-        $mine = $this->portalUser();
-        $theirs = $this->portalUser('other@example.com', 'Other Trading');
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+        $exportShipment = $this->exportShipmentFor($company, 'BL-EXP-ACCORDION');
+        $importShipment = $this->importShipmentFor($company, 'BL-IMP-ACCORDION');
+        $exportContainer = $exportShipment->containers()->firstOrFail();
+        $importContainer = $importShipment->containers()->firstOrFail();
 
-        $ownShipment = $this->exportShipmentFor($mine->companies()->first(), 'BL-MINE-2');
-        $otherShipment = $this->exportShipmentFor($theirs->companies()->first(), 'BL-THEIRS-2');
+        $this->actingAs($user);
 
-        $ownContainer = $ownShipment->containers()->firstOrFail();
-        $otherContainer = $otherShipment->containers()->firstOrFail();
-
-        $this->actingAs($mine)
-            ->get(route('customer.export-containers.show', ['exportContainer' => $ownContainer->getKey()]))
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $exportShipment->getKey()])
             ->assertOk()
-            ->assertSee($ownContainer->container_number);
+            ->assertSee('<details', false)
+            ->assertSee('<summary', false)
+            ->assertSee($exportContainer->container_number)
+            ->assertDontSee('target="_blank"', false);
 
-        $this->actingAs($mine)
-            ->get(route('customer.export-containers.show', ['exportContainer' => $otherContainer->getKey()]))
-            ->assertNotFound();
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $importShipment->getKey()])
+            ->assertOk()
+            ->assertSee('<details', false)
+            ->assertSee('<summary', false)
+            ->assertSee($importContainer->container_number)
+            ->assertDontSee('target="_blank"', false);
+    }
+
+    public function test_shipment_accordions_render_matching_admin_fields_and_visible_photos(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+        $exportShipment = $this->exportShipmentFor($company, 'BL-EXP-FIELD-PARITY');
+        $importShipment = $this->importShipmentFor($company, 'BL-IMP-FIELD-PARITY');
+        $exportContainer = $exportShipment->containers()->firstOrFail();
+        $importContainer = $importShipment->containers()->firstOrFail();
+        $hsCode = HsCode::query()->firstOrFail();
+
+        $importContainer->update([
+            'size' => '40',
+            'gross_weight' => '1020.500',
+            'cbm' => '8.250',
+            'description_of_goods' => 'Consumer electronics',
+            'packages' => '85 cartons',
+            'driver_name' => 'Rina Driver',
+            'license_number' => 'B 1234 ABC',
+            'gate_out_cy_at' => '2026-09-23 09:15:00',
+            'tracking_position' => 'Bekasi',
+            'tracking_position_url' => 'https://tracking.example.test/import',
+            'factory_loading_status' => 'finished',
+            'return_depot_name' => 'Jakarta Return Depot',
+            'empty_returned_at' => '2026-09-23 18:45:00',
+            'status' => 'completed',
+            'completed_at' => '2026-09-23 19:00:00',
+        ]);
+        $importContainer->hsCodes()->attach($hsCode);
+
+        $exportContainer->update([
+            'size' => '20',
+            'seal_number' => 'SEAL-EXP-22',
+            'driver_name' => 'Agus Driver',
+            'license_number' => 'B 7777 EF',
+            'driver_license_number' => 'SIM-987',
+            'tracking_position' => 'Tanjung Priok',
+            'tracking_position_url' => 'https://tracking.example.test/export',
+            'stuffing_status' => 'finished',
+            'port_of_loading' => 'Tanjung Priok',
+            'gate_in_cy_at' => '2026-09-23 08:30:00',
+            'vgm_value' => '1234.500',
+            'final_checked' => true,
+            'final_checked_at' => '2026-09-23 11:45:00',
+        ]);
+
+        // At the final milestone every container step is reached, so each
+        // step's fields render.
+        $importShipment->update(['current_milestone' => ImportMilestone::EmptyReturned]);
+        $exportShipment->update(['current_milestone' => ExportMilestone::FinalChecking]);
+
+        $createPhoto = fn (array $attributes): Attachment => Attachment::query()->create([
+            'disk' => 'public',
+            'directory' => 'portal-test',
+            'visibility' => 'public',
+            'name' => 'portal-test-photo.jpg',
+            'path' => 'portal-test/photo.jpg',
+            'type' => 'image/jpeg',
+            'ext' => 'jpg',
+        ] + $attributes);
+
+        $createPhoto([
+            'alt' => 'Visible import door photo',
+            'import_container_id' => $importContainer->getKey(),
+            'category' => 'door_photo',
+            'is_customer_visible' => true,
+        ]);
+        $createPhoto([
+            'alt' => 'Internal import floor photo',
+            'import_container_id' => $importContainer->getKey(),
+            'category' => 'floor_photo',
+            'is_customer_visible' => false,
+        ]);
+        $createPhoto([
+            'alt' => 'Visible export seal photo',
+            'export_container_id' => $exportContainer->getKey(),
+            'category' => 'seal_photo',
+            'is_customer_visible' => true,
+        ]);
+
+        $this->actingAs($user);
+
+        $importPage = Livewire::test(ImportShipmentDetail::class, ['importShipment' => $importShipment->getKey()]);
+        foreach ([
+            'Container Size', '40 ft', 'Gross weight (kg)', '1020.500', 'CBM / measurement', '8.250',
+            'Description of goods', 'Consumer electronics', 'Packages', '85 cartons', 'HS codes', $hsCode->code,
+            'Driver name', 'Rina Driver', 'No. License', 'B 1234 ABC', 'Gate out CY', 'Tracking position driver',
+            'Bekasi', 'Tracking position (url)', 'Open tracking link',
+            'Loading in factory status', 'Finished', 'Return depot name', 'Jakarta Return Depot', 'Return date',
+            'Completed at', 'Photo Door', 'Visible import door photo',
+            'Container summary', 'Container progress', 'Latest: Empty container returned', 'Completed',
+            'Gross weight 1020.500 kg',
+            'Container shipping schedule', 'Gate out from inbound terminal', 'Container on the way factory',
+            'Container arrived in factory', 'Empty container returned',
+        ] as $fieldOrValue) {
+            $importPage->assertSee($fieldOrValue);
+        }
+        $importPage->assertDontSee('Internal import floor photo')->assertDontSee('VGM (kg)');
+
+        $exportPage = Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $exportShipment->getKey()]);
+        foreach ([
+            'Container Size', '20 ft', 'Seal number', 'SEAL-EXP-22', 'Driver name', 'Agus Driver',
+            'Vehicle / Truck Number', 'B 7777 EF', 'Driver License Number', 'SIM-987', 'Tracking position',
+            'Tanjung Priok', 'Tracking position (url)', 'Open tracking link', 'Stuffing status at Factory',
+            'Finished', 'Port of loading', 'Gate in CY at', 'VGM (kg)', '1234.500',
+            'Final checked', 'Yes', 'Final checked at', 'Photo Seal', 'Visible export seal photo',
+            'Container summary', 'Container progress', 'Latest: Final checking shipment details', 'Completed',
+            'Seal SEAL-EXP-22', 'VGM 1234.500 kg',
+            'Pick up empty container at depot', 'Container on the way to factory',
+            'Checking PEB & NPE', 'Gate in CY', 'Final checking shipment details',
+        ] as $fieldOrValue) {
+            $exportPage->assertSee($fieldOrValue);
+        }
+        $exportPage->assertDontSee('Gross weight (kg)');
+    }
+
+    public function test_container_steps_mark_the_current_milestone_and_hide_future_fields(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-STEPS');
+        $container = $shipment->containers()->firstOrFail();
+
+        $container->update([
+            'driver_name' => 'Agus Driver',
+            'tracking_position' => 'Tanjung Priok',
+            'stuffing_status' => 'on_process',
+            'vgm_value' => '1234.500',
+        ]);
+        $shipment->update(['current_milestone' => ExportMilestone::StuffingPebNpe]);
+
+        $progress = app(ShipmentTimeline::class)
+            ->forContainers($shipment->refresh(), [$container->refresh()])[$container->getKey()];
+
+        $this->assertSame([
+            'Pick up empty container at depot',
+            'Container on the way to factory',
+            'Stuffing at factory / PEB & NPE',
+            'Checking PEB & NPE',
+            'Gate in CY',
+            'Final checking shipment details',
+        ], array_map(fn (ShipmentTimelineEntry $step) => $step->title, $progress->steps));
+
+        $this->assertFalse($progress->steps[0]->isPending);
+        $this->assertFalse($progress->steps[1]->isPending);
+        $this->assertTrue($progress->steps[2]->isLatest);
+        $this->assertSame('Stuffing at factory / PEB & NPE', $progress->current()->title);
+        $this->assertSame('Container on the way to factory', $progress->steps[1]->title);
+        $this->assertSame('Agus Driver', collect($progress->steps[0]->fields)->firstWhere('label', 'Driver name')['value']);
+        $this->assertSame([], $progress->steps[3]->fields);
+        $this->assertSame([], $progress->steps[4]->fields);
+        $this->assertSame([], $progress->steps[5]->fields);
+        $this->assertSame(3, $progress->reachedCount());
+        $this->assertSame(6, $progress->totalSteps());
+        $this->assertSame(ContainerStatus::InProgress, $progress->status);
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Latest: Stuffing at factory / PEB & NPE')
+            ->assertSee('aria-current="step"', false)
+            ->assertDontSee('1234.500');
+    }
+
+    public function test_container_steps_follow_the_spjm_branch(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        $spjm = $this->importShipmentFor($company, 'BL-IMP-SPJM');
+        // Saving the response and a post-branch milestone in one save would
+        // clamp the milestone back to Response billing, so the response goes
+        // first and the milestone second.
+        $spjm->update(['billing_response' => BillingResponse::Spjm]);
+        $spjm->update(['current_milestone' => ImportMilestone::GateOutCy]);
+
+        $plain = $this->importShipmentFor($company, 'BL-IMP-PLAIN');
+        $plain->update(['current_milestone' => ImportMilestone::GateOutCy]);
+
+        $timeline = app(ShipmentTimeline::class);
+        $spjmContainer = $spjm->containers()->firstOrFail();
+        $plainContainer = $plain->containers()->firstOrFail();
+
+        $spjmTitles = array_map(
+            fn (ShipmentTimelineEntry $step) => $step->title,
+            $timeline->forContainers($spjm->refresh(), [$spjmContainer])[$spjmContainer->getKey()]->steps,
+        );
+        $plainTitles = array_map(
+            fn (ShipmentTimelineEntry $step) => $step->title,
+            $timeline->forContainers($plain->refresh(), [$plainContainer])[$plainContainer->getKey()]->steps,
+        );
+
+        $this->assertSame('Container inspection', $spjmTitles[0]);
+        $this->assertSame('Container shipping schedule', $plainTitles[0]);
+        $this->assertNotContains('Container inspection', $plainTitles);
+    }
+
+    public function test_a_shipment_at_its_final_milestone_completes_the_container_journey(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-DONE');
+        $shipment->update(['current_milestone' => ExportMilestone::FinalChecking]);
+        $container = $shipment->containers()->firstOrFail();
+
+        $progress = app(ShipmentTimeline::class)
+            ->forContainers($shipment->refresh(), [$container])[$container->getKey()];
+
+        $this->assertNull($progress->current());
+        $this->assertSame(6, $progress->reachedCount());
+        $this->assertSame(6, $progress->totalSteps());
+        $this->assertTrue($progress->isComplete());
+        $this->assertSame(ContainerStatus::Completed, $progress->status);
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Latest: Final checking shipment details');
+    }
+
+    public function test_a_shipment_at_its_first_milestone_shows_containers_as_not_started(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-NEW');
+        $container = $shipment->containers()->firstOrFail();
+
+        $progress = app(ShipmentTimeline::class)
+            ->forContainers($shipment->refresh(), [$container])[$container->getKey()];
+
+        $this->assertSame(0, $progress->reachedCount());
+        $this->assertSame(ContainerStatus::Pending, $progress->status);
+        $this->assertTrue(collect($progress->steps)->every(
+            fn (ShipmentTimelineEntry $step) => $step->isPending,
+        ));
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Not started')
+            ->assertSee('journey starts at Pick up empty container at depot.');
+    }
+
+    public function test_only_web_urls_become_tracking_links(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+        $good = $this->exportShipmentFor($company, 'BL-EXP-TRACK');
+        $bad = $this->exportShipmentFor($company, 'BL-EXP-TRACK-XSS');
+
+        $good->update(['current_milestone' => ExportMilestone::OnTheWayToFactory]);
+        $bad->update(['current_milestone' => ExportMilestone::OnTheWayToFactory]);
+
+        $goodContainer = $good->containers()->firstOrFail();
+        $badContainer = $bad->containers()->firstOrFail();
+        $goodContainer->update(['tracking_position_url' => 'https://tracking.example.test/x']);
+        $badContainer->update(['tracking_position_url' => 'javascript:alert(1)']);
+
+        $timeline = app(ShipmentTimeline::class);
+        $goodProgress = $timeline->forContainers($good->refresh(), [$goodContainer->refresh()])[$goodContainer->getKey()];
+        $badProgress = $timeline->forContainers($bad->refresh(), [$badContainer->refresh()])[$badContainer->getKey()];
+
+        $this->assertSame('https://tracking.example.test/x', $goodProgress->trackingUrl);
+        $goodField = collect($goodProgress->steps[1]->fields)->firstWhere('label', 'Tracking position (url)');
+        $this->assertSame('Open tracking link', $goodField['value']);
+        $this->assertSame('https://tracking.example.test/x', $goodField['href']);
+
+        $this->assertNull($badProgress->trackingUrl);
+        $badField = collect($badProgress->steps[1]->fields)->firstWhere('label', 'Tracking position (url)');
+        $this->assertSame('javascript:alert(1)', $badField['value']);
+        $this->assertArrayNotHasKey('href', $badField);
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $good->getKey()])
+            ->assertOk()
+            ->assertSee('Track live')
+            ->assertSee('https://tracking.example.test/x', false);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $bad->getKey()])
+            ->assertOk()
+            ->assertDontSee('Track live')
+            ->assertDontSee('href="javascript:alert(1)"', false);
+    }
+
+    public function test_a_cancelled_container_stays_cancelled_whatever_the_milestone(): void
+    {
+        // Only import containers carry an editable status, so a cancellation
+        // can only come from an import container.
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-CXL');
+        $shipment->update(['current_milestone' => ImportMilestone::GateOutCy]);
+        $container = $shipment->containers()->firstOrFail();
+        $container->update(['status' => ContainerStatus::Cancelled]);
+
+        $progress = app(ShipmentTimeline::class)
+            ->forContainers($shipment->refresh(), [$container->refresh()])[$container->getKey()];
+
+        $this->assertSame(ContainerStatus::Cancelled, $progress->status);
+
+        $this->actingAs($user);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Cancelled')
+            ->assertSee('This container was cancelled.');
+    }
+
+    public function test_container_row_chips_appear_only_once_their_milestone_unlocks(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        $export = $this->exportShipmentFor($company, 'BL-EXP-CHIPS');
+        $export->containers()->firstOrFail()->update([
+            'seal_number' => 'SEAL-CHIPS',
+            'vgm_value' => '1234.500',
+        ]);
+
+        $import = $this->importShipmentFor($company, 'BL-IMP-CHIPS');
+        $import->containers()->firstOrFail()->update(['gross_weight' => '1020.500']);
+
+        $this->actingAs($user);
+
+        // At the first milestone none of these fields are unlocked yet, so a
+        // stray stored value must not leak onto the row.
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $export->getKey()])
+            ->assertDontSee('Seal SEAL-CHIPS')
+            ->assertDontSee('VGM 1234.500 kg');
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $import->getKey()])
+            ->assertDontSee('Gross weight 1020.500 kg');
+
+        $export->update(['current_milestone' => ExportMilestone::GateInCy]);
+        $import->update(['current_milestone' => ImportMilestone::GateOutCy]);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $export->getKey()])
+            ->assertSee('Seal SEAL-CHIPS')
+            ->assertSee('VGM 1234.500 kg');
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $import->getKey()])
+            ->assertSee('Gross weight 1020.500 kg');
+    }
+
+    public function test_container_summary_tiles_follow_the_admin_milestone_lock(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-TILES');
+        $shipment->containers()->firstOrFail()->update([
+            'size' => '40',
+            'gross_weight' => '1020.500',
+            'description_of_goods' => 'Consumer electronics',
+        ]);
+
+        $this->actingAs($user);
+
+        // The cargo fields are still locked in the admin before Response
+        // billing, so filled values must not leak into the summary tiles.
+        // (The B/L summary always shows a "Description of goods" label for
+        // imports, so only the container's value is asserted here.)
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertDontSee('Container Size')
+            ->assertDontSee('Gross weight (kg)')
+            ->assertDontSee('Consumer electronics')
+            ->assertSee('No container details published yet.');
+
+        $shipment->update(['current_milestone' => ImportMilestone::ResponseBilling]);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Container Size')
+            ->assertSee('40 ft')
+            ->assertSee('Gross weight (kg)')
+            ->assertSee('1020.500')
+            ->assertSee('Description of goods')
+            ->assertSee('Consumer electronics');
+    }
+
+    public function test_container_rows_show_the_latest_step_with_its_logged_time(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-LATEST');
+
+        // Advancing writes a milestone_changed log per step, which is where
+        // the row's "Latest: ..." timestamp comes from.
+        $shipment->advanceMilestone();
+        $shipment->advanceMilestone();
+        $shipment->refresh();
+
+        $logged = $shipment->activityLogs()
+            ->where('event', 'milestone_changed')
+            ->orderByDesc('occurred_at')
+            ->firstOrFail();
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Latest: Pick up empty container at depot')
+            ->assertSee($logged->occurred_at->format('d M Y H:i'));
+    }
+
+    public function test_the_sailing_card_shows_reached_values_with_admin_labels(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-SAIL');
+        $shipment->update([
+            'current_milestone' => ExportMilestone::PickupEmptyContainer,
+            'shipping_line' => 'Test Line',
+            'vessel_name' => 'MV Test',
+            'voyage_number' => 'V-001',
+            'port_of_loading' => 'Tanjung Priok',
+            'port_of_discharge' => 'Singapore',
+            // Locked until Gate in CY / Final checking: set anyway to prove
+            // the card only surfaces reached milestones.
+            'departure_date' => '2026-09-25',
+            'eta_at' => '2026-10-01 08:00:00',
+            'actual_arrival_at' => '2026-10-02 09:00:00',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Sailing information')
+            ->assertSee('Port of loading')
+            ->assertSee('Tanjung Priok')
+            ->assertSee('Port of discharge')
+            ->assertSee('Singapore')
+            ->assertSee('Vessel name')
+            ->assertSee('MV Test')
+            ->assertSee('Voyage number')
+            ->assertSee('V-001')
+            ->assertSee('Shipping line')
+            ->assertSee('Test Line')
+            ->assertDontSee('Departure date')
+            ->assertDontSee('Arrival time / ETA')
+            ->assertDontSee('Actual arrival');
+    }
+
+    public function test_the_sailing_card_prefers_actual_arrival_over_eta(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-ARRIVED');
+        $shipment->update([
+            'current_milestone' => ExportMilestone::FinalChecking,
+            'port_of_discharge' => 'Singapore',
+            'eta_at' => '2026-10-01 08:00:00',
+            'actual_arrival_at' => '2026-10-02 09:00:00',
+        ]);
+
+        $this->actingAs($user);
+
+        // The card's route side shows "Actual arrival · ..."; the ETA label
+        // with the middot separator only renders when no actual exists. The
+        // Tracking progress list still shows the ETA field on its own row.
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('Sailing information')
+            ->assertSee('Actual arrival · 02 Oct 2026 09:00')
+            ->assertDontSee('Arrival time / ETA ·');
+    }
+
+    public function test_the_sailing_card_is_absent_until_a_sailing_value_is_reached(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-NOSAIL');
+        // Even a stored ETA must not surface: its milestone is not reached.
+        $shipment->update(['eta_at' => '2026-10-01 08:00:00']);
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertDontSee('Sailing information');
+    }
+
+    public function test_the_shipment_summary_shows_status_completion_and_document_date(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+        $done = $this->exportShipmentFor($company, 'BL-EXP-SUMMARY', ShipmentStatus::Completed);
+        $done->update([
+            'document_received_date' => '2026-09-01',
+            'completed_at' => '2026-09-20 10:00:00',
+        ]);
+        $running = $this->exportShipmentFor($company, 'BL-EXP-RUNNING');
+
+        $this->actingAs($user);
+
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $done->getKey()])
+            ->assertOk()
+            ->assertSee('Status')
+            ->assertSee('Completed')
+            ->assertSee('Document received date')
+            ->assertSee('01 Sep 2026')
+            ->assertSee('Completed at')
+            ->assertSee('20 Sep 2026');
+
+        // No completed_at -> no tile; the running pill reads In Progress.
+        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $running->getKey()])
+            ->assertOk()
+            ->assertSee('In Progress')
+            ->assertDontSee('Completed at');
+    }
+
+    public function test_the_dashboard_lists_pod_and_vessel_arrival(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        $arrived = $this->exportShipmentFor($company, 'BL-EXP-POD-ACTUAL');
+        $arrived->update([
+            'current_milestone' => ExportMilestone::FinalChecking,
+            'port_of_discharge' => 'Singapore',
+            'eta_at' => '2026-10-01 08:00:00',
+            'actual_arrival_at' => '2026-10-02 09:00:00',
+        ]);
+
+        $sailing = $this->exportShipmentFor($company, 'BL-EXP-POD-ETA');
+        $sailing->update([
+            'current_milestone' => ExportMilestone::GateInCy,
+            'port_of_discharge' => 'Hong Kong',
+            'eta_at' => '2026-10-05 14:30:00',
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(Dashboard::class)
+            ->assertSee('POD / Vessel arrival')
+            ->assertSee('Singapore')
+            // Actual arrival wins over the ETA on the same row.
+            ->assertSee('02 Oct 2026 09:00')
+            ->assertDontSee('ETA 01 Oct 2026 08:00')
+            ->assertSee('Hong Kong')
+            ->assertSee('ETA 05 Oct 2026 14:30')
+            ->assertSee('Document received date')
+            ->assertDontSee('Latest place');
     }
 
     public function test_a_customer_can_confirm_an_import_draft_pib(): void
@@ -482,11 +1018,11 @@ class PortalTest extends TestCase
         $shipment->refresh();
 
         $this->assertTrue($shipment->confirmation_checklist);
+        $this->assertSame($user->getKey(), $shipment->confirmed_by);
 
         $this->assertDatabaseHas('activity_logs', [
             'import_shipment_id' => $shipment->getKey(),
             'event' => 'draft_pib_confirmed',
-            'is_customer_visible' => true,
         ]);
     }
 
@@ -513,7 +1049,7 @@ class PortalTest extends TestCase
         Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
             ->assertOk()
             ->assertSee('Draft PIB confirmation')
-            ->assertSee('no action is needed')
+            ->assertSee('This draft PIB is confirmed')
             ->assertDontSee('Confirm draft PIB')
             ->assertDontSee('Request revision');
     }
@@ -548,6 +1084,50 @@ class PortalTest extends TestCase
             'import_shipment_id' => $shipment->getKey(),
             'event' => 'draft_pib_revision_requested',
         ]);
+    }
+
+    public function test_a_revision_request_is_stored_as_a_note_the_customer_can_see(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-REVNOTE');
+
+        $this->actingAs($user);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->set('revisionNotes', 'Please change the HS code.')
+            ->call('requestRevision')
+            ->assertOk()
+            ->assertSee('Please change the HS code.');
+
+        $this->assertDatabaseHas('notes', [
+            'noteable_type' => ImportShipment::class,
+            'noteable_id' => $shipment->getKey(),
+            'author_id' => $user->getKey(),
+            'body' => 'Please change the HS code.',
+        ]);
+
+        $this->assertDatabaseHas('activity_logs', [
+            'import_shipment_id' => $shipment->getKey(),
+            'event' => 'draft_pib_revision_requested',
+        ]);
+    }
+
+    public function test_notes_from_other_authors_stay_internal(): void
+    {
+        $user = $this->portalUser();
+        $colleague = $this->portalUser('colleague@example.com', 'Colleague Co');
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-INTERNAL');
+
+        $shipment->notes()->create([
+            'body' => 'Internal office remark',
+            'author_id' => $colleague->getKey(),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertDontSee('Internal office remark');
     }
 
     public function test_confirming_an_already_confirmed_draft_changes_nothing(): void

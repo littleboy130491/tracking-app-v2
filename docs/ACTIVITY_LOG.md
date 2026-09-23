@@ -923,3 +923,149 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoActivityLogSeeder.php | Day-apart milestone trails for main demo shipments |
 | 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Latest-journey assertion follows milestone steps |
 | 2026-09-22 19:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Milestone log count assertion seed-independent |
+| 2026-09-23 11:53 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Import badge in the portal Type column is green |
+| 2026-09-23 11:59 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started plan for portal tracking step field display |
+| 2026-09-23 11:59 | Codex (GPT-6) | UPDATE | app/Services/ShipmentTimelineEntry.php | Added optional labeled values to timeline entries |
+| 2026-09-23 11:59 | Codex (GPT-6) | UPDATE | plans/_progress.md | Recorded typed timeline field-value payload completion |
+| 2026-09-23 11:59 | Codex (GPT-6) | UPDATE | app/Services/ShipmentTimeline.php | Mapped shipment fields to their Import and Export milestones |
+| 2026-09-23 11:59 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed milestone field mapping and began portal rendering |
+| 2026-09-23 12:01 | Codex (GPT-6) | UPDATE | resources/views/components/shipment-timeline.blade.php | Rendered milestone field values in the portal progress list |
+| 2026-09-23 12:01 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed portal timeline rendering and began UAT update |
+| 2026-09-23 12:02 | Codex (GPT-6) | UPDATE | docs/UAT.md | Added portal checks for milestone field values |
+| 2026-09-23 12:03 | Codex (GPT-6) | UPDATE | app/Services/ShipmentTimelineEntry.php | Documented the timeline field shape on its constructor |
+| 2026-09-23 12:03 | Codex (GPT-6) | UPDATE | docs/UAT.md | Uses a portal user assigned to the sample shipments |
+| 2026-09-23 12:03 | Codex (GPT-6) | UPDATE | app/Services/ShipmentTimeline.php | Aligned imports and formatted the milestone mapper signature |
+| 2026-09-23 12:03 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed portal tracking step fields plan and checks |
+| 2026-09-23 12:06 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Revision request now saved as customer-authored shipment note |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started responsive right-side timeline fields plan |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | resources/views/components/shipment-timeline.blade.php | Moved milestone fields into a responsive right-hand column |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | resources/views/components/shipment-timeline.blade.php | Kept field labels beside values within the right column |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed right-side timeline layout and began UAT update |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | docs/UAT.md | Added desktop right-column and mobile stacking checks |
+| 2026-09-23 12:07 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed layout UAT changes and began final review |
+| 2026-09-23 12:09 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed responsive timeline fields plan and review |
+| 2026-09-23 12:09 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Pass customer's own notes to the portal view |
+| 2026-09-23 12:09 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Show "Your messages" list in draft PIB card |
+| 2026-09-23 12:09 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Test note storage, portal visibility, internal-only boundary |
+| 2026-09-23 12:09 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added revision-notes UAT checklist |
+| 2026-09-23 12:11 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started tracking progress border and font refinement |
+| 2026-09-23 12:11 | Codex (GPT-6) | UPDATE | resources/views/components/shipment-timeline.blade.php | Removed divider and matched value text size to milestones |
+| 2026-09-23 12:11 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed divider and font adjustment; began UAT revision |
+| 2026-09-23 12:11 | Codex (GPT-6) | UPDATE | docs/UAT.md | Added no-divider and font-scale desktop expectations |
+| 2026-09-23 12:11 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed UAT revision and began final review |
+| 2026-09-23 12:12 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed border and typography refinement |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started portal container accordion implementation plan |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Eager-loaded visible photos and HS codes for import containers |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked import container relation loading complete |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | app/Livewire/Customer/ExportShipmentDetail.php | Eager-loaded customer-visible photos for export containers |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed the import/export container eager-loading step |
+| 2026-09-23 12:20 | Codex (GPT-6) | UPDATE | plans/_progress.md | Recorded passing portal and PHP syntax checks |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started shared portal container accordion step |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Replaced new-tab container links with expandable sections |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked the shared accordion structure complete |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Removed obsolete import container page route props |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked import accordion include props removed |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Removed obsolete export container page route props |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked both obsolete container route props removed |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | docs/UAT.md | Added portal accordion expand/collapse checks |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | tests/Feature/Portal/PortalTest.php | Test import/export inline containers have no detail-page links |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Added the accordion feature-test checkpoint |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked accordion UAT and obsolete route-prop work complete |
+| 2026-09-23 12:35 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed accordion interaction step and recorded regression checks |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Started Import/Export container admin-field mapping |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Added type-specific admin fields and visible photo galleries |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Marked Import/Export field and photo mapping complete |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | tests/Feature/Portal/PortalTest.php | Cover type-specific admin fields and customer-visible container photos |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | docs/UAT.md | Added full Import/Export admin-field parity checks for accordions |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Replaced nested inline PHP directives with safe Blade blocks |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed admin-field mapping and recorded passing portal tests |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Set next checkpoint to final portal verification |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed the accordion field-parity UAT checklist |
+| 2026-09-23 12:50 | Codex (GPT-6) | UPDATE | plans/_progress.md | Added Import/Export container field-parity regression coverage |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Customer-note flag under Confirmation checklist |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Delegated handler jumps to a named form tab |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/notes-panel.blade.php | Customer-authored notes get marker class + tag |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | resources/css/filament/admin/theme.css | Amber styles for customer notes and the flag |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Test customer-note flag on import edit page |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/NotesPanelTest.php | Test customer marking in notes panel |
+| 2026-09-23 12:23 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added flag/color checks to revision-notes section |
+| 2026-09-23 12:30 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Removed "no action is needed" from confirmed message |
+| 2026-09-23 12:30 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Updated confirmed-message assertion |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | CREATE | database/migrations/2026_09_23_053832_add_confirmed_by_to_import_shipments_table.php | Add confirmed_by user FK to import_shipments |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | UPDATE | app/Models/ImportShipment.php | Saving hook stamps confirmed_by + confirmedBy relation |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Show "Confirmed by {name}" under the toggle |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Assert portal confirm stamps the customer |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/AdminPanelSmokeTest.php | Assert admin confirm stamps the admin, uncheck clears |
+| 2026-09-23 12:41 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added Confirmed-by checklist item |
+| 2026-09-23 13:03 | Codex (GPT-6) | UPDATE | plans/_progress.md | Completed container accordion plan after full verification |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Enums/ExportMilestone.php | Added isContainerStep() flag for container milestones |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Enums/ImportMilestone.php | Added isContainerStep() flag for container milestones |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | CREATE | app/Services/ContainerProgress.php | Per-container summary + steps view model |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimelineEntry.php | Field shape gains optional href and wide keys |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimeline.php | Added forContainers() with step fields and derived status |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ExportShipmentDetail.php | Pass containerProgress to the detail view |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Pass containerProgress to the detail view |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Forward containerProgress into the containers partial |
+| 2026-09-23 13:33 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Forward containerProgress into the containers partial |
+| 2026-09-23 13:36 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Rebuilt rows into summary card + progress stepper |
+| 2026-09-23 13:36 | Devin (SWE-2 Max) | CREATE | resources/views/livewire/customer/partials/container-steps.blade.php | Vertical done/current/upcoming container stepper |
+| 2026-09-23 13:40 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Cover container progress steps, statuses and tracking links |
+| 2026-09-23 13:40 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Rewrote portal container checklist for summary + steps |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | app/Livewire/Customer/ExportContainerDetail.php | Removed unused standalone container page component |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | app/Livewire/Customer/ImportContainerDetail.php | Removed unused standalone container page component |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | resources/views/livewire/customer/export-container-detail.blade.php | Removed unused standalone container page view |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | resources/views/livewire/customer/import-container-detail.blade.php | Removed unused standalone container page view |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | app/Enums/ShipmentMilestone.php | Removed unused pre-split milestone enum |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | app/Enums/ShipmentType.php | Removed unused shipment type enum |
+| 2026-09-23 17:10 | Devin (SWE-2 Max) | DELETE | resources/views/welcome.blade.php | Removed unused default welcome view |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | routes/web.php | Removed standalone portal container routes and imports |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Dropped removed columns and relations from CSV exports |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ActivityLogs/Schemas/ActivityLogForm.php | Removed customer-visibility toggle |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ActivityLogs/Tables/ActivityLogsTable.php | Removed customer-visibility icon column |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Removed status column and filter |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Removed creator/updater/hsCodes eager-loads and columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/HsCodes/Tables/HsCodesTable.php | Removed export-shipments count column |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Removed creator/updater eager-loads and columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/Dashboard.php | POD/Vessel arrival + latest event via forShipment helpers |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ExportShipmentDetail.php | Passes sailing information to the detail view |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Passes sailing data; dropped visibility flag writes |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/ActivityLog.php | Dropped is_customer_visible attribute |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/Concerns/ActsAsShipment.php | Removed latest-event stamping and visibility flag |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/ExportContainer.php | Dropped status/latest-event/completed/audit attributes |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/ExportShipment.php | Dropped hsCodes relation, latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/HsCode.php | Removed exportShipments relation |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/ImportContainer.php | Dropped latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Models/ImportShipment.php | Dropped latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Services/ActivityLogger.php | Removed visibility flag, latest-event stamping, ignored attrs |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Services/ContainerProgress.php | Added latestReached() and gated chips; removed next() |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimeline.php | Removed container-page methods; added sailing helpers and chips |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimelineEntry.php | Removed location/detail/isActual/sourceEvent properties |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040006_create_export_shipments_table.php | Dropped latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Dropped latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040007_create_hs_codes_table.php | Dropped export_shipment_hs_code pivot |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040008_create_export_containers_table.php | Dropped status/latest-event/completed/audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040008_create_import_containers_table.php | Dropped latest-event and audit columns |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/migrations/2026_09_15_040017_create_activity_logs_table.php | Dropped is_customer_visible column |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Removed locked ETA and container status/completed values |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoExportConditionSeeder.php | Trimmed draft/early/cancelled rows to unlocked fields |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoImportConditionSeeder.php | Trimmed draft/early/cancelled rows to unlocked fields |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoContainerConditionSeeder.php | Dropped export container status values |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoAttachmentSeeder.php | Dropped uploaded_by from container created_by |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoActivityLogSeeder.php | Milestone trails for every non-draft shipment; removed fake history |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/components/shipment-timeline.blade.php | Removed location/detail branches |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/filament/bill-of-ladings/milestone-stepper.blade.php | Fixed stale ShipmentMilestone docblock reference |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | POD/Vessel arrival column; renamed document-date header |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Included sailing card after the summary |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Included sailing card after the summary |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Repurposed into milestone-gated sailing card |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Latest-step row text, gated chips, no last-update line |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Status pill, completed-at tile, renamed document label |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Removed container-route tests; added chips/sailing/summary/dashboard coverage |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/ShipmentActivityLoggingTest.php | Dropped latest-event and visibility assertions |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | Dropped removed-relation export assertions |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | docs/ERD.md | Dropped removed columns and export HS-code pivot |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | README.md | Portal containers inline; removed container routes |
+| 2026-09-23 17:49 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Rewrote portal section; fixed stale container/journey items |
+| 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | database/seeders/DemoActivityLogSeeder.php | Trails skip step 1; seeded dates aligned to step times |
+| 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | app/Services/ShipmentTimeline.php | Summary tiles gated on unlocking milestone |
+| 2026-09-23 18:18 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Added locked-summary-tiles test |
