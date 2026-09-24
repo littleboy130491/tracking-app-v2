@@ -1198,3 +1198,7 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 14:45 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | B/L column nowrap, B/L-only search labels |
 | 2026-09-24 14:45 | Muse Spark | UPDATE | app/Livewire/Customer/Dashboard.php | Portal search matches B/L number only |
 | 2026-09-24 14:45 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | B/L-only search test, imajiner matrix cover |
+| 2026-09-24 15:00 | Muse Spark | UPDATE | config/mail.php | mailgun mailer registered |
+| 2026-09-24 15:00 | Muse Spark | UPDATE | config/otpz.php | OTPZ_DISABLE_LIMITS flag (non-production only) |
+| 2026-09-24 15:00 | Muse Spark | UPDATE | app/Http/Controllers/Customer/LoginController.php | Mail failures show friendly OTP message, logged |
+| 2026-09-24 15:00 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Mail failure regression test |

@@ -46,11 +46,19 @@ return [
 
     'expose_in_dev' => env('OTPZ_EXPOSE_IN_DEV', false),
 
-    'limits' => [
-        ['limit' => 1, 'minutes' => 1],
-        ['limit' => 3, 'minutes' => 5],
-        ['limit' => 5, 'minutes' => 30],
-    ],
+    /*
+    | OTPZ_DISABLE_LIMITS=true turns the code-request throttle off entirely.
+    | Local testing only: the flag is ignored in production so the throttle
+    | can never be disabled there by accident.
+    */
+
+    'limits' => filter_var(env('OTPZ_DISABLE_LIMITS', false), FILTER_VALIDATE_BOOL) && env('APP_ENV') !== 'production'
+        ? []
+        : [
+            ['limit' => 1, 'minutes' => 1],
+            ['limit' => 3, 'minutes' => 5],
+            ['limit' => 5, 'minutes' => 30],
+        ],
 
     /*
     |--------------------------------------------------------------------------

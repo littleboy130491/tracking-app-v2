@@ -27,9 +27,11 @@ use BenBjurstrom\Otpz\Exceptions\OtpThrottleException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 
 class LoginController
 {
@@ -52,6 +54,18 @@ class LoginController
         } catch (OtpThrottleException) {
             return back()
                 ->withErrors(['email' => 'Too many codes requested. Please wait a moment and try again.'])
+                ->onlyInput('email');
+        } catch (TransportExceptionInterface $exception) {
+            // A mail provider outage (e.g. Mailgun 401) must never 500 the
+            // login screen; the customer gets a friendly message while the
+            // real error goes to the log for the admin.
+            Log::error('OTP email failed to send.', [
+                'email' => $data['email'],
+                'error' => $exception->getMessage(),
+            ]);
+
+            return back()
+                ->withErrors(['email' => 'There is a problem in the OTP system, please contact admin.'])
                 ->onlyInput('email');
         }
 

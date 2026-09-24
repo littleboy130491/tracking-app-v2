@@ -35,8 +35,10 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\ShipmentTimeline;
 use App\Services\ShipmentTimelineEntry;
+use BenBjurstrom\Otpz\Actions\SendOtp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Tests\TestCase;
 
 class PortalTest extends TestCase
@@ -173,6 +175,27 @@ class PortalTest extends TestCase
         // Reaching the code check proves the signature and session lock passed.
         $this->assertStringContainsString('invalid', (string) session('errors')->first('code'));
         $this->assertGuest();
+    }
+
+    public function test_a_mail_provider_failure_shows_a_friendly_otp_system_message(): void
+    {
+        $failure = new class('Unable to send an email: Forbidden (code 401).') extends \RuntimeException implements TransportExceptionInterface
+        {
+            public function getDebug(): string
+            {
+                return '';
+            }
+
+            public function appendDebug(string $debug): void {}
+        };
+
+        $this->mock(SendOtp::class, function ($mock) use ($failure): void {
+            $mock->shouldReceive('handle')->once()->andThrow($failure);
+        });
+
+        $this->post(route('customer.login.send'), ['email' => 'customer@example.com'])
+            ->assertRedirect('/')
+            ->assertSessionHasErrors(['email' => 'There is a problem in the OTP system, please contact admin.']);
     }
 
     public function test_repeated_wrong_codes_are_rate_limited(): void
