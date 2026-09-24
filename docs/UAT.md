@@ -11,6 +11,15 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Import loading fields above the repeater (2026-09-24)
+
+- [ ] Bill of Ladings → Import → open a B/L → **Containers** tab. Expected: **Terminal name**, **Date of loading** and **Loading destination** sit above the container list, right after Description of goods / Packages / HS codes — not below it.
+
+## 0. Dashboard Bill of Ladings widget (2026-09-24)
+
+- [ ] Open `/admin` (the dashboard). Expected: the **Filament docs / GitHub widget is gone**; under the welcome card sits a **Bill of Ladings** section with two cards — **Export** and **Import**.
+- [ ] Click each card. Expected: it opens the matching list (Bill of Ladings → Export / Import).
+
 ## 0. Export sailing dates on the Containers tab (2026-09-24)
 
 - [ ] Bill of Ladings → Export → open a B/L → **Containers** tab. Expected: below the AJU number sit **Departure date** and **Arrival time / ETA**, disabled with "Locked until Step 7: Gate in CY" until that step is reached.
@@ -93,7 +102,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Portal home → open Import B/L `BL-IMP-0002` at desktop width → **Tracking progress**. Expected: milestone title and date are on the left, fields are on the right without a vertical divider, and values match the milestone text size while labels stay smaller.
 - [ ] Resize the same page to a narrow/mobile width. Expected: fields stack below their milestone without horizontal overflow.
-- [ ] Open Export B/L `BL-EXP-0003` at desktop width → **Tracking progress**. Expected: booking, pickup/stuffing, AJU, sailing and arrival fields appear to the right of their matching milestones with no vertical divider.
+- [ ] Open Export B/L `BL-EXP-0003` at desktop width → **Tracking progress**. Expected: booking, pickup/stuffing, AJU and sailing fields appear to the right of their matching milestones with no vertical divider.
 - [ ] Open Import B/L `BL-IMP-0001` → **Tracking progress**. Expected: **Response billing** fields appear to the right; future steps stay greyed without field values.
 - [ ] Compare a B/L’s **Tracking progress** with its **Containers** section. Expected: container-specific values stay outside the shipment timeline.
 
@@ -188,7 +197,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - Open `BL-IMP-0001` (SPJM, sits at **Waiting process bahandle**, so Step 11 is already reached).
 
 - [ ] Edit `BL-IMP-0001` → **Shipping Details**. Expected: only **Response billing** remains of the Step 11 group — **Description of goods**, **Packages** and **HS codes** have moved to the Containers tab.
-- [ ] **Containers** tab. Expected: **Description of goods**, **Packages** and **HS codes** above the containers repeater (unlocked at `Step 11: Response billing`); **Terminal name**, **Date of loading** and **Loading destination** appear **below** the repeater (locked until `Step 17: Container shipping schedule`).
+- [ ] **Containers** tab. Expected: **Description of goods**, **Packages** and **HS codes** above the containers repeater (unlocked at `Step 11: Response billing`); **Terminal name**, **Date of loading** and **Loading destination** sit **above** the repeater too, under the cargo fields (locked until `Step 17: Container shipping schedule`).
 - [ ] Expand container `CMAU7654321`. Expected: **Container Size**, **Description of goods**, **Packages** and **HS codes** are shown and unlocked (Step 11), next to the container number.
 - [ ] Check the cargo fields on the container. Expected: they start from the shipment values (`Electronic components` / `85 cartons` / `8542.31`) and can be changed per container without affecting the shipment.
 - [ ] Change a container's **Description of goods** and Save. Expected: the container keeps the overridden value; the shipment's own Description of goods is unchanged.
@@ -374,7 +383,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Bill of Ladings → Import → New works the same way (Customer only on create).
 - [ ] Open `BL-IMP-0001` → Edit. Expected: the stepper shows the SPJM branch (21 steps) in three rows — row 1: the 10 steps up to **Payment billing**; row 2: **Response billing** followed by the **five SPJM-only steps in red** (Upload all document, Waiting process bahandle, Payment bahandle, Container inspection, Waiting change status SPJM to SPPB); row 3: the remaining 5 steps. The header shows a **New import B/L** action that opens the create form. Shipping Details unlocks in this order: **B/L number** at `Step 2: Checking document`; **Shipping line** at `Step 3: Draft PIB`; **Vessel name** at `Step 4: Checking draft PIB to importir`; **Confirmation checklist** toggle at `Step 5: Waiting confirmation from customer`; **AJU number**, **Voyage** and **Status billing** at `Step 6: Final sending PIB to custom (issuing billing)`; **Port of loading** at `Step 7: Process payment THC`; **Departure date** at `Step 8: Waiting release DO`; **Port of discharge** at `Step 9: DO release`; **Arrival time / ETA** at `Step 10: Payment billing`; **Response billing** at `Step 11: Response billing` (Description of goods, Packages and HS codes moved to the Containers tab).
-- [ ] Containers tab. Expected: **Description of goods**, **Packages** and **HS codes** above the containers repeater (unlocked at `Step 11: Response billing`); **Terminal name**, **Date of loading** and **Loading destination** appear **below** the repeater — locked until `Step 17: Container shipping schedule` on the SPJM shipment (Step 12 on a non-SPJM shipment).
+- [ ] Containers tab. Expected: **Description of goods**, **Packages** and **HS codes** above the containers repeater (unlocked at `Step 11: Response billing`); **Terminal name**, **Date of loading** and **Loading destination** sit **above** the repeater too, under the cargo fields — locked until `Step 17: Container shipping schedule` on the SPJM shipment (Step 12 on a non-SPJM shipment).
 - [ ] Set **Response billing** = SPPB on a shipment at Step 11. Expected: the stepper drops the red SPJM block (row 2 becomes Response billing + the normal steps, 16 steps total) and the next step is **Container shipping schedule**.
 - [ ] `BL-IMP-0002` (completed, SPPB) shows the same shortened sequence.
 - [ ] SPJM demo data: `BL-IMP-0003` (completed SPJM, SIN) shows the whole red block done and the shipment completed; `BL-IMP-0004` (BJM) sits at **Response billing** with the red block upcoming and its containers carrying only the number (no size yet).

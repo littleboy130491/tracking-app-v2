@@ -1137,3 +1137,20 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 12:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated: Actual arrival removed (export) |
 | 2026-09-24 12:52 | human | UPDATE | EXPORT.md | Rewritten to the step-by-step field format |
 | 2026-09-24 12:52 | human | UPDATE | IMPORT.md | Rewritten to the step-by-step field format |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/migrations/2026_09_15_040006_create_export_shipments_table.php | Dropped actual_arrival_at from export_shipments |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/ExportShipment.php | Fillable and cast for actual_arrival_at removed |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Export Actual arrival field removed |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | Export CSV list without actual_arrival_at |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoExportShipmentSeeder.php | actual_arrival_at removed from the completed export |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | Export shipment column list without actual_arrival_at |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | EXPORT.md | Actual arrival line dropped from Step 8 |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Actual-arrival coverage moved to import shipments |
+| 2026-09-24 13:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Export checklists without the Actual arrival field |
+| 2026-09-24 13:25 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Filament/Widgets/BillOfLadingsWidget.php | Dashboard shortcuts into the Export and Import lists |
+| 2026-09-24 13:25 | Devin (DeepSeek V4.1 Flash Max) | CREATE | resources/views/filament/widgets/bill-of-ladings.blade.php | Widget cards for the two B/L lists |
+| 2026-09-24 13:25 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Providers/Filament/AdminPanelProvider.php | Filament info widget removed from the dashboard |
+| 2026-09-24 13:25 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Dashboard widget checklist |
+| 2026-09-24 13:27 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Loading fields moved above the containers repeater |
+| 2026-09-24 13:27 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | containersTab docblock updated |
+| 2026-09-24 13:27 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Import loading-fields checklist updated |
+| 2026-09-24 13:34 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Unused footer slot dropped from containersTab |

@@ -456,9 +456,6 @@ class ShipmentTimeline
                     ['label' => 'Departure date', 'value' => $shipment->departure_date],
                     ['label' => 'Arrival time / ETA', 'value' => $shipment->eta_at],
                 ],
-                ExportMilestone::FinalChecking => [
-                    ['label' => 'Actual arrival', 'value' => $shipment->actual_arrival_at],
-                ],
                 default => [],
             });
         }

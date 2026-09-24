@@ -175,9 +175,6 @@ class ImportShipmentForm
                                         ShipmentFields::hsCodesField(),
                                     ], $enum, ImportMilestone::ResponseBilling),
                                 ]),
-                            ],
-                            fn (array $data, ImportShipment $shipment): array => self::seedContainerCargo($data, $shipment),
-                            [
                                 Grid::make(2)->schema([
                                     // Loading data unlocks with the delivery
                                     // schedule, which is the first step after the
@@ -195,6 +192,7 @@ class ImportShipmentForm
                                     ], $enum, ImportMilestone::ContainerShippingSchedule),
                                 ]),
                             ],
+                            fn (array $data, ImportShipment $shipment): array => self::seedContainerCargo($data, $shipment),
                         ),
                         ShipmentFields::statusTab($enum, ImportMilestone::EmptyReturned),
                         ShipmentFields::notesTab(),

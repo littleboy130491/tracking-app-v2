@@ -200,15 +200,14 @@ class ShipmentFields
 
     /**
      * The containers tab: optional shipment-level header components (e.g. the
-     * export pickup/stuffing fields) above a repeater whose items stay open to
-     * distinguish individual container records, and optional footer components
-     * below it (e.g. the import loading data). The repeater carries the
-     * `bl-containers` class so the panel theme can tint each item header.
+     * export pickup/stuffing fields or the import cargo/loading fields) above
+     * a repeater whose items stay open to distinguish individual container
+     * records. The repeater carries the `bl-containers` class so the panel
+     * theme can tint each item header.
      *
      * @param  list<Field>  $itemFields
      * @param  list<Component>  $headerComponents
      * @param  (Closure(array<string, mixed>, ImportShipment): array<string, mixed>)|null  $seedItemState
-     * @param  list<Component>  $footerComponents
      */
     public static function containersTab(
         string $milestoneEnum,
@@ -217,7 +216,6 @@ class ShipmentFields
         BackedEnum $unlockedAt,
         array $headerComponents = [],
         ?Closure $seedItemState = null,
-        array $footerComponents = [],
     ): Tab {
         $repeater = Repeater::make('containers')
             ->relationship()
@@ -292,7 +290,6 @@ class ShipmentFields
             ->schema([
                 ...$headerComponents,
                 self::gate($repeater->schema($itemFields), $milestoneEnum, $unlockedAt),
-                ...$footerComponents,
             ]);
     }
 

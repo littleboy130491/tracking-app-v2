@@ -42,7 +42,6 @@ return new class extends Migration
             $table->text('stuffing_destination')->nullable();
             $table->date('departure_date')->nullable();
             $table->timestamp('eta_at')->nullable();
-            $table->timestamp('actual_arrival_at')->nullable();
 
             $table->string('status', 30)->default('draft');
             $table->string('current_milestone', 40)->default('document_received');

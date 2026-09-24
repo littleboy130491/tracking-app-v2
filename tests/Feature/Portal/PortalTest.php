@@ -870,11 +870,10 @@ class PortalTest extends TestCase
             'voyage_number' => 'V-001',
             'port_of_loading' => 'Tanjung Priok',
             'port_of_discharge' => 'Singapore',
-            // Locked until Gate in CY / Final checking: set anyway to prove
-            // the card only surfaces reached milestones.
+            // Locked until Gate in CY: set anyway to prove the card only
+            // surfaces reached milestones.
             'departure_date' => '2026-09-25',
             'eta_at' => '2026-10-01 08:00:00',
-            'actual_arrival_at' => '2026-10-02 09:00:00',
         ]);
 
         $this->actingAs($user);
@@ -892,16 +891,15 @@ class PortalTest extends TestCase
             ->assertSee('Shipping line')
             ->assertSee('Test Line')
             ->assertDontSee('Departure date')
-            ->assertDontSee('Arrival time / ETA')
-            ->assertDontSee('Actual arrival');
+            ->assertDontSee('Arrival time / ETA');
     }
 
     public function test_the_sailing_card_prefers_actual_arrival_over_eta(): void
     {
         $user = $this->portalUser();
-        $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-ARRIVED');
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-ARRIVED');
         $shipment->update([
-            'current_milestone' => ExportMilestone::FinalChecking,
+            'current_milestone' => ImportMilestone::EmptyReturned,
             'port_of_discharge' => 'Singapore',
             'eta_at' => '2026-10-01 08:00:00',
             'actual_arrival_at' => '2026-10-02 09:00:00',
@@ -912,7 +910,7 @@ class PortalTest extends TestCase
         // The card's route side shows "Actual arrival · ..."; the ETA label
         // with the middot separator only renders when no actual exists. The
         // Tracking progress list still shows the ETA field on its own row.
-        Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
             ->assertOk()
             ->assertSee('Actual arrival · 02 Oct 2026 09:00')
             ->assertDontSee('Arrival time / ETA ·');
@@ -966,9 +964,9 @@ class PortalTest extends TestCase
         $user = $this->portalUser();
         $company = $user->companies()->firstOrFail();
 
-        $arrived = $this->exportShipmentFor($company, 'BL-EXP-POD-ACTUAL');
+        $arrived = $this->importShipmentFor($company, 'BL-IMP-POD-ACTUAL');
         $arrived->update([
-            'current_milestone' => ExportMilestone::FinalChecking,
+            'current_milestone' => ImportMilestone::EmptyReturned,
             'port_of_discharge' => 'Singapore',
             'eta_at' => '2026-10-01 08:00:00',
             'actual_arrival_at' => '2026-10-02 09:00:00',

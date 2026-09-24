@@ -62,7 +62,6 @@ VGM (kg)
 
 Step 8: Final checking shipment details
 B/L fields:
-Actual arrival (date time)
 Status (option: Draft | In Progress | Completed | Cancelled),
 Completed at (date time)
 Container fields:

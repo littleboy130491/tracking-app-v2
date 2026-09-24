@@ -93,7 +93,6 @@ class DemoExportShipmentSeeder extends Seeder
             'cy_closing_at' => now()->subDays(23),
             'departure_date' => now()->subDays(20)->toDateString(),
             'eta_at' => now()->subDays(6),
-            'actual_arrival_at' => now()->subDays(6),
             'pickup_depot_name' => 'Depot Makassar Utama',
             'stuffing_date' => now()->subDays(24),
             'stuffing_destination' => 'PT Smelter Makassar, Bantaeng',

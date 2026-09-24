@@ -90,7 +90,7 @@ class TableExportColumns
                 'aju_number', 'do_number', 'shipping_line', 'vessel_name', 'voyage_number',
                 'port_of_loading', 'port_of_discharge', 'depot_closing_at', 'cy_closing_at',
                 'pickup_depot_name', 'stuffing_date', 'stuffing_destination',
-                'departure_date', 'eta_at', 'actual_arrival_at',
+                'departure_date', 'eta_at',
                 'status', 'current_milestone', 'completed_at',
                 'created_at', 'updated_at', 'deleted_at',
             ]),

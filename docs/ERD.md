@@ -136,7 +136,6 @@ erDiagram
         text stuffing_destination
         date departure_date
         timestamp eta_at
-        timestamp actual_arrival_at
         string status "draft | in_progress | completed | cancelled"
         string current_milestone "ExportMilestone position"
         timestamp completed_at
