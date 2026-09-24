@@ -46,19 +46,15 @@
                             </p>
                             @if ($entry->isLatest)
                                 <span class="rounded bg-accent-100 px-1.5 py-0.5 text-xs font-medium text-accent-600">Latest</span>
-                            @elseif ($entry->isPending)
-                                <span class="text-xs font-medium text-slate-400">Upcoming</span>
                             @endif
                             <span class="sr-only">{{ $entry->isPending ? 'Upcoming step' : ($entry->isLatest ? 'Current step' : 'Completed step') }}</span>
                         </div>
                         @if (! $entry->isPending && $entry->occurredAt)
                             <p class="mt-0.5 text-xs text-slate-500">{{ $entry->occurredAt }}</p>
-                        @elseif ($entry->isPending)
-                            <p class="mt-0.5 text-xs text-slate-400">Pending</p>
                         @endif
                         </div>
                         @if ($entry->fields !== [])
-                            <dl class="grid min-w-0 content-start gap-2 border-t border-slate-200 pt-2 md:border-t-0 md:border-l md:pl-4 md:pt-0">
+                            <dl class="grid min-w-0 content-start gap-2 border-t border-slate-200 pt-2 md:border-t-0 md:pt-0">
                                 @foreach ($entry->fields as $field)
                                     <div class="min-w-0">
                                         <dt class="text-xs font-medium text-slate-500">{{ $field['label'] }}</dt>

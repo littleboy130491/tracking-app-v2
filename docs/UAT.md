@@ -11,10 +11,46 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Export sailing dates on the Containers tab (2026-09-24)
+
+- [ ] Bill of Ladings → Export → open a B/L → **Containers** tab. Expected: below the AJU number sit **Departure date** and **Arrival time / ETA**, disabled with "Locked until Step 7: Gate in CY" until that step is reached.
+- [ ] **Shipping Details** tab. Expected: no Departure date / ETA / **Actual arrival** there — only the Step 2 booking fields.
+
+## 0. B/L number in Shipment overview (2026-09-24)
+
+- [ ] Open any B/L detail in the portal. Expected: **B/L number** is the first fact in **Shipment overview** (the page title above still shows it too).
+
+## 0. Sailing + Containers card (2026-09-24)
+
+- [ ] Open an Export B/L detail with sailing values. Expected: the sailing strip (route with both ports and their dates) sits at the top of the containers card, separated by a thin divider; no "Sailing information" header.
+- [ ] Check **Shipment overview**. Expected: **Vessel name**, **Voyage number** and **Shipping line** appear there once their milestone is reached — before that they are absent.
+- [ ] Open an Import B/L detail. Expected: same — one card below Tracking progress holding the sailing strip and the containers table.
+- [ ] Check a shipment whose sailing milestone is not reached. Expected: the card shows only the containers table — no empty route strip and no dangling divider line.
+- [ ] Look at the route strip. Expected: a small truck icon above a full-width dashed line; the line's ends carry a hollow dot (loading) and a filled dot (discharge); each port's label, name and date sit under its own end (discharge right-aligned on desktop, both stacked on mobile).
+
+## 0. Tracking progress status labels (2026-09-24)
+
+- [ ] Open a B/L detail with future steps → **Tracking progress**. Expected: future milestones are greyed with no "Upcoming" badge and no "Pending" line; the current milestone still shows its "Latest" badge.
+- [ ] Expand a container. Expected: the **Cargo tracking** steps show no "Upcoming" badge either; only the current step keeps its "Latest" badge.
+
+## 0. Progress fields without divider (2026-09-24)
+
+- [ ] Open any B/L detail in the portal → **Tracking progress** at desktop width. Expected: the milestone fields on the right show no vertical divider line.
+- [ ] Expand a container row → **Cargo tracking**. Expected: the step fields have no vertical divider either — both lists match.
+- [ ] Resize to a narrow width. Expected: fields still stack under their milestone with a top divider, nothing overflows.
+
+## 0. Containers table on B/L detail (2026-09-24)
+
+- [ ] Open an Export and an Import B/L detail in the portal. Expected: the containers table starts directly at the top of the card — no "Containers" title, no count badge, no section header.
+- [ ] Look at the header row. Expected: it sits flush under the rounded top (no gap or double border) and has no divider line before the blank chevron column — the last header cell reads as padding.
+- [ ] Look at a container row with progress. Expected: the status column shows just the event name (e.g. "Pick up empty container at depot") — no "Latest:" prefix — and the subline under the container number shows the size (plus a VGM/Gross weight chip once unlocked) but no "Seal …" chip; the seal number stays in its own **Seal No.** column.
+- [ ] Expand a container row. Expected: no "Container summary" heading and no fact tiles; the Track live button (container in progress with a tracking URL) and the photo strip stay above **Cargo tracking**; a container with neither shows only **Cargo tracking**.
+- [ ] Resize to a narrow width. Expected: the table still scrolls horizontally and nothing overflows.
+
 ## 0. B/L detail consistency (2026-09-23)
 
-- [ ] Open Export B/L detail. Expected: Shipment overview, Sailing, Tracking progress, Containers all share same card shell + header padding.
-- [ ] Check Tracking progress vs Container progress. Expected: same vertical line, numbered nodes, Current card style, Upcoming grey.
+- [ ] Open Export B/L detail. Expected: Shipment overview and Tracking progress share same card shell + header padding; the sailing strip and the Containers table share one card with no section header.
+- [ ] Check Tracking progress vs Cargo tracking. Expected: same vertical line, numbered nodes, current step highlighted, upcoming steps greyed.
 - [ ] Check pills. Expected: Completed green, In Progress amber, Cancelled red, same in overview + containers.
 - [ ] Open Import B/L. Expected: Draft PIB block uses same card style; Your messages still works.
 - [ ] Resize to mobile. Expected: no overflow, grids stack.
@@ -26,9 +62,9 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - `php artisan migrate:fresh --seed` (demo data).
 - Portal: log in as `customer@example.com` / `password` (Dewi, assigned to NUS, SIN and BJM).
 
-- [ ] Open Export B/L `BL-EXP-0005`. Expected: a **Sailing information** card under the summary shows Jakarta (IDJKT) → Singapore (SGSIN) with vessel MV Ocean Voyager, voyage V-330 and line Maersk — no arrival line yet; in **Containers**, `MSKU9002004` carries a `Seal SL-0105` chip and reads "Latest: Container on the way to factory" with the logged time above the mini progress bar.
+- [ ] Open Export B/L `BL-EXP-0005`. Expected: the sailing strip at the top of the containers card shows Jakarta (IDJKT) → Singapore (SGSIN) — no arrival line yet — and **Shipment overview** lists vessel MV Ocean Voyager, voyage V-330 and line Maersk; in **Containers**, `MSKU9002004` reads "Container on the way to factory" with the logged time above the mini progress bar, and its seal `SL-0105` sits in the **Seal No.** column.
 - [ ] Expand `MSKU9002004` on `BL-EXP-0005`. Expected: done steps are green checks, the current step is a highlighted brand-blue card with a "Current" badge, upcoming steps are greyed with no field values, and the step fields show Driver name, Vehicle / Truck Number and Tracking position.
-- [ ] Open Import B/L `BL-IMP-0003` and expand `MSKU7788991`. Expected: the row reads "Latest: Empty container returned" with a full green bar and a `Gross weight 14250.000 kg` chip; the sailing card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Actual arrival** (no ETA line); the "Open tracking link" field opens a new tab.
+- [ ] Open Import B/L `BL-IMP-0003` and expand `MSKU7788991`. Expected: the row reads "Empty container returned" with a full green bar and a `Gross weight 14250.000 kg` chip; the sailing card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Actual arrival** (no ETA line); the "Open tracking link" field opens a new tab.
 - [ ] Open Import B/L `BL-IMP-0001`. Expected: the summary shows an **In Progress** status pill, **Document received date** and no "Completed at"; each container row reads "Not started" (the note inside says the journey starts at Container inspection) except `CMAU7654324`, which reads "Cancelled" with the red note; `CMAU7654321` shows its photos while `CMAU7654323`'s internal-only photos stay hidden. Keep a container expanded, send a **Request revision** message and resize to mobile width — the container stays open and nothing overflows.
 - [ ] Portal home (`/portal`). Expected: the table has **POD / Vessel arrival** (`BL-IMP-0001` shows Surabaya (IDSUB) with "ETA 28 Sep 2026 10:34") and **Document received date** columns, no "Latest place" column, and `—` for rows with nothing reached.
 
@@ -58,7 +94,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Portal home → open Import B/L `BL-IMP-0002` at desktop width → **Tracking progress**. Expected: milestone title and date are on the left, fields are on the right without a vertical divider, and values match the milestone text size while labels stay smaller.
 - [ ] Resize the same page to a narrow/mobile width. Expected: fields stack below their milestone without horizontal overflow.
 - [ ] Open Export B/L `BL-EXP-0003` at desktop width → **Tracking progress**. Expected: booking, pickup/stuffing, AJU, sailing and arrival fields appear to the right of their matching milestones with no vertical divider.
-- [ ] Open Import B/L `BL-IMP-0001` → **Tracking progress**. Expected: **Response billing** fields appear to the right; future steps remain **Pending** without field values.
+- [ ] Open Import B/L `BL-IMP-0001` → **Tracking progress**. Expected: **Response billing** fields appear to the right; future steps stay greyed without field values.
 - [ ] Compare a B/L’s **Tracking progress** with its **Containers** section. Expected: container-specific values stay outside the shipment timeline.
 
 ## 0. Combined Bill of Ladings list in customer portal (2026-09-22)
@@ -74,7 +110,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Set filters that yield no rows (e.g. search a nonsense string). Expected: "0 shipments found" and the empty-state message.
 - [ ] Click **Clear filters** after setting several filters. Expected: all inputs reset to All/blank and the full combined list returns.
 - [ ] Click a B/L number on an Import row. Expected: it opens the import detail page. Same for an Export row: opens the export detail page.
-- [ ] On a detail page, check **Tracking progress**. Expected: the process steps in order — reached steps with datetimes, the current step marked latest, upcoming steps greyed as Pending.
+- [ ] On a detail page, check **Tracking progress**. Expected: the process steps in order — reached steps with datetimes, the current step marked latest, upcoming steps greyed with no status label.
 - [ ] With 16+ visible shipments, use the pagination links. Expected: page 2 shows the next rows; the count reflects the total across both types.
 
 ## 0. SPJM milestone cannot skip the branch (2026-09-22)
@@ -328,7 +364,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Bill of Ladings → Export → New. Expected: only the **Customer** section (Customer, Document received date/by); no stepper, no tabs.
 - [ ] Open `BL-EXP-0001` → Edit. Expected: Customer section, then the stepper (8 steps), then tabs **Shipping Details | Containers | Status | Notes | Activity log**. The header shows a **New export B/L** action (plus Regress / Advance / Save); clicking it opens the create form.
 - [ ] **Document received by** (same on the import form): open the dropdown. Expected: only **staff accounts** are offered (admin / super admin / operator) — customer accounts never appear.
-- [ ] Shipping Details order: **B/L number, DO number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode** (no AJU number here — it lives on the Containers tab, unlocked at Step 5; **Goods description is gone from the export form**). **Departure date, ETA and Actual arrival are gone**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
+- [ ] Shipping Details order: **B/L number, DO number, Shipping line, Vessel name, Voyage, Port of loading, Port of discharge, Closing time at depot, Closing time at CY, Shipment mode** (no AJU number here — it lives on the Containers tab, unlocked at Step 5; **Goods description is gone from the export form**). **Departure date and Arrival time / ETA live on the Containers tab, after AJU number (locked until `Step 7: Gate in CY`); Actual arrival is removed from the export form**; **Status and Completed at now live in the Status tab** (locked until `Step 8: Final checking shipment details`; reaching the last step also completes the shipment automatically). **Pick up depot, Stuffing date (date + time) and Stuffing destination live on the Containers tab, above the repeater.** Package count, Package unit, Terminal name, Loading date and Loading destination are **gone**; **HS codes are import-only**.
 - [ ] **Status** tab (between Containers and Notes). Expected: **Status** dropdown (draft / in progress / completed / cancelled) + **Completed at**, both editable once Step 8 is reached; Save persists them and the Activity log records the change.
 - [ ] At Step 1 the fields show `Locked until Step 2: Checking booking order`. Click **Advance** → they become editable.
 - [ ] Containers tab → expand `MSKU1234567`. Expected: identity + driver + photos unlocked at "Pick up empty container"; **Tracking position** unlocks at "Container on the way to factory"; **Stuffing status at Factory** (On Process / Finished, defaulting to On Process) at "Stuffing at factory / PEB & NPE"; **Port of loading** + **Gate in CY** at "Checking PEB & NPE"; **VGM (kg)** at "Gate in CY"; **Final checked** (toggle) at "Final checking".
@@ -355,9 +391,9 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 **Portal**
 
 - [ ] Log in as `customer@example.com` → portal home has a **Type** dropdown (Export / Import) next to the company/status filters; Export lists NUS/BJM exports; selecting Import lists the SIN import.
-- [ ] Open `BL-EXP-0001` → Export shipment page: summary, sailing information, tracking progress, and containers that expand in place.
+- [ ] Open `BL-EXP-0001` → Export shipment page: summary, tracking progress, and the sailing + containers card whose rows expand in place.
 - [ ] Open `BL-IMP-0001` → Import shipment page: facts, **Draft PIB confirmation** with Confirm / Request revision, journey, containers.
-- [ ] On `BL-EXP-0001` and `BL-IMP-0001`, expand a container row (`MSKU1234567`, `CMAU7654321`). Expected: summary tiles, customer-visible photos and the per-step journey with the admin field labels (export: driver/tracking/stuffing/VGM/final check; import: gate-out/driver/weights/return).
+- [ ] On `BL-EXP-0001` and `BL-IMP-0001`, expand a container row (`MSKU1234567`, `CMAU7654321`). Expected: customer-visible photos and the per-step journey with the admin field labels (export: driver/tracking/stuffing/VGM/final check; import: gate-out/driver/return).
 - [ ] `sari@java-retail.test` opens `BL-IMP-0002` (already confirmed): the Confirm and Request revision actions are **not** offered.
 - [ ] A **draft** shipment (Status = Draft) is **not** listed in the portal, and opening its shipment URL returns **404**. Advance it past **Document received** → it becomes In progress and appears with its containers.
 
@@ -527,8 +563,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Sailing information**
 
-- [ ] Portal → open `BL-IMP-0003`. Expected: a **Sailing information** card shows Shanghai (CNSHA) → Surabaya (IDSUB) with the departure date and **Actual arrival**, plus vessel, voyage and shipping line; no ETA line once the actual arrival exists.
-- [ ] Portal → open `BL-IMP-0001` (still sailing). Expected: the card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA** instead of an actual arrival; on `BL-EXP-0005` (earlier milestone) the card shows the route and vessel but no arrival line — values whose milestone is not reached never appear.
+- [ ] Portal → open `BL-IMP-0003`. Expected: the sailing strip (no header) shows Shanghai (CNSHA) → Surabaya (IDSUB) with the departure date and **Actual arrival**; no ETA line once the actual arrival exists. Vessel, voyage and shipping line sit in **Shipment overview**.
+- [ ] Portal → open `BL-IMP-0001` (still sailing). Expected: the card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA** instead of an actual arrival; on `BL-EXP-0005` (earlier milestone) the strip shows the route but no arrival line — values whose milestone is not reached never appear.
 - [ ] Expand `MSKU7788991` on `BL-IMP-0003`. Expected: the container's step-by-step journey reads inspection → gate out → factory → empty return with its logged times.
 - [ ] Open `BL-IMP-0001` (containers not started). Expected: each container row reads "Not started" and the journey inside begins with "Container inspection" marked upcoming.
 

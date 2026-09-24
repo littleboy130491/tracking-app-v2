@@ -22,7 +22,7 @@ readonly class ContainerProgress
     /**
      * @param  list<array{label: string, value: string, href?: string, wide?: bool}>  $summary
      * @param  list<ShipmentTimelineEntry>  $steps  isLatest = current step, isPending = upcoming, else done
-     * @param  list<string>  $chips  seal/weight row chips, only for unlocked milestones
+     * @param  list<string>  $chips  weight row chips, only for unlocked milestones
      */
     public function __construct(
         public array $summary,

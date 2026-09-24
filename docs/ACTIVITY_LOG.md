@@ -1085,3 +1085,55 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-23 19:45 | Muse Spark | UPDATE | resources/views/components/shipment-timeline.blade.php | Removed latest box highlight |
 | 2026-09-23 19:45 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Removed latest box highlight |
 | 2026-09-23 20:00 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Plain table columns, blue links, dividers |
+| 2026-09-24 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Removed Containers section header; table sits at card top |
+| 2026-09-24 09:36 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist for headerless containers table |
+| 2026-09-24 09:38 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Container row shows event name without "Latest:" prefix |
+| 2026-09-24 09:38 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Assertions updated for prefix-free container row text |
+| 2026-09-24 09:38 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated for prefix-free container row text |
+| 2026-09-24 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Dropped seal chip from container row chips |
+| 2026-09-24 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ContainerProgress.php | Chips docblock no longer mentions seal |
+| 2026-09-24 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Removed seal-chip assertions, added chip-absence guard |
+| 2026-09-24 09:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated: seal only in its own column |
+| 2026-09-24 09:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Removed Container summary heading and tiles; card keeps Track live + photos |
+| 2026-09-24 09:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Tile assertions trimmed; summary lock test now service-level |
+| 2026-09-24 09:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated for summary removal |
+| 2026-09-24 09:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/components/shipment-timeline.blade.php | Dropped left border from milestone fields column |
+| 2026-09-24 09:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist for divider-free tracking progress |
+| 2026-09-24 09:44 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/components/shipment-timeline.blade.php | Removed Upcoming badge and Pending label from milestone steps |
+| 2026-09-24 09:44 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist for status-label-free tracking progress |
+| 2026-09-24 09:46 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Removed Sailing information header; card starts with route row |
+| 2026-09-24 09:46 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Sailing card moved above the containers section |
+| 2026-09-24 09:46 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Sailing card moved above the containers section |
+| 2026-09-24 09:46 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Sailing header assertions replaced with content anchors |
+| 2026-09-24 09:46 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated for sailing card placement |
+| 2026-09-24 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Dropped left border and padding from step fields column |
+| 2026-09-24 09:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Divider checklist covers container progress too |
+| 2026-09-24 09:49 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Removed divider before blank chevron header cell |
+| 2026-09-24 09:49 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Header-row checklist covers chevron column |
+| 2026-09-24 09:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Route row gets gradient line with arrow marker |
+| 2026-09-24 09:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist item for the sailing route track |
+| 2026-09-24 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Route simplified: dashed line, no port cards, right-aligned destination |
+| 2026-09-24 09:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Route checklist matches dashed-line design |
+| 2026-09-24 10:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Route strip rebuilt to reference: truck icon, dashed line, end dots, facts below |
+| 2026-09-24 10:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Route strip checklist rewritten for reference layout |
+| 2026-09-24 10:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Card shell removed; renders as the card's top strip |
+| 2026-09-24 10:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Card shell removed; table renders inside shared card |
+| 2026-09-24 10:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Sailing strip and containers merged into one card |
+| 2026-09-24 10:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Sailing strip and containers merged into one card |
+| 2026-09-24 10:53 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated for the merged sailing + containers card |
+| 2026-09-24 10:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/container-steps.blade.php | Heading renamed to Cargo tracking; Upcoming badge removed |
+| 2026-09-24 10:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Assertions updated for the Cargo tracking heading |
+| 2026-09-24 10:54 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist renamed to Cargo tracking; Upcoming item updated |
+| 2026-09-24 11:00 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | Vessel name, voyage and shipping line added to the overview grid |
+| 2026-09-24 11:00 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Vessel facts removed; strip now holds only the route |
+| 2026-09-24 11:00 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Sailing values passed into the shipment summary |
+| 2026-09-24 11:00 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Sailing values passed into the shipment summary |
+| 2026-09-24 11:00 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklists updated: vessel facts live in Shipment overview |
+| 2026-09-24 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-summary.blade.php | B/L number added as the first overview fact |
+| 2026-09-24 11:01 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist for B/L number in Shipment overview |
+| 2026-09-24 12:48 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Departure date and ETA moved to the Containers tab after AJU number |
+| 2026-09-24 12:48 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated for the moved export sailing dates |
+| 2026-09-24 12:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Actual arrival removed from the export form |
+| 2026-09-24 12:50 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Checklist updated: Actual arrival removed (export) |
+| 2026-09-24 12:52 | human | UPDATE | EXPORT.md | Rewritten to the step-by-step field format |
+| 2026-09-24 12:52 | human | UPDATE | IMPORT.md | Rewritten to the step-by-step field format |

@@ -8,7 +8,7 @@
      How to extend: step data is App\Services\ContainerProgress, built by
        ShipmentTimeline::forContainers(). --}}
 <section class="rounded-lg bg-white p-4 ring-1 ring-slate-100">
-    <h3 class="text-sm font-semibold text-slate-900">Container progress</h3>
+    <h3 class="text-sm font-semibold text-slate-900">Cargo tracking</h3>
 
     @if ($progress->status === \App\Enums\ContainerStatus::Cancelled)
         <p class="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">This container was cancelled.</p>
@@ -19,7 +19,7 @@
     @endif
 
     @if ($progress->steps !== [])
-        <ol class="mt-4" aria-label="Container progress">
+        <ol class="mt-4" aria-label="Cargo tracking">
             @foreach ($progress->steps as $step)
                 <li @class(['relative flex gap-3', 'pb-5' => ! $loop->last]) @if ($step->isLatest) aria-current="step" @endif>
                     @if (! $loop->last)
@@ -49,8 +49,6 @@
                             </p>
                             @if ($step->isLatest)
                                 <span class="rounded bg-accent-100 px-1.5 py-0.5 text-xs font-medium text-accent-600">Latest</span>
-                            @elseif ($step->isPending)
-                                <span class="text-xs font-medium text-slate-400">Upcoming</span>
                             @endif
                             <span class="sr-only">{{ $step->isPending ? 'Upcoming step' : ($step->isLatest ? 'Current step' : 'Completed step') }}</span>
                         </div>
@@ -59,7 +57,7 @@
                         @endif
                         </div>
                         @if ($step->fields !== [])
-                            <dl class="grid min-w-0 content-start gap-2 border-t border-slate-200 pt-2 md:border-t-0 md:border-l md:pl-4 md:pt-0">
+                            <dl class="grid min-w-0 content-start gap-2 border-t border-slate-200 pt-2 md:border-t-0 md:pt-0">
                                 @foreach ($step->fields as $field)
                                     <div class="min-w-0">
                                         <dt class="text-xs font-medium text-slate-500">{{ $field['label'] }}</dt>

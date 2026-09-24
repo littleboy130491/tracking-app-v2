@@ -210,7 +210,7 @@ class ShipmentTimeline
     }
 
     /**
-     * The collapsed-row chips (seal, weight) — each one only appears once the
+     * The collapsed-row weight chips — each one only appears once the
      * B/L milestone that unlocks the field in the admin form has been
      * reached, so a filled-but-locked value never leaks into the row.
      *
@@ -221,9 +221,6 @@ class ShipmentTimeline
     {
         if ($container instanceof ExportContainer) {
             return array_values(array_filter([
-                $this->milestoneReached($sequence, $position, ExportMilestone::PickupEmptyContainer) && filled($container->seal_number)
-                    ? 'Seal '.$container->seal_number
-                    : null,
                 $this->milestoneReached($sequence, $position, ExportMilestone::GateInCy) && filled($container->vgm_value)
                     ? 'VGM '.$container->vgm_value.' kg'
                     : null,

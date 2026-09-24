@@ -1,10 +1,11 @@
 {{-- File: resources/views/livewire/customer/partials/sailing-information.blade.php
-     Responsibility: The sailing card on the customer B/L detail pages.
-     What it does: renders the shipment's sailing facts (ports, dates, vessel,
-       voyage, shipping line) as a route view; fed by
+     Responsibility: The sailing strip that heads the B/L detail card.
+     What it does: renders the shipment's route (ports and their dates) as a
+       line view; the vessel facts live in the shipment overview. Fed by
        ShipmentTimeline::sailingInformation(), so only values whose milestone
-       has been reached appear — the card itself hides when there is nothing.
-     How to use: @include('livewire.customer.partials.sailing-information', ['sailing' => $sailing]).
+       has been reached appear — the strip itself hides when there is nothing.
+     How to use: included at the top of the shared sailing/containers card on
+       the customer B/L detail pages.
      How to extend: add labels to ShipmentTimeline::sailingInformation(). --}}
 @php
     $pol = $sailing['Port of loading'] ?? null;
@@ -14,59 +15,48 @@
     $eta = $sailing['Arrival time / ETA'] ?? null;
     $hasOrigin = filled($pol) || filled($departure);
     $hasDestination = filled($pod) || filled($actualArrival) || filled($eta);
-    $vesselFacts = array_filter([
-        'Vessel name' => $sailing['Vessel name'] ?? null,
-        'Voyage number' => $sailing['Voyage number'] ?? null,
-        'Shipping line' => $sailing['Shipping line'] ?? null,
-    ], filled(...));
 @endphp
 @if ($sailing !== [])
-<div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-    <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
-        <h2 class="flex items-center gap-2 font-semibold text-slate-900">Sailing information</h2>
-    </div>
-    <div class="px-4 py-4 sm:px-6">
+<div class="px-4 py-4 sm:px-6">
     @if ($hasOrigin || $hasDestination)
-        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            @if ($hasOrigin)
-                <div class="flex-1 rounded-lg bg-brand-50 p-4 ring-1 ring-brand-100">
-                    <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of loading</div>
-                    <div class="mt-1 font-medium text-slate-900">{{ $pol ?? '—' }}</div>
-                    @if (filled($departure))
-                        <div class="mt-1 text-xs text-slate-500">Departure date · {{ $departure }}</div>
-                    @endif
-                </div>
-            @endif
-            @if ($hasOrigin && $hasDestination)
-                <div class="flex items-center justify-center text-slate-400" aria-hidden="true">
-                    <svg class="h-5 w-5 rotate-90 sm:rotate-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h13m0 0-4-4m4 4-4 4" />
-                    </svg>
-                </div>
-            @endif
-            @if ($hasDestination)
-                <div class="flex-1 rounded-lg bg-accent-100/50 p-4 ring-1 ring-accent-100">
-                    <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of discharge</div>
-                    <div class="mt-1 font-medium text-slate-900">{{ $pod ?? '—' }}</div>
-                    @if (filled($actualArrival))
-                        <div class="mt-1 text-xs text-slate-500">Actual arrival · {{ $actualArrival }}</div>
-                    @elseif (filled($eta))
-                        <div class="mt-1 text-xs text-slate-500">Arrival time / ETA · {{ $eta }}</div>
-                    @endif
-                </div>
-            @endif
+        {{-- Route strip: transport icon above a dashed line whose ends mark the
+             ports, each port's facts sitting underneath its end. --}}
+        <div>
+            <div class="flex justify-end pr-8">
+                @svg('heroicon-s-truck', 'h-5 w-5 text-brand-500')
+            </div>
+            <div class="relative mt-1 h-3" aria-hidden="true">
+                <span class="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-brand-400"></span>
+                @if ($hasOrigin)
+                    <span class="absolute left-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full border-2 border-brand-500 bg-white"></span>
+                @endif
+                @if ($hasDestination)
+                    <span class="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-brand-500"></span>
+                @endif
+            </div>
+            <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+                @if ($hasOrigin)
+                    <div class="min-w-0">
+                        <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of loading</div>
+                        <div class="mt-1 font-medium text-slate-900">{{ $pol ?? '—' }}</div>
+                        @if (filled($departure))
+                            <div class="mt-0.5 text-xs text-slate-500">Departure date · {{ $departure }}</div>
+                        @endif
+                    </div>
+                @endif
+                @if ($hasDestination)
+                    <div class="min-w-0 sm:text-right">
+                        <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of discharge</div>
+                        <div class="mt-1 font-medium text-slate-900">{{ $pod ?? '—' }}</div>
+                        @if (filled($actualArrival))
+                            <div class="mt-0.5 text-xs text-slate-500">Actual arrival · {{ $actualArrival }}</div>
+                        @elseif (filled($eta))
+                            <div class="mt-0.5 text-xs text-slate-500">Arrival time / ETA · {{ $eta }}</div>
+                        @endif
+                    </div>
+                @endif
+            </div>
         </div>
     @endif
-    @if ($vesselFacts !== [])
-        <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-3">
-            @foreach ($vesselFacts as $label => $value)
-                <div>
-                    <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $label }}</dt>
-                    <dd class="mt-0.5 font-medium text-slate-900">{{ $value }}</dd>
-                </div>
-            @endforeach
-        </dl>
-    @endif
-    </div>
 </div>
 @endif

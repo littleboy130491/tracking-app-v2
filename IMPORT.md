@@ -1,65 +1,106 @@
 IMPORT
 
-OUTPUT - Process 1
+Step 1: Document received
+B/L fields:
+Customer name
+Document received date (date)
+Document received by (admin / operators name, for internal data)
 
-Document Received -> progress
-Customer -> field
-Checking Document -> progress
-No. BL -> field
+Step 2: Checking document
+B/L fields:
+B/L number
+Shipment mode (option: FCL | LCL | Air Shipment)
 
-INPUT - Process 2
+Step 3: Draft PIB
+B/L fields:
+Shipping line
 
-Draft PIB -> progress
-Shipping Line -> field
-Checking Draft PIB to Importir -> progress
-Vessel Name -> field
-Waiting Confirmation from Customer -> progress
-Confirmation Checklist -> field (boolean)
-Final Sending PIB to Custom (Bea Cukai), menerbitkan billing -> progress
-Nomor AJU -> field
-Voyage -> field
-Status Billing -> field
-Process Payment THC -> progress
-Port of Loading -> field
-Waiting Release DO -> progress
-Departure Date -> field
-DO Release -> progress
-Port of Discharging -> field
-Payment Billing -> progress
-Arrival Time / ETA -> field
-Response Billing (SPPB/AP/SPJK/SPJM) -> progress
-No. Container -> field (relationship, repeater)
-No. Container -> subfield-container
-Response Billing -> field
-Size Container -> subfield-container
-Description of Goods -> field (shipment level, seeded to each container, overridable)
-Packages -> field (shipment level, seeded to each container, overridable)
-Hscode -> field (shipment level, multiple per container, overridable)
-Tambahan Step SPJM -> progress (conditional: Response Billing = SPJM)
-Gross Weight (kg) -> subfield-container (Response Billing)
-CBM / Measurement -> subfield-container (Response Billing)
-Upload All Document -> progress
-Waiting Process Bahandle -> progress
-Payment Bahandle -> progress
-Container Inspection -> progress
-Waiting Change Status of SPJM to SPPB -> progress
-Container Shipping Schedule -> progress
+Step 4: Checking draft PIB to importir
+B/L fields:
+Vessel name
 
-FINAL - Process 3
+Step 5: Waiting confirmation from customer
+B/L fields:
+Confirmation checklist (toggle)
+Confirmed by (read-only note, shows who confirmed)
 
-Gate Out from Inbound Terminal for Delivery to Consignee -> progress
-Gate Out CY -> subfield-container
-Gate Out Date -> subfield-container
-Gate Out Time -> subfield-container
-Driver Name -> subfield-container
-No. License -> subfield-container
-Container On The Way Factory -> progress
-Tracking Position Driver -> subfield-container
-Tracking Position (url) -> subfield-container (validated URL)
-Container Arrived in Factory -> progress
-Loading in Factory -> subfield-container
-Loading in Factory Status -> subfield-container (ON-PROCESS | FINISHED)
-Empty Container Returned -> progress
-Return Empty Container Depot -> subfield-container
-Return Depot Name -> subfield-container
-Return Date -> subfield-container
+Step 6: Final sending PIB to custom (issuing billing)
+B/L fields:
+AJU number
+Voyage number
+Status billing (option: Not Issued | Issued)
+
+Step 7: Process payment THC
+B/L fields:
+Port of loading
+
+Step 8: Waiting release DO
+B/L fields:
+Departure date (date)
+
+Step 9: DO release
+B/L fields:
+Port of discharge
+
+Step 10: Payment billing
+B/L fields:
+Arrival time / ETA (date time)
+Actual arrival (date time)
+
+Step 11: Response billing
+B/L fields:
+Billing response (option: SPPB | AP | SPJK | SPJM)
+Description of goods
+Packages
+HS codes
+
+Container fields:
+Container Number
+Container Size (option: 20 ft | 40 ft | 45 ft)
+Gross weight (kg)
+CBM / measurement
+Description of goods (default: same value as Description of goods from B/L, step 11)
+Packages (default: same value as Packages from B/L, step 11)
+HS codes (default: same value as HS codes from B/L, step 11)
+Photo Door (image)
+Photo Floor (image)
+Photo Seal (image)
+Photo EIR (image)
+Additional Photos (image)
+
+Additional step for SPJM
+Step 12: Upload all document (SPJM branch only) -> change status only, no fields
+Step 13: Waiting process bahandle (SPJM branch only) -> change status only, no fields
+Step 14: Payment bahandle (SPJM branch only) -> change status only, no fields
+Step 15: Container inspection (SPJM branch only) No fields -> change status only, no fields
+Step 16: Waiting change status SPJM to SPPB (SPJM branch only) -> change status only, no fields
+
+Step 17: Container shipping schedule
+B/L fields:
+Terminal name
+Date of loading (date)
+Loading destination
+
+Step 18: Gate out from inbound terminal
+Container fields:
+Gate out CY (date time)
+Driver name
+No. License
+
+Step 19: Container on the way factory
+Container fields:
+Tracking position driver
+Tracking position (url)
+
+Step 20: Container arrived in factory
+Container fields:
+Loading in factory status (option: On Process | Finished)
+
+Step 21: Empty container returned
+B/L fields:
+Status (option: Draft | In Progress | Completed | Cancelled)
+Completed at (date time)
+
+Container fields:
+Return depot name
+Return date (date time)

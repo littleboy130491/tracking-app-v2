@@ -7,7 +7,7 @@
  * - Covers login routing, the no-registration OTP rule, the signed verify step
  *   (including posting through the rendered form), the attempt rate limiter,
  *   the Export/Import dashboard tabs, per-customer scoping, shipment/container
- *   search, Import/Export container summary + progress steps, row chips, the
+ *   search, Import/Export container progress steps, row chips, the
  *   sailing information card, the POD / Vessel arrival dashboard column and
  *   the import PIB confirmation and revision notes.
  * - Also asserts the seeded many-to-many between companies and portal users.
@@ -549,13 +549,12 @@ class PortalTest extends TestCase
 
         $importPage = Livewire::test(ImportShipmentDetail::class, ['importShipment' => $importShipment->getKey()]);
         foreach ([
-            'Container Size', '40 ft', 'Gross weight (kg)', '1020.500', 'CBM / measurement', '8.250',
-            'Description of goods', 'Consumer electronics', 'Packages', '85 cartons', 'HS codes', $hsCode->code,
+            '40 ft', '1020.500', 'Description of goods',
             'Driver name', 'Rina Driver', 'No. License', 'B 1234 ABC', 'Gate out CY', 'Tracking position driver',
             'Bekasi', 'Tracking position (url)', 'Open tracking link',
             'Loading in factory status', 'Finished', 'Return depot name', 'Jakarta Return Depot', 'Return date',
-            'Completed at', 'Photo Door', 'Visible import door photo',
-            'Container summary', 'Container progress', 'Latest: Empty container returned', 'Completed',
+            'Photo Door', 'Visible import door photo',
+            'Cargo tracking', 'Completed',
             'Gross weight 1020.500 kg',
             'Container shipping schedule', 'Gate out from inbound terminal', 'Container on the way factory',
             'Container arrived in factory', 'Empty container returned',
@@ -566,13 +565,13 @@ class PortalTest extends TestCase
 
         $exportPage = Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $exportShipment->getKey()]);
         foreach ([
-            'Container Size', '20 ft', 'Seal number', 'SEAL-EXP-22', 'Driver name', 'Agus Driver',
+            '20 ft', 'SEAL-EXP-22', 'Driver name', 'Agus Driver',
             'Vehicle / Truck Number', 'B 7777 EF', 'Driver License Number', 'SIM-987', 'Tracking position',
             'Tanjung Priok', 'Tracking position (url)', 'Open tracking link', 'Stuffing status at Factory',
             'Finished', 'Port of loading', 'Gate in CY at', 'VGM (kg)', '1234.500',
             'Final checked', 'Yes', 'Final checked at', 'Photo Seal', 'Visible export seal photo',
-            'Container summary', 'Container progress', 'Latest: Final checking shipment details', 'Completed',
-            'Seal SEAL-EXP-22', 'VGM 1234.500 kg',
+            'Cargo tracking', 'Completed',
+            'VGM 1234.500 kg',
             'Pick up empty container at depot', 'Container on the way to factory',
             'Checking PEB & NPE', 'Gate in CY', 'Final checking shipment details',
         ] as $fieldOrValue) {
@@ -624,7 +623,7 @@ class PortalTest extends TestCase
 
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Latest: Stuffing at factory / PEB & NPE')
+            ->assertSee('Stuffing at factory / PEB & NPE')
             ->assertSee('aria-current="step"', false)
             ->assertDontSee('1234.500');
     }
@@ -682,7 +681,7 @@ class PortalTest extends TestCase
 
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Latest: Final checking shipment details');
+            ->assertSee('Final checking shipment details');
     }
 
     public function test_a_shipment_at_its_first_milestone_shows_containers_as_not_started(): void
@@ -792,7 +791,6 @@ class PortalTest extends TestCase
         // At the first milestone none of these fields are unlocked yet, so a
         // stray stored value must not leak onto the row.
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $export->getKey()])
-            ->assertDontSee('Seal SEAL-CHIPS')
             ->assertDontSee('VGM 1234.500 kg');
         Livewire::test(ImportShipmentDetail::class, ['importShipment' => $import->getKey()])
             ->assertDontSee('Gross weight 1020.500 kg');
@@ -800,9 +798,10 @@ class PortalTest extends TestCase
         $export->update(['current_milestone' => ExportMilestone::GateInCy]);
         $import->update(['current_milestone' => ImportMilestone::GateOutCy]);
 
+        // The seal lives in its own column, never as a row chip.
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $export->getKey()])
-            ->assertSee('Seal SEAL-CHIPS')
-            ->assertSee('VGM 1234.500 kg');
+            ->assertSee('VGM 1234.500 kg')
+            ->assertDontSee('Seal SEAL-CHIPS');
         Livewire::test(ImportShipmentDetail::class, ['importShipment' => $import->getKey()])
             ->assertSee('Gross weight 1020.500 kg');
     }
@@ -811,35 +810,29 @@ class PortalTest extends TestCase
     {
         $user = $this->portalUser();
         $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-TILES');
-        $shipment->containers()->firstOrFail()->update([
+        $container = $shipment->containers()->firstOrFail();
+        $container->update([
             'size' => '40',
             'gross_weight' => '1020.500',
             'description_of_goods' => 'Consumer electronics',
         ]);
 
-        $this->actingAs($user);
+        $timeline = app(ShipmentTimeline::class);
 
         // The cargo fields are still locked in the admin before Response
         // billing, so filled values must not leak into the summary tiles.
-        // (The B/L summary always shows a "Description of goods" label for
-        // imports, so only the container's value is asserted here.)
-        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
-            ->assertOk()
-            ->assertDontSee('Container Size')
-            ->assertDontSee('Gross weight (kg)')
-            ->assertDontSee('Consumer electronics')
-            ->assertSee('No container details published yet.');
+        $progress = $timeline->forContainers($shipment->refresh(), [$container->refresh()])[$container->getKey()];
+        $this->assertSame([], $progress->summary);
 
         $shipment->update(['current_milestone' => ImportMilestone::ResponseBilling]);
 
-        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
-            ->assertOk()
-            ->assertSee('Container Size')
-            ->assertSee('40 ft')
-            ->assertSee('Gross weight (kg)')
-            ->assertSee('1020.500')
-            ->assertSee('Description of goods')
-            ->assertSee('Consumer electronics');
+        $tiles = collect(
+            $timeline->forContainers($shipment->refresh(), [$container->refresh()])[$container->getKey()]->summary,
+        )->pluck('value', 'label');
+
+        $this->assertSame('40 ft', $tiles['Container Size']);
+        $this->assertSame('1020.500', $tiles['Gross weight (kg)']);
+        $this->assertSame('Consumer electronics', $tiles['Description of goods']);
     }
 
     public function test_container_rows_show_the_latest_step_with_its_logged_time(): void
@@ -848,7 +841,7 @@ class PortalTest extends TestCase
         $shipment = $this->exportShipmentFor($user->companies()->first(), 'BL-EXP-LATEST');
 
         // Advancing writes a milestone_changed log per step, which is where
-        // the row's "Latest: ..." timestamp comes from.
+        // the row's latest-event timestamp comes from.
         $shipment->advanceMilestone();
         $shipment->advanceMilestone();
         $shipment->refresh();
@@ -862,7 +855,7 @@ class PortalTest extends TestCase
 
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Latest: Pick up empty container at depot')
+            ->assertSee('Pick up empty container at depot')
             ->assertSee($logged->occurred_at->format('d M Y H:i'));
     }
 
@@ -888,7 +881,6 @@ class PortalTest extends TestCase
 
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Sailing information')
             ->assertSee('Port of loading')
             ->assertSee('Tanjung Priok')
             ->assertSee('Port of discharge')
@@ -922,7 +914,6 @@ class PortalTest extends TestCase
         // Tracking progress list still shows the ETA field on its own row.
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Sailing information')
             ->assertSee('Actual arrival · 02 Oct 2026 09:00')
             ->assertDontSee('Arrival time / ETA ·');
     }
@@ -938,7 +929,7 @@ class PortalTest extends TestCase
 
         Livewire::test(ExportShipmentDetail::class, ['exportShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertDontSee('Sailing information');
+            ->assertDontSee('Port of loading');
     }
 
     public function test_the_shipment_summary_shows_status_completion_and_document_date(): void

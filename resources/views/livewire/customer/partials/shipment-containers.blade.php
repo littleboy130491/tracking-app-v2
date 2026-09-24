@@ -1,29 +1,22 @@
 {{-- File: resources/views/livewire/customer/partials/shipment-containers.blade.php
-     Responsibility: Expandable container table on a shipment detail page.
+     Responsibility: Expandable container table inside the B/L detail card.
      What it does: each container is a <details> row with plain table columns
        (number, latest event/time, tracking position, seal); the expanded body
-       holds a summary card (tiles, Track live link, photo strip) and the
+       holds the Track live link and photo strip (when present) and the
        per-step journey from the container-steps partial.
      How to use: @include('livewire.customer.partials.shipment-containers',
        ['containers' => $containers, 'containerProgress' => $containerProgress]).
-     How to extend: step/summary data comes from App\Services\ContainerProgress
+     How to extend: step data comes from App\Services\ContainerProgress
        (ShipmentTimeline::forContainers); add photo slots in $photoSlots. --}}
 @if ($containers->isNotEmpty())
-<div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-    <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
-        <h2 class="flex items-center gap-2 font-semibold text-slate-900">
-            Containers
-            <span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">{{ $containers->count() }}</span>
-        </h2>
-    </div>
-    <div class="overflow-x-auto">
+<div class="overflow-x-auto">
     <div class="min-w-[820px]">
     <div class="grid grid-cols-[1.3fr_1.5fr_1fr_0.8fr_2rem] gap-0 border-b border-slate-200 text-left" aria-hidden="true">
         <span class="px-4 py-2.5 text-sm font-semibold text-slate-900 sm:px-6">Container No.</span>
         <span class="border-l border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-900">Latest Event Status/ Time</span>
         <span class="border-l border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-900">Tracking position</span>
         <span class="border-l border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-900">Seal No.</span>
-        <span class="border-l border-slate-200 px-4 py-2.5"></span>
+        <span class="px-4 py-2.5"></span>
     </div>
     <div class="divide-y divide-slate-200">
         @foreach ($containers as $container)
@@ -34,7 +27,7 @@
                 $stateText = match (true) {
                     $status === \App\Enums\ContainerStatus::Cancelled => 'Cancelled',
                     $latest === null => 'Not started',
-                    default => 'Latest: '.$latest->title,
+                    default => $latest->title,
                 };
                 $sizeLabel = match ((string) $container->size) {
                     '20' => '20 ft',
@@ -52,6 +45,7 @@
                 $photos = $container->attachments->filter(
                     fn ($attachment) => array_key_exists($attachment->category?->value ?? '', $photoSlots),
                 );
+                $hasTrackLink = $progress->trackingUrl && $status === \App\Enums\ContainerStatus::InProgress;
             @endphp
             {{-- wire:ignore.self keeps the open attribute untouched when Livewire re-renders. --}}
             <details class="group" wire:key="container-{{ $container->getKey() }}" wire:ignore.self>
@@ -88,10 +82,10 @@
                     </span>
                 </summary>
                 <div class="grid gap-4 border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6">
+                    @if ($hasTrackLink || $photos->isNotEmpty())
                     <section class="rounded-lg bg-white p-4 ring-1 ring-slate-100">
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <h3 class="text-sm font-semibold text-slate-900">Container summary</h3>
-                            @if ($progress->trackingUrl && $status === \App\Enums\ContainerStatus::InProgress)
+                        @if ($hasTrackLink)
+                            <div class="flex flex-wrap items-center justify-end gap-2">
                                 <a
                                     href="{{ $progress->trackingUrl }}"
                                     target="_blank"
@@ -104,20 +98,10 @@
                                     </svg>
                                     Track live
                                 </a>
-                            @endif
-                        </div>
-                        @if ($progress->summary !== [])
-                            <dl class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach ($progress->summary as $tile)
-                                    <div @class(['min-w-0 rounded-md bg-slate-50 px-3 py-2', 'sm:col-span-2 lg:col-span-3' => $tile['wide'] ?? false])>
-                                        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $tile['label'] }}</dt>
-                                        <dd class="mt-0.5 break-words text-sm font-medium text-slate-900">{{ $tile['value'] }}</dd>
-                                    </div>
-                                @endforeach
-                            </dl>
+                            </div>
                         @endif
                         @if ($photos->isNotEmpty())
-                            <div class="mt-4">
+                            <div @class(['mt-4' => $hasTrackLink])>
                                 <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500">Photos</h4>
                                 <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                                     @foreach ($photoSlots as $category => $photoLabel)
@@ -142,10 +126,8 @@
                                 </div>
                             </div>
                         @endif
-                        @if ($progress->summary === [] && $photos->isEmpty())
-                            <p class="mt-3 text-sm text-slate-400">No container details published yet.</p>
-                        @endif
                     </section>
+                    @endif
 
                     @include('livewire.customer.partials.container-steps', ['progress' => $progress])
                 </div>
@@ -154,5 +136,4 @@
     </div>
     </div>
     </div>
-</div>
 @endif

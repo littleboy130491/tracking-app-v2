@@ -1,81 +1,70 @@
-1. Process 1 — Booking & Document
-   _Document Received_
+Export
 
-Data:
+Step 1: Document Received
+B/L fields:
+Customer name
+Document received date
+Document received by (admin / operators name, for internal data)
 
-- Shipment Type (export)
-- Customer (relationship)
-- Customer name snapshot (not editable except for admin & super_admin)
-- Document Received Date (default today, editable)
-- Document Received By (default current user, not editable except for admin & super_admin)
+Step 2: Checking Booking Order
+B/L fields:
+B/L number
+DO number
+Shipping line
+Vessel name
+Voyage number
+Port of loading
+Port of discharge
+Closing time at depot (date time)
+Closing time at CY (date time)
+Shipment mode (option: FCL | LCL | Air Shipment)
 
-_Checking Booking Order_
+Step 3: Pick up empty container at depot
+B/L fields:
+Pick up depot
+Stuffing date (date time)
+Stuffing destination
+Container fields:
+Container Number
+Container Size (option: 20 ft | 40 ft | 45 ft)
+Seal number
+Driver name
+Vehicle / Truck Number
+Driver License
+Photo Door (image)
+Photo Floor (image)
+Photo Seal (image)
+Photo EIR (image)
+Additional Photos (image)
 
-Data:
+Step 4: Container on the way to factory
+Container fields:
+Tracking position
+Tracking position (url)
 
-- No. DO
-- Shipping Line
-- Vessel Name
-- Voyage
-- Port of Loading
-- Port of Discharge
-- Closing Time Depot
-- Closing Time CY
-- Shipment Mode
+Step 5: Stuffing at factory / PEB & NPE
+B/L fields:
+AJU number
+Container fields:
+Stuffing status at Factory (option: On Process | Finished)
 
-2. Process 2 — Container Preparation
+Step 6: Checking PEB & NPE
+Container fields:
+Port of loading (default: same value as Port of loading from B/L, step 2)
+Gate in CY at (date time)
 
-_Pick Up Empty Container_
+Step 7: Gate in CY
+B/L fields:
+Departure date (date)
+Arrival time / ETA (date + time)
+Container fields:
+VGM (kg)
 
-Data:
-
-- Pick Up Depot
-- Stuffing Date
-- Stuffing Destination
-- Container relationships
-
-Each container data:
-
-- Container Number
-- Container Size
-- Container Type
-- Seal Number
-- Driver name
-- Vehicle / Truck Number
-- Driver License Number
-- Photo Door
-- Photo Floor
-- Photo Seal
-- Photo EIR
-- Additional Photos
-
-3. Process 3 — Stuffing & Customs
-   _Container On The Way Factory_
-
-Container data:
-
-- Tracking Position Driver
-- Tracking Position Driver (url)
-
-_Process Stuffing at Factory & Process PEB and NPE_
-
-Container data:
-
-- Progress Stuffing at Factory: ON-PROCESS | FINISHED
-
-_Checking PEB and NPE_
-Container data:
-
-- Port of Loading: default will follow port of loading from bill of lading
-- Gate In CY Date
-
-_Process Gate In CY_
-Container data:
-
-- Amount of VGM (kg)
-
-_Final Checking Details Shipment_
-Container data:
-
-- Final Checking Date
-- Final Checking Checklist boolean
+Step 8: Final checking shipment details
+B/L fields:
+Actual arrival (date time)
+Status (option: Draft | In Progress | Completed | Cancelled),
+Completed at (date time)
+Container fields:
+Final checked (toggle)
+Final checked at (date time)

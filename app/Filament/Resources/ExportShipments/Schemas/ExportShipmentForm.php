@@ -5,9 +5,10 @@
  * Responsibility: Admin form for an export shipment.
  * What it does:
  * - Customer section above the tabs, then the milestone stepper on edit.
- * - Shipping Details: booking-order fields, pickup/stuffing and sailing dates,
- *   each disabled until its milestone is reached.
- * - Containers: the export container repeater; items stay open to distinguish
+ * - Shipping Details: the booking-order fields, disabled until their milestone
+ *   is reached.
+ * - Containers: the pickup/stuffing, AJU number and sailing-date header fields
+ *   above the export container repeater; items stay open to distinguish
  *   individual container records.
  * - Notes and Activity log tabs.
  * How to use: Rendered by the export shipment create and edit pages.
@@ -74,18 +75,6 @@ class ExportShipmentForm
                                                 ->label('Shipment mode')
                                                 ->options(ShipmentMode::options()),
                                         ], $enum, ExportMilestone::CheckingBookingOrder),
-                                        // Sailing dates: the vessel schedule is known once
-                                        // the container gates in; actual arrival closes
-                                        // out at final checking.
-                                        ...ShipmentFields::gated([
-                                            DatePicker::make('departure_date'),
-                                            DateTimePicker::make('eta_at')
-                                                ->label('Arrival time / ETA'),
-                                        ], $enum, ExportMilestone::GateInCy),
-                                        ...ShipmentFields::gated([
-                                            DateTimePicker::make('actual_arrival_at')
-                                                ->label('Actual arrival'),
-                                        ], $enum, ExportMilestone::FinalChecking),
                                     ]),
                             ]),
                         ShipmentFields::containersTab(
@@ -131,6 +120,16 @@ class ExportShipmentForm
                                             ->label('AJU number')
                                             ->maxLength(100),
                                     ], $enum, ExportMilestone::StuffingPebNpe),
+                                ]),
+                                Grid::make(2)->schema([
+                                    // Step 7 — Gate in CY. The vessel schedule is known
+                                    // once the container gates in; the dates sit with
+                                    // the other container-tab header fields.
+                                    ...ShipmentFields::gated([
+                                        DatePicker::make('departure_date'),
+                                        DateTimePicker::make('eta_at')
+                                            ->label('Arrival time / ETA'),
+                                    ], $enum, ExportMilestone::GateInCy),
                                 ]),
                             ],
                         ),

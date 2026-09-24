@@ -1,15 +1,22 @@
 {{-- File: resources/views/livewire/customer/partials/shipment-summary.blade.php
      Responsibility: The customer-visible shipment facts grid.
-     What it does: shows company, status pill, type, shipment mode, AJU
-       number, container count, document received date and completion date
-       for one shipment; the goods description row is import-only.
-     How to use: @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Export']).
+     What it does: shows B/L number, company, status pill, type, shipment mode,
+       the vessel facts (name, voyage, line — only once their milestone is
+       reached), AJU number, container count, document received date and
+       completion date for one shipment; the goods description row is
+       import-only.
+     How to use: @include('livewire.customer.partials.shipment-summary',
+       ['shipment' => $shipment, 'typeLabel' => 'Export', 'sailing' => $sailing]).
      How to extend: add customer-visible fields here once they are published. --}}
 <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
     <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
         <h2 class="flex items-center gap-2 font-semibold text-slate-900">Shipment overview</h2>
     </div>
     <div class="grid gap-4 px-4 py-4 sm:px-6 md:grid-cols-3">
+    <div>
+        <div class="text-xs font-medium uppercase tracking-wide text-slate-500">B/L number</div>
+        <div class="font-medium text-slate-900">{{ $shipment->bl_number ?: '—' }}</div>
+    </div>
     <div>
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Company</div>
         <div class="font-medium text-slate-900">{{ $shipment->company_name_snapshot }}</div>
@@ -35,6 +42,16 @@
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Shipment mode</div>
         <div class="font-medium text-slate-900">{{ $shipment->shipment_mode?->label() ?? '—' }}</div>
     </div>
+    @foreach (array_filter([
+        'Vessel name' => $sailing['Vessel name'] ?? null,
+        'Voyage number' => $sailing['Voyage number'] ?? null,
+        'Shipping line' => $sailing['Shipping line'] ?? null,
+    ], filled(...)) as $label => $value)
+        <div>
+            <div class="text-xs font-medium uppercase tracking-wide text-slate-500">{{ $label }}</div>
+            <div class="font-medium text-slate-900">{{ $value }}</div>
+        </div>
+    @endforeach
     <div>
         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">AJU number</div>
         <div class="font-medium text-slate-900">{{ $shipment->aju_number ?: '—' }}</div>
