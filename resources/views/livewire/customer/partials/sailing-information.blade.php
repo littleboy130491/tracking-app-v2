@@ -18,8 +18,9 @@
 @if ($sailing !== [])
 <div class="px-4 py-4 sm:px-6">
     @if ($hasOrigin || $hasDestination)
-        {{-- Route strip: transport icon above a dashed line whose ends mark the
-             ports, each port's facts sitting underneath its end. --}}
+        {{-- Route strip: a dashed line whose ends mark the ports, each port's
+             facts sitting underneath its end. The ports stay side by side on
+             mobile (two columns) so the dots keep lining up with their text. --}}
         <div>
             <div class="relative mt-1 h-3" aria-hidden="true">
                 <span class="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-brand-400"></span>
@@ -30,20 +31,20 @@
                     <span class="absolute right-0 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-brand-500"></span>
                 @endif
             </div>
-            <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div class="mt-2 grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                 @if ($hasOrigin)
                     <div class="min-w-0">
                         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of loading</div>
-                        <div class="mt-1 font-medium text-slate-900">{{ $pol ?? '—' }}</div>
+                        <div class="mt-1 break-words text-sm font-medium text-slate-900 sm:text-base">{{ $pol ?? '—' }}</div>
                         @if (filled($departure))
                             <div class="mt-0.5 text-xs text-slate-500">Departure date · {{ $departure }}</div>
                         @endif
                     </div>
                 @endif
                 @if ($hasDestination)
-                    <div class="min-w-0 sm:text-right">
+                    <div @class(['min-w-0 sm:text-right', 'col-start-2' => ! $hasOrigin])>
                         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of discharge</div>
-                        <div class="mt-1 font-medium text-slate-900">{{ $pod ?? '—' }}</div>
+                        <div class="mt-1 break-words text-sm font-medium text-slate-900 sm:text-base">{{ $pod ?? '—' }}</div>
                         @if (filled($eta))
                             <div class="mt-0.5 text-xs text-slate-500">Arrival time / ETA · {{ $eta }}</div>
                         @endif

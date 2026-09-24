@@ -1208,3 +1208,5 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 15:10 | Muse Spark | CREATE | resources/views/emails/otp.blade.php | OTP email with SAM Group logo |
 | 2026-09-24 15:10 | Muse Spark | UPDATE | app/Support/Otp/ConfigurableAttemptOtp.php | Hyphenated pastes verify correctly |
 | 2026-09-24 15:10 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Expose recovery, logo and hyphen tests |
+| 2026-09-24 15:15 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | B/L list scrolls horizontally on mobile |
+| 2026-09-24 15:15 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Ports side by side on mobile, smaller type |

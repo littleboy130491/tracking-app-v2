@@ -117,8 +117,8 @@
         </div>
     </div>
 
-    <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200 text-sm">
+    <div class="mt-6 overflow-x-auto rounded-xl bg-white shadow-sm">
+        <table class="min-w-[760px] divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                     <th class="whitespace-nowrap px-4 py-3">B/L number</th>
