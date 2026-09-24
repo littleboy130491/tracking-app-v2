@@ -1202,3 +1202,9 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 15:00 | Muse Spark | UPDATE | config/otpz.php | OTPZ_DISABLE_LIMITS flag (non-production only) |
 | 2026-09-24 15:00 | Muse Spark | UPDATE | app/Http/Controllers/Customer/LoginController.php | Mail failures show friendly OTP message, logged |
 | 2026-09-24 15:00 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Mail failure regression test |
+| 2026-09-24 15:10 | Muse Spark | UPDATE | app/Http/Controllers/Customer/LoginController.php | Mail failure continues to verify when exposing locally |
+| 2026-09-24 15:10 | Muse Spark | UPDATE | app/Mail/DevOtpMail.php | Expose gate tightened to local and testing only |
+| 2026-09-24 15:10 | Muse Spark | UPDATE | config/otpz.php | Branded template, expose/throttle comments |
+| 2026-09-24 15:10 | Muse Spark | CREATE | resources/views/emails/otp.blade.php | OTP email with SAM Group logo |
+| 2026-09-24 15:10 | Muse Spark | UPDATE | app/Support/Otp/ConfigurableAttemptOtp.php | Hyphenated pastes verify correctly |
+| 2026-09-24 15:10 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Expose recovery, logo and hyphen tests |

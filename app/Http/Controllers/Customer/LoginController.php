@@ -24,6 +24,7 @@ use App\Support\Otp\ConfigurableAttemptOtp;
 use BenBjurstrom\Otpz\Actions\SendOtp;
 use BenBjurstrom\Otpz\Exceptions\OtpAttemptException;
 use BenBjurstrom\Otpz\Exceptions\OtpThrottleException;
+use BenBjurstrom\Otpz\Models\Otp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,24 +58,45 @@ class LoginController
                 ->onlyInput('email');
         } catch (TransportExceptionInterface $exception) {
             // A mail provider outage (e.g. Mailgun 401) must never 500 the
-            // login screen; the customer gets a friendly message while the
-            // real error goes to the log for the admin.
+            // login screen; the real error goes to the log for the admin.
             Log::error('OTP email failed to send.', [
                 'email' => $data['email'],
                 'error' => $exception->getMessage(),
             ]);
+
+            // On local (or under phpunit) with the expose flag the OTP record
+            // already exists (it is created before the mail is sent), so
+            // continue to the verify screen where the code is shown anyway.
+            if (config('otpz.expose_in_dev') && in_array(app()->environment(), ['local', 'testing'], true)) {
+                $otp = Otp::query()
+                    ->where('user_id', User::query()->where('email', $data['email'])->value('id'))
+                    ->latest('id')
+                    ->first();
+
+                if ($otp) {
+                    return $this->verifyRedirect($request, $otp->getKey());
+                }
+            }
 
             return back()
                 ->withErrors(['email' => 'There is a problem in the OTP system, please contact admin.'])
                 ->onlyInput('email');
         }
 
-        // The link stays valid a little longer than the code itself, so a stale
-        // code reports "expired" instead of an invalid-signature error.
+        return $this->verifyRedirect($request, $otp->getKey());
+    }
+
+    /**
+     * The signed verify link. It stays valid a little longer than the code
+     * itself, so a stale code reports "expired" instead of an
+     * invalid-signature error.
+     */
+    private function verifyRedirect(Request $request, int|string $otpId): RedirectResponse
+    {
         return redirect(URL::temporarySignedRoute('customer.verify', now()->addMinutes(
             (int) config('otpz.expiration', 5) + 10,
         ), [
-            'otp' => $otp->getKey(),
+            'otp' => $otpId,
             'sessionId' => $request->session()->getId(),
         ]));
     }

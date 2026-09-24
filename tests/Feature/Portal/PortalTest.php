@@ -25,6 +25,7 @@ use App\Enums\ShipmentStatus;
 use App\Livewire\Customer\Dashboard;
 use App\Livewire\Customer\ExportShipmentDetail;
 use App\Livewire\Customer\ImportShipmentDetail;
+use App\Mail\DevOtpMail;
 use App\Models\ActivityLog;
 use App\Models\Attachment;
 use App\Models\Company;
@@ -35,7 +36,9 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\ShipmentTimeline;
 use App\Services\ShipmentTimelineEntry;
+use BenBjurstrom\Otpz\Actions\CreateOtp;
 use BenBjurstrom\Otpz\Actions\SendOtp;
+use BenBjurstrom\Otpz\Models\Otp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
@@ -163,6 +166,23 @@ class PortalTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
+    public function test_a_hyphenated_code_paste_signs_the_customer_in(): void
+    {
+        $user = $this->portalUser();
+        $form = $this->openVerifyForm($user);
+
+        $this->assertNotSame('', $form['code']);
+
+        // The email prints the code with a readability hyphen; a verbatim
+        // paste must verify just like the raw code.
+        $hyphenated = substr_replace($form['code'], '-', 5, 0);
+
+        $this->post($form['action'], ['code' => $hyphenated, 'sessionId' => $form['sessionId']])
+            ->assertRedirect(route('customer.dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
     public function test_a_wrong_code_through_the_rendered_form_shows_a_friendly_error(): void
     {
         $form = $this->openVerifyForm($this->portalUser());
@@ -196,6 +216,57 @@ class PortalTest extends TestCase
         $this->post(route('customer.login.send'), ['email' => 'customer@example.com'])
             ->assertRedirect('/')
             ->assertSessionHasErrors(['email' => 'There is a problem in the OTP system, please contact admin.']);
+    }
+
+    public function test_a_mail_failure_with_expose_redirects_to_verify_with_code(): void
+    {
+        app()->detectEnvironment(fn () => 'local');
+        config(['otpz.expose_in_dev' => true]);
+
+        $user = User::query()->where('email', 'customer@example.com')->firstOrFail();
+
+        // Mimic the package state when the mail transport throws: the OTP
+        // row already exists.
+        [$otp] = app(CreateOtp::class)->handle($user);
+
+        $failure = new class('Unable to send an email: Forbidden (code 401).') extends \RuntimeException implements TransportExceptionInterface
+        {
+            public function getDebug(): string
+            {
+                return '';
+            }
+
+            public function appendDebug(string $debug): void {}
+        };
+
+        $this->mock(SendOtp::class, function ($mock) use ($failure): void {
+            $mock->shouldReceive('handle')->once()->andThrow($failure);
+        });
+
+        // Switching env to local re-enables CSRF (skipped only under
+        // testing): visit the form first so the session starts, then post
+        // with its token like a real browser.
+        $this->get(route('customer.login'))->assertOk();
+        $response = $this->post(route('customer.login.send'), [
+            'email' => 'customer@example.com',
+            '_token' => csrf_token(),
+        ]);
+
+        $this->assertStringContainsString('/login/verify/'.$otp->getKey(), $response->headers->get('Location'));
+
+        session()->put('otpz_dev_code', 'DEV123');
+        $this->get($response->headers->get('Location'))->assertSee('DEV123');
+    }
+
+    public function test_the_otp_email_carries_the_sam_group_logo(): void
+    {
+        $user = User::query()->where('email', 'customer@example.com')->firstOrFail();
+        [$otp, $code] = app(CreateOtp::class)->handle($user);
+
+        $html = app(DevOtpMail::class, ['otp' => $otp, 'code' => $code])->render();
+
+        $this->assertStringContainsString('images/logo.png', $html);
+        $this->assertStringContainsString(substr_replace($code, '-', 5, 0), $html);
     }
 
     public function test_repeated_wrong_codes_are_rate_limited(): void

@@ -38,9 +38,10 @@ return [
     | Development Convenience
     |--------------------------------------------------------------------------
     |
-    | When true (and not in production) the plaintext one-time password is also
-    | stored in the session and shown on the verify screen, so local development
-    | does not depend on reading the mail log. Never enable this in production.
+    | When true (and the app runs on local) the plaintext one-time password is
+    | also stored in the session and shown on the verify screen, even when mail
+    | delivery itself fails — so local development never depends on reading
+    | the mail log. Any other environment ignores the flag.
     |
     */
 
@@ -98,7 +99,8 @@ return [
     |
     */
 
-    'template' => 'otpz::mail.otpz',
+    'template' => 'emails.otp',
+    // 'template' => 'otpz::mail.otpz',
     // 'template' => 'otpz::mail.notification',
 
     /*
