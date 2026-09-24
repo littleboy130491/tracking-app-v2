@@ -45,7 +45,6 @@ Port of discharge
 Step 10: Payment billing
 B/L fields:
 Arrival time / ETA (date time)
-Actual arrival (date time)
 
 Step 11: Response billing
 B/L fields:
@@ -57,6 +56,7 @@ HS codes
 Container fields:
 Container Number
 Container Size (option: 20 ft | 40 ft | 45 ft)
+Seal number
 Gross weight (kg)
 CBM / measurement
 Description of goods (default: same value as Description of goods from B/L, step 11)

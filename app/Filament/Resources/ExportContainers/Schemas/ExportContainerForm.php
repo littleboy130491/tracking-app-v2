@@ -5,8 +5,8 @@
  * Responsibility: Admin form for a standalone export container.
  * What it does:
  * - Selects the parent export shipment, then edits the export container
- *   fields (identity, transport/tracking, photos, stuffing, gate in, VGM,
- *   final check and status).
+ *   fields (identity, transport/tracking, photos, stuffing, gate in, VGM
+ *   and final check).
  * - Milestone gating happens on the shipment form's repeater; the standalone
  *   form edits the same fields freely.
  * How to use: Rendered by the export container create/edit pages.
@@ -60,7 +60,7 @@ class ExportContainerForm
                     ->columns(2)
                     ->schema(ContainerFields::photos(ExportContainer::class)),
                 Section::make('Stuffing')
-                    ->description('Process 2/3: stuff the container at the factory.')
+                    ->description('Step 5: stuff the container at the factory.')
                     ->columns(3)
                     ->schema(ContainerFields::exportStuffing()),
                 Section::make('Gate in & VGM')

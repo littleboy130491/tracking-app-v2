@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'shipping_line', 'vessel_name', 'confirmation_checklist',
     'aju_number', 'voyage_number', 'billing_issuance_status',
     'port_of_loading', 'departure_date', 'port_of_discharge',
-    'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
+    'eta_at', 'billing_response', 'goods_description',
     'packages', 'terminal_name', 'loading_date', 'loading_destination',
     'status', 'current_milestone', 'completed_at',
 ])]
@@ -92,7 +92,6 @@ class ImportShipment extends Model
             'departure_date' => 'date',
             'loading_date' => 'date',
             'eta_at' => 'datetime',
-            'actual_arrival_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

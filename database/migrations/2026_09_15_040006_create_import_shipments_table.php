@@ -45,7 +45,6 @@ return new class extends Migration
             $table->string('port_of_discharge')->nullable();
             // Payment billing (arrival time / ETA) / Response billing.
             $table->timestamp('eta_at')->nullable();
-            $table->timestamp('actual_arrival_at')->nullable();
             $table->string('billing_response', 20)->nullable();
             // Upload all document.
             $table->text('goods_description')->nullable();

@@ -39,9 +39,12 @@ trait ActsAsContainer
 
     /**
      * Point the given media rows at this container, one category per photo
-     * picker, and detach anything no longer picked. Curator's picker cannot
-     * write the container columns itself, so the Filament pages call this
-     * after the form saves.
+     * picker, and detach anything no longer picked. Ownership is exclusive:
+     * all four shipment/container link columns are cleared first, so picking
+     * a photo that belongs to another container (or the other process) moves
+     * it instead of double-linking it. Curator's picker cannot write the
+     * container columns itself, so the Filament pages call this after the
+     * form saves.
      *
      * @param  array<string, list<int>>  $photosByCategory  category value => media ids
      */
@@ -57,7 +60,13 @@ trait ActsAsContainer
         Attachment::query()
             ->where(static::CONTAINER_FK, $this->getKey())
             ->when($pickedIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $pickedIds))
-            ->update([static::CONTAINER_FK => null, static::SHIPMENT_FK => null, 'category' => null]);
+            ->update([
+                'export_container_id' => null,
+                'export_shipment_id' => null,
+                'import_container_id' => null,
+                'import_shipment_id' => null,
+                'category' => null,
+            ]);
 
         foreach ($photosByCategory as $category => $mediaIds) {
             $ids = array_values(array_filter(array_map('intval', (array) $mediaIds)));
@@ -67,9 +76,17 @@ trait ActsAsContainer
             }
 
             Attachment::query()->whereIn('id', $ids)->update([
+                'export_container_id' => null,
+                'export_shipment_id' => null,
+                'import_container_id' => null,
+                'import_shipment_id' => null,
                 static::CONTAINER_FK => $this->getKey(),
                 static::SHIPMENT_FK => $this->{static::SHIPMENT_FK},
                 'category' => $category,
+                // A picked photo is meant for the customer portal; without
+                // this every admin pick stays internal (default false) and
+                // the portal photo strip stays empty in real use.
+                'is_customer_visible' => true,
             ]);
 
             Attachment::query()

@@ -11,10 +11,9 @@
     $pol = $sailing['Port of loading'] ?? null;
     $departure = $sailing['Departure date'] ?? null;
     $pod = $sailing['Port of discharge'] ?? null;
-    $actualArrival = $sailing['Actual arrival'] ?? null;
     $eta = $sailing['Arrival time / ETA'] ?? null;
     $hasOrigin = filled($pol) || filled($departure);
-    $hasDestination = filled($pod) || filled($actualArrival) || filled($eta);
+    $hasDestination = filled($pod) || filled($eta);
 @endphp
 @if ($sailing !== [])
 <div class="px-4 py-4 sm:px-6">
@@ -22,9 +21,6 @@
         {{-- Route strip: transport icon above a dashed line whose ends mark the
              ports, each port's facts sitting underneath its end. --}}
         <div>
-            <div class="flex justify-end pr-8">
-                @svg('heroicon-s-truck', 'h-5 w-5 text-brand-500')
-            </div>
             <div class="relative mt-1 h-3" aria-hidden="true">
                 <span class="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t-2 border-dashed border-brand-400"></span>
                 @if ($hasOrigin)
@@ -48,9 +44,7 @@
                     <div class="min-w-0 sm:text-right">
                         <div class="text-xs font-medium uppercase tracking-wide text-slate-500">Port of discharge</div>
                         <div class="mt-1 font-medium text-slate-900">{{ $pod ?? '—' }}</div>
-                        @if (filled($actualArrival))
-                            <div class="mt-0.5 text-xs text-slate-500">Actual arrival · {{ $actualArrival }}</div>
-                        @elseif (filled($eta))
+                        @if (filled($eta))
                             <div class="mt-0.5 text-xs text-slate-500">Arrival time / ETA · {{ $eta }}</div>
                         @endif
                     </div>

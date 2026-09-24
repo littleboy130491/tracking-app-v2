@@ -132,8 +132,6 @@ class ImportShipmentForm
                                         ...ShipmentFields::gated([
                                             DateTimePicker::make('eta_at')
                                                 ->label('Arrival time / ETA'),
-                                            DateTimePicker::make('actual_arrival_at')
-                                                ->label('Actual arrival'),
                                         ], $enum, ImportMilestone::BillingPayment),
                                         // Step 11 — Response billing (SPPB/AP/SPJK/SPJM).
                                         ...ShipmentFields::gated([
@@ -148,6 +146,7 @@ class ImportShipmentForm
                             [
                                 ...ShipmentFields::gated(ContainerFields::importIdentity(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importSize(), $enum, ImportMilestone::ResponseBilling, '../../'),
+                                ...ShipmentFields::gated(ContainerFields::importSeal(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importWeights(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importCbm(), $enum, ImportMilestone::ResponseBilling, '../../'),
                                 ...ShipmentFields::gated(ContainerFields::importCargo(), $enum, ImportMilestone::ResponseBilling, '../../'),

@@ -71,6 +71,7 @@ class DemoExportShipmentSeeder extends Seeder
         ]);
 
         $this->container($borneo, 'PILU4455661', '40', 'SL-0005');
+        $this->container($borneo, 'PILU4455662', '40', 'SL-0007');
     }
 
     /**
@@ -84,6 +85,7 @@ class DemoExportShipmentSeeder extends Seeder
             'shipment_mode' => ShipmentMode::Fcl,
             // The AJU number exists once the PEB is lodged (step 5).
             'aju_number' => 'AJU-EXP-0003',
+            'do_number' => 'DO-EXP-0003',
             'shipping_line' => 'Evergreen',
             'vessel_name' => 'MV Ever Summit',
             'voyage_number' => 'V-512',
@@ -110,6 +112,18 @@ class DemoExportShipmentSeeder extends Seeder
             'port_of_loading' => 'Makassar New Port',
             'gate_in_cy_at' => now()->subDays(23),
             'vgm_value' => 30250,
+            'final_checked' => true,
+            'final_checked_at' => now()->subDays(22),
+        ]);
+
+        $this->container($exported, 'EGHU6677882', '40', 'SL-0008', [
+            'driver_name' => 'Rudi Hartono',
+            'license_number' => 'DD 9456 LM',
+            'tracking_position' => 'Passed Camba checkpoint',
+            'stuffing_status' => StuffingStatus::Finished,
+            'port_of_loading' => 'Makassar New Port',
+            'gate_in_cy_at' => now()->subDays(23),
+            'vgm_value' => 28750,
             'final_checked' => true,
             'final_checked_at' => now()->subDays(22),
         ]);

@@ -47,6 +47,7 @@ class ImportContainerForm
                     ->schema([
                         ...ContainerFields::importIdentity(),
                         ...ContainerFields::importSize(),
+                        ...ContainerFields::importSeal(),
                         ...ContainerFields::importWeights(),
                         ...ContainerFields::importCbm(),
                         ...ContainerFields::importCargo(),

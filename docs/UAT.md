@@ -73,7 +73,7 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 - [ ] Open Export B/L `BL-EXP-0005`. Expected: the sailing strip at the top of the containers card shows Jakarta (IDJKT) → Singapore (SGSIN) — no arrival line yet — and **Shipment overview** lists vessel MV Ocean Voyager, voyage V-330 and line Maersk; in **Containers**, `MSKU9002004` reads "Container on the way to factory" with the logged time above the mini progress bar, and its seal `SL-0105` sits in the **Seal No.** column.
 - [ ] Expand `MSKU9002004` on `BL-EXP-0005`. Expected: done steps are green checks, the current step is a highlighted brand-blue card with a "Current" badge, upcoming steps are greyed with no field values, and the step fields show Driver name, Vehicle / Truck Number and Tracking position.
-- [ ] Open Import B/L `BL-IMP-0003` and expand `MSKU7788991`. Expected: the row reads "Empty container returned" with a full green bar and a `Gross weight 14250.000 kg` chip; the sailing card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Actual arrival** (no ETA line); the "Open tracking link" field opens a new tab.
+- [ ] Open Import B/L `BL-IMP-0003` and expand `MSKU7788991`. Expected: the row reads "Empty container returned" with a full green bar and a `Gross weight 14250.000 kg` chip; the sailing card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA**; the "Open tracking link" field opens a new tab.
 - [ ] Open Import B/L `BL-IMP-0001`. Expected: the summary shows an **In Progress** status pill, **Document received date** and no "Completed at"; each container row reads "Not started" (the note inside says the journey starts at Container inspection) except `CMAU7654324`, which reads "Cancelled" with the red note; `CMAU7654321` shows its photos while `CMAU7654323`'s internal-only photos stay hidden. Keep a container expanded, send a **Request revision** message and resize to mobile width — the container stays open and nothing overflows.
 - [ ] Portal home (`/portal`). Expected: the table has **POD / Vessel arrival** (`BL-IMP-0001` shows Surabaya (IDSUB) with "ETA 28 Sep 2026 10:34") and **Document received date** columns, no "Latest place" column, and `—` for rows with nothing reached.
 
@@ -572,8 +572,8 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 **Sailing information**
 
-- [ ] Portal → open `BL-IMP-0003`. Expected: the sailing strip (no header) shows Shanghai (CNSHA) → Surabaya (IDSUB) with the departure date and **Actual arrival**; no ETA line once the actual arrival exists. Vessel, voyage and shipping line sit in **Shipment overview**.
-- [ ] Portal → open `BL-IMP-0001` (still sailing). Expected: the card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA** instead of an actual arrival; on `BL-EXP-0005` (earlier milestone) the strip shows the route but no arrival line — values whose milestone is not reached never appear.
+- [ ] Portal → open `BL-IMP-0003`. Expected: the sailing strip (no header) shows Shanghai (CNSHA) → Surabaya (IDSUB) with the departure date and **Arrival time / ETA**. Vessel, voyage and shipping line sit in **Shipment overview**.
+- [ ] Portal → open `BL-IMP-0001` (still sailing). Expected: the card shows Shanghai (CNSHA) → Surabaya (IDSUB) with **Arrival time / ETA**; on `BL-EXP-0005` (earlier milestone) the strip shows the route but no arrival line — values whose milestone is not reached never appear.
 - [ ] Expand `MSKU7788991` on `BL-IMP-0003`. Expected: the container's step-by-step journey reads inspection → gate out → factory → empty return with its logged times.
 - [ ] Open `BL-IMP-0001` (containers not started). Expected: each container row reads "Not started" and the journey inside begins with "Container inspection" marked upcoming.
 

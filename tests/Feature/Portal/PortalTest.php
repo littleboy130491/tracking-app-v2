@@ -212,7 +212,11 @@ class PortalTest extends TestCase
         // The seeded operator covers NUS and SNI for the admin panel scope.
         $operator = User::query()->where('email', 'operator@example.com')->firstOrFail();
         $this->assertSame(2, $operator->companies()->count());
-        $this->assertSame(0, $nusantara->operators()->whereKeyNot($operator->getKey())->count());
+
+        // The imajiner operator covers every company.
+        $imajiner = User::query()->where('email', 'webmaster.imajiner@gmail.com')->firstOrFail();
+        $this->assertSame(5, $imajiner->companies()->count());
+        $this->assertSame(1, $nusantara->operators()->whereKeyNot($operator->getKey())->count());
 
         $this->assertSame(5, Company::query()->count());
         $this->assertSame(5, User::query()->role(Role::CUSTOMER)->count());
@@ -294,7 +298,7 @@ class PortalTest extends TestCase
             ->assertDontSee('BL-IMP-0002');
     }
 
-    public function test_the_number_search_matches_containers_and_shows_the_latest_journey(): void
+    public function test_the_number_search_matches_bl_numbers_only(): void
     {
         // Agus manages SNI, which owns the completed export BL-EXP-0003.
         $agus = User::query()->where('email', 'agus@borneo.test')->firstOrFail();
@@ -302,13 +306,19 @@ class PortalTest extends TestCase
         $this->actingAs($agus);
 
         Livewire::test(Dashboard::class)
-            ->set('number', 'EGHU6677881')
+            ->set('number', 'BL-EXP-0003')
             ->assertSee('BL-EXP-0003')
             ->assertDontSee('BL-EXP-0001')
             ->assertSee('POD / Vessel arrival')
             ->assertSee('Document received date')
             ->assertDontSee('Latest place')
             ->assertSee('Final checking shipment details');
+
+        // A container number no longer matches anything: search is B/L only.
+        Livewire::test(Dashboard::class)
+            ->set('number', 'EGHU6677881')
+            ->assertDontSee('BL-EXP-0003')
+            ->assertSee('No shipments match your filters');
     }
 
     public function test_the_company_filter_cannot_reveal_another_companys_shipments(): void
@@ -478,6 +488,7 @@ class PortalTest extends TestCase
 
         $importContainer->update([
             'size' => '40',
+            'seal_number' => 'SEAL-IMP-22',
             'gross_weight' => '1020.500',
             'cbm' => '8.250',
             'description_of_goods' => 'Consumer electronics',
@@ -549,7 +560,7 @@ class PortalTest extends TestCase
 
         $importPage = Livewire::test(ImportShipmentDetail::class, ['importShipment' => $importShipment->getKey()]);
         foreach ([
-            '40 ft', '1020.500', 'Description of goods',
+            '40 ft', 'SEAL-IMP-22', '1020.500', 'Description of goods',
             'Driver name', 'Rina Driver', 'No. License', 'B 1234 ABC', 'Gate out CY', 'Tracking position driver',
             'Bekasi', 'Tracking position (url)', 'Open tracking link',
             'Loading in factory status', 'Finished', 'Return depot name', 'Jakarta Return Depot', 'Return date',
@@ -894,7 +905,7 @@ class PortalTest extends TestCase
             ->assertDontSee('Arrival time / ETA');
     }
 
-    public function test_the_sailing_card_prefers_actual_arrival_over_eta(): void
+    public function test_the_sailing_card_shows_eta(): void
     {
         $user = $this->portalUser();
         $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-ARRIVED');
@@ -902,18 +913,14 @@ class PortalTest extends TestCase
             'current_milestone' => ImportMilestone::EmptyReturned,
             'port_of_discharge' => 'Singapore',
             'eta_at' => '2026-10-01 08:00:00',
-            'actual_arrival_at' => '2026-10-02 09:00:00',
         ]);
 
         $this->actingAs($user);
 
-        // The card's route side shows "Actual arrival · ..."; the ETA label
-        // with the middot separator only renders when no actual exists. The
-        // Tracking progress list still shows the ETA field on its own row.
         Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
             ->assertOk()
-            ->assertSee('Actual arrival · 02 Oct 2026 09:00')
-            ->assertDontSee('Arrival time / ETA ·');
+            ->assertSee('Arrival time / ETA · 01 Oct 2026 08:00')
+            ->assertDontSee('Actual arrival');
     }
 
     public function test_the_sailing_card_is_absent_until_a_sailing_value_is_reached(): void
@@ -968,8 +975,7 @@ class PortalTest extends TestCase
         $arrived->update([
             'current_milestone' => ImportMilestone::EmptyReturned,
             'port_of_discharge' => 'Singapore',
-            'eta_at' => '2026-10-01 08:00:00',
-            'actual_arrival_at' => '2026-10-02 09:00:00',
+            'eta_at' => '2026-10-02 09:00:00',
         ]);
 
         $sailing = $this->exportShipmentFor($company, 'BL-EXP-POD-ETA');
@@ -984,9 +990,7 @@ class PortalTest extends TestCase
         Livewire::test(Dashboard::class)
             ->assertSee('POD / Vessel arrival')
             ->assertSee('Singapore')
-            // Actual arrival wins over the ETA on the same row.
-            ->assertSee('02 Oct 2026 09:00')
-            ->assertDontSee('ETA 01 Oct 2026 08:00')
+            ->assertSee('ETA 02 Oct 2026 09:00')
             ->assertSee('Hong Kong')
             ->assertSee('ETA 05 Oct 2026 14:30')
             ->assertSee('Document received date')

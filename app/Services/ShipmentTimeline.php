@@ -160,7 +160,6 @@ class ShipmentTimeline
             'Departure date',
             'Port of discharge',
             'Arrival time / ETA',
-            'Actual arrival',
             'Vessel name',
             'Voyage number',
             'Shipping line',
@@ -405,6 +404,7 @@ class ShipmentTimeline
         if ($this->milestoneReached($sequence, $position, ImportMilestone::ResponseBilling)) {
             $fields = [
                 ['label' => 'Container Size', 'value' => $size],
+                ['label' => 'Seal number', 'value' => $container->seal_number],
                 ['label' => 'Gross weight (kg)', 'value' => $container->gross_weight],
                 ['label' => 'CBM / measurement', 'value' => $container->cbm],
                 ['label' => 'Packages', 'value' => $container->packages],
@@ -491,7 +491,6 @@ class ShipmentTimeline
                 ],
                 ImportMilestone::BillingPayment => [
                     ['label' => 'Arrival time / ETA', 'value' => $shipment->eta_at],
-                    ['label' => 'Actual arrival', 'value' => $shipment->actual_arrival_at],
                 ],
                 ImportMilestone::ResponseBilling => [
                     ['label' => 'Billing response', 'value' => $shipment->billing_response],

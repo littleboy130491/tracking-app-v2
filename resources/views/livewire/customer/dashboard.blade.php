@@ -15,9 +15,9 @@
         {{-- Primary search spans the full width; secondary filters sit in a
              compact row below it so the bar stays tidy on every breakpoint. --}}
         <div class="relative">
-            <label for="number" class="mb-1 block text-xs font-medium text-slate-500">
-                Search B/L number, container or seal
-            </label>
+                <label for="number" class="mb-1 block text-xs font-medium text-slate-500">
+                    Search B/L number
+                </label>
             <div class="relative">
                 <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -26,7 +26,7 @@
                     id="number"
                     type="text"
                     wire:model.live.debounce.400ms="number"
-                    placeholder="Search by B/L, container or seal…"
+                    placeholder="Search by B/L number…"
                     class="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 >
             </div>
@@ -121,7 +121,7 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                    <th class="px-4 py-3">B/L number</th>
+                    <th class="whitespace-nowrap px-4 py-3">B/L number</th>
                     <th class="px-4 py-3">Type</th>
                     <th class="px-4 py-3">Company</th>
                     <th class="px-4 py-3">Status</th>
@@ -137,7 +137,7 @@
                         ? route('customer.export-shipments.show', ['exportShipment' => $shipment->getKey()])
                         : route('customer.import-shipments.show', ['importShipment' => $shipment->getKey()]))
                     <tr class="cursor-pointer hover:bg-slate-50" onclick="window.location='{{ $detailUrl }}'">
-                        <td class="px-4 py-3">
+                        <td class="whitespace-nowrap px-4 py-3">
                             <a
                                 href="{{ $detailUrl }}"
                                 class="font-medium text-brand-600 underline-offset-2 hover:text-brand-700 hover:underline"
@@ -167,13 +167,9 @@
                         <td class="px-4 py-3">
                             @if (filled($sail['Port of discharge'] ?? null))
                                 {{ $sail['Port of discharge'] }}
-                                @if (filled($sail['Actual arrival'] ?? null))
-                                    <span class="block text-xs text-slate-500">{{ $sail['Actual arrival'] }}</span>
-                                @elseif (filled($sail['Arrival time / ETA'] ?? null))
+                                @if (filled($sail['Arrival time / ETA'] ?? null))
                                     <span class="block text-xs text-slate-500">ETA {{ $sail['Arrival time / ETA'] }}</span>
                                 @endif
-                            @elseif (filled($sail['Actual arrival'] ?? null))
-                                {{ $sail['Actual arrival'] }}
                             @elseif (filled($sail['Arrival time / ETA'] ?? null))
                                 ETA {{ $sail['Arrival time / ETA'] }}
                             @else

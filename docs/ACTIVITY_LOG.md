@@ -1154,3 +1154,47 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 13:27 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | containersTab docblock updated |
 | 2026-09-24 13:27 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Import loading-fields checklist updated |
 | 2026-09-24 13:34 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/ShipmentFields.php | Unused footer slot dropped from containersTab |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | database/migrations/2026_09_15_040006_create_import_shipments_table.php | Dropped actual_arrival_at from import_shipments |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | app/Models/ImportShipment.php | Fillable and cast for actual_arrival_at removed |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Actual arrival removed from import form Step 10 |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | app/Services/ShipmentTimeline.php | Import Actual arrival field removed |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | app/Filament/Concerns/TableExportColumns.php | Import CSV list without actual_arrival_at |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Sailing strip ETA only, no actual arrival branch |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Dashboard POD arrival ETA only |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | database/seeders/DemoImportShipmentSeeder.php | actual_arrival_at removed from completed import |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | actual_arrival_at removed from SPJM import |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Sailing and dashboard tests assert ETA only |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | IMPORT.md | Actual arrival line dropped from Step 10 |
+| 2026-09-24 13:40 | Muse Spark | UPDATE | docs/UAT.md | Import checklists without Actual arrival field |
+| 2026-09-24 13:55 | Muse Spark | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Completed export covers do_number, driver license and tracking url |
+| 2026-09-24 13:55 | Muse Spark | UPDATE | app/Filament/Resources/ExportContainers/Schemas/ExportContainerForm.php | Fixed stale Stuffing step label and field list |
+| 2026-09-24 14:05 | Muse Spark | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Completed import container covers driver, tracking url, factory and depot |
+| 2026-09-24 14:05 | Muse Spark | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | SPJM containers carry cargo and full tracking pair |
+| 2026-09-24 14:05 | Muse Spark | UPDATE | docs/ERD.md | IMPORT_SHIPMENTS lists shipment_mode and confirmed_by |
+| 2026-09-24 14:15 | Muse Spark | UPDATE | app/Models/Concerns/ActsAsContainer.php | Picked container photos default to customer-visible |
+| 2026-09-24 14:15 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Seal column export-only, hidden on import |
+| 2026-09-24 14:25 | Muse Spark | UPDATE | app/Models/Concerns/ActsAsContainer.php | Attachment ownership exclusive across containers and processes |
+| 2026-09-24 14:30 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Track live link moved under tracking position cell |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Truck icon removed from sailing strip |
+| 2026-09-24 14:35 | Muse Spark | CREATE | database/migrations/2026_09_24_141100_add_seal_number_to_import_containers_table.php | Seal number column on import_containers |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Models/ImportContainer.php | seal_number fillable |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Filament/Concerns/ContainerFields.php | importSeal group added |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Filament/Resources/ImportShipments/Schemas/ImportShipmentForm.php | Seal in import repeater |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Filament/Resources/ImportContainers/Schemas/ImportContainerForm.php | Seal in standalone form |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Services/ShipmentTimeline.php | Seal number in import summary |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Seal column for both processes |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | app/Filament/Concerns/TableExportColumns.php | seal_number in import CSV |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | docs/ERD.md | IMPORT_CONTAINERS seal_number |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Demo seals SL-IMP-0001..0003 |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | database/seeders/DemoSpjmShipmentSeeder.php | Demo seals SL-IMP-0010/0011 |
+| 2026-09-24 14:35 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Import seal parity coverage |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | database/seeders/DemoExportShipmentSeeder.php | Second containers on BL-EXP-0002 and BL-EXP-0003 |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | database/seeders/DemoImportShipmentSeeder.php | Second container ONEU9988772 on BL-IMP-0002 |
+| 2026-09-24 14:45 | Muse Spark | CREATE | database/seeders/DemoImajinerUserSeeder.php | imajiner operator on all companies |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | database/seeders/DatabaseSeeder.php | Wired DemoImajinerUserSeeder |
+| 2026-09-24 14:45 | Muse Spark | CREATE | database/seeders/BulkShipmentSeeder.php | Standalone 25+25 shipments for pagination |
+| 2026-09-24 14:45 | Muse Spark | DELETE | app/Filament/Widgets/BillOfLadingsWidget.php | Dashboard back to Filament default |
+| 2026-09-24 14:45 | Muse Spark | DELETE | resources/views/filament/widgets/bill-of-ladings.blade.php | Dashboard back to Filament default |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | B/L column nowrap, B/L-only search labels |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | app/Livewire/Customer/Dashboard.php | Portal search matches B/L number only |
+| 2026-09-24 14:45 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | B/L-only search test, imajiner matrix cover |

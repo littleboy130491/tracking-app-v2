@@ -60,8 +60,6 @@ class DemoSpjmShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'departure_date' => now()->subDays(25)->toDateString(),
             'eta_at' => now()->subDays(9),
-            // Arrived one day late; the timeline shows the actual, not the ETA.
-            'actual_arrival_at' => now()->subDays(8),
             'goods_description' => 'Textile machinery',
             'packages' => '64 crates',
             'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',
@@ -81,10 +79,14 @@ class DemoSpjmShipmentSeeder extends Seeder
         $this->hsCodes($completed, '8448.20');
 
         $this->container($completed, 'MSKU7788990', '40', [
+            'description_of_goods' => 'Textile machinery',
+            'packages' => '64 crates',
+            'seal_number' => 'SL-IMP-0010',
             'gate_out_cy_at' => now()->subDays(7),
             'driver_name' => 'Slamet Riyadi',
             'license_number' => 'L 9021 UZ',
             'tracking_position' => 'Driver Slamet — live location shared',
+            'tracking_position_url' => 'https://maps.example.com/live/MSKU7788990',
             'gross_weight' => 24800,
             'cbm' => 58.4,
             'factory_loading_status' => FactoryLoadingStatus::Finished,
@@ -95,9 +97,13 @@ class DemoSpjmShipmentSeeder extends Seeder
         ]);
 
         $this->container($completed, 'MSKU7788991', '20', [
+            'description_of_goods' => 'Textile machinery',
+            'packages' => '64 crates',
+            'seal_number' => 'SL-IMP-0011',
             'gate_out_cy_at' => now()->subDays(7),
             'driver_name' => 'Agus Salim',
             'license_number' => 'L 8842 XX',
+            'tracking_position' => 'Driver Agus — live location shared',
             'tracking_position_url' => 'https://maps.example.com/live/MSKU7788991',
             'gross_weight' => 14250,
             'cbm' => 29.1,

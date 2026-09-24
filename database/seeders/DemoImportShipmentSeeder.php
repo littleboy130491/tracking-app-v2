@@ -23,6 +23,7 @@ namespace Database\Seeders;
 use App\Enums\BillingIssuanceStatus;
 use App\Enums\BillingResponse;
 use App\Enums\ContainerStatus;
+use App\Enums\FactoryLoadingStatus;
 use App\Enums\ImportMilestone;
 use App\Enums\ShipmentMode;
 use App\Enums\ShipmentStatus;
@@ -75,10 +76,12 @@ class DemoImportShipmentSeeder extends Seeder
         $this->container($sinar, 'CMAU7654321', '20', [
             'description_of_goods' => 'Electronic components',
             'packages' => '85 cartons',
+            'seal_number' => 'SL-IMP-0001',
         ]);
         $this->container($sinar, 'CMAU7654322', '20', [
             'description_of_goods' => 'Electronic components',
             'packages' => '85 cartons',
+            'seal_number' => 'SL-IMP-0002',
         ]);
     }
 
@@ -100,8 +103,6 @@ class DemoImportShipmentSeeder extends Seeder
             'port_of_discharge' => 'Surabaya (IDSUB)',
             'departure_date' => now()->subDays(18)->toDateString(),
             'eta_at' => now()->subDays(4),
-            // The vessel arrived as estimated; the timeline shows the actual.
-            'actual_arrival_at' => now()->subDays(4),
             'goods_description' => 'Household appliances',
             'packages' => '120 cartons',
             'terminal_name' => 'Terminal Petikemas Surabaya (TPS)',
@@ -123,10 +124,34 @@ class DemoImportShipmentSeeder extends Seeder
         $this->container($imported, 'ONEU9988771', '20', [
             'description_of_goods' => 'Household appliances',
             'packages' => '120 cartons',
+            'seal_number' => 'SL-IMP-0003',
             'gate_out_cy_at' => now()->subDays(3),
+            'driver_name' => 'Budi Santoso',
+            'license_number' => 'L 1234 AB',
             'tracking_position' => 'Driver Budi — live location shared',
+            'tracking_position_url' => 'https://maps.example.com/live/ONEU9988771',
             'gross_weight' => 18500,
             'cbm' => 33.2,
+            'factory_loading_status' => FactoryLoadingStatus::Finished,
+            'return_depot_name' => 'Depot JRD, Surabaya',
+            'empty_returned_at' => now()->subDays(2),
+            'status' => ContainerStatus::Completed,
+            'completed_at' => now()->subDays(2),
+        ]);
+
+        $this->container($imported, 'ONEU9988772', '20', [
+            'description_of_goods' => 'Household appliances',
+            'packages' => '120 cartons',
+            'seal_number' => 'SL-IMP-0004',
+            'gate_out_cy_at' => now()->subDays(3),
+            'driver_name' => 'Agus Wijaya',
+            'license_number' => 'L 5678 CD',
+            'tracking_position' => 'Driver Agus — live location shared',
+            'tracking_position_url' => 'https://maps.example.com/live/ONEU9988772',
+            'gross_weight' => 16200,
+            'cbm' => 30.5,
+            'factory_loading_status' => FactoryLoadingStatus::Finished,
+            'return_depot_name' => 'Depot JRD, Surabaya',
             'empty_returned_at' => now()->subDays(2),
             'status' => ContainerStatus::Completed,
             'completed_at' => now()->subDays(2),

@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             HsCodeSeeder::class,
             DemoCompanySeeder::class,
+            DemoImajinerUserSeeder::class,
             DemoExportShipmentSeeder::class,
             DemoImportShipmentSeeder::class,
             DemoSpjmShipmentSeeder::class,

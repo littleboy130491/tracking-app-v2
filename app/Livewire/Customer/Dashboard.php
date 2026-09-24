@@ -7,8 +7,7 @@
  * - Lists the shipments of the companies the signed-in user manages in one
  *   combined list; the **Type** filter defaults to All and can narrow to
  *   Export or Import only.
- * - Filters by type, company, number (B/L, container, seal), status, year and
- *   month (spec.md).
+ * - Filters by type, company, B/L number, status, year and month (spec.md).
  * - Merges the export and import tables in PHP (they are separate tables) and
  *   paginates the combined result manually.
  * - Adds each shipment's latest reached milestone (Latest Event) and its
@@ -162,14 +161,7 @@ class Dashboard extends Component
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->with(['company', 'containers'])
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))
-            ->when($this->number !== '', fn (Builder $query) => $query->where(
-                fn (Builder $inner) => $inner
-                    ->where('bl_number', 'like', '%'.$this->number.'%')
-                    ->orWhereHas('containers', fn (Builder $containers) => $containers
-                        ->where('container_number', 'like', '%'.$this->number.'%')
-                        // Only export containers carry a seal number.
-                        ->when($model === ExportShipment::class, fn (Builder $seal) => $seal->orWhere('seal_number', 'like', '%'.$this->number.'%'))),
-            ))
+            ->when($this->number !== '', fn (Builder $query) => $query->where('bl_number', 'like', '%'.$this->number.'%'))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
             ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('created_at', (int) $this->month))

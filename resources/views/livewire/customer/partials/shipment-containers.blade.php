@@ -1,9 +1,10 @@
 {{-- File: resources/views/livewire/customer/partials/shipment-containers.blade.php
      Responsibility: Expandable container table inside the B/L detail card.
      What it does: each container is a <details> row with plain table columns
-       (number, latest event/time, tracking position, seal); the expanded body
-       holds the Track live link and photo strip (when present) and the
-       per-step journey from the container-steps partial.
+       (number, latest event/time, tracking position with the Track live link
+       below it when a tracking URL exists, seal); the expanded body holds
+       the photo strip (when present) and the per-step journey from the
+       container-steps partial.
      How to use: @include('livewire.customer.partials.shipment-containers',
        ['containers' => $containers, 'containerProgress' => $containerProgress]).
      How to extend: step data comes from App\Services\ContainerProgress
@@ -70,6 +71,20 @@
                         </span>
                         <span class="min-w-0 border-l border-slate-100 px-4 py-3">
                             <span class="block break-words text-sm text-slate-800">{{ $trackingPosition }}</span>
+                            @if ($hasTrackLink)
+                                <a
+                                    href="{{ $progress->trackingUrl }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Track this container live (opens in a new tab)"
+                                    class="mt-1 inline-flex items-center gap-1 text-xs font-medium text-brand-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                >
+                                    <svg class="h-3 w-3" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 3h6v6M17 3l-8 8M7 5H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2" />
+                                    </svg>
+                                    Track live
+                                </a>
+                            @endif
                         </span>
                         <span class="min-w-0 border-l border-slate-100 px-4 py-3">
                             <span class="block break-words text-sm text-slate-800">{{ $sealNumber }}</span>
@@ -82,50 +97,32 @@
                     </span>
                 </summary>
                 <div class="grid gap-4 border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-6">
-                    @if ($hasTrackLink || $photos->isNotEmpty())
+                    @if ($photos->isNotEmpty())
                     <section class="rounded-lg bg-white p-4 ring-1 ring-slate-100">
-                        @if ($hasTrackLink)
-                            <div class="flex flex-wrap items-center justify-end gap-2">
-                                <a
-                                    href="{{ $progress->trackingUrl }}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    aria-label="Track this container live (opens in a new tab)"
-                                    class="inline-flex items-center gap-1.5 rounded-md bg-brand-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                                >
-                                    <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 3h6v6M17 3l-8 8M7 5H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-2" />
-                                    </svg>
-                                    Track live
-                                </a>
-                            </div>
-                        @endif
-                        @if ($photos->isNotEmpty())
-                            <div @class(['mt-4' => $hasTrackLink])>
-                                <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500">Photos</h4>
-                                <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                                    @foreach ($photoSlots as $category => $photoLabel)
-                                        @foreach ($photos->filter(fn ($photo) => $photo->category?->value === $category) as $photo)
-                                            <a
-                                                href="{{ $photo->url }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                aria-label="{{ $photoLabel }} (opens in a new tab)"
-                                                class="group/photo block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                        <div>
+                            <h4 class="text-xs font-medium uppercase tracking-wide text-slate-500">Photos</h4>
+                            <div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                                @foreach ($photoSlots as $category => $photoLabel)
+                                    @foreach ($photos->filter(fn ($photo) => $photo->category?->value === $category) as $photo)
+                                        <a
+                                            href="{{ $photo->url }}"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label="{{ $photoLabel }} (opens in a new tab)"
+                                            class="group/photo block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                                        >
+                                            <img
+                                                src="{{ $photo->url }}"
+                                                alt="{{ $photo->alt ?: $photoLabel }}"
+                                                loading="lazy"
+                                                class="h-28 w-full rounded-md border border-slate-200 object-cover transition group-hover/photo:border-brand-400"
                                             >
-                                                <img
-                                                    src="{{ $photo->url }}"
-                                                    alt="{{ $photo->alt ?: $photoLabel }}"
-                                                    loading="lazy"
-                                                    class="h-28 w-full rounded-md border border-slate-200 object-cover transition group-hover/photo:border-brand-400"
-                                                >
-                                                <span class="mt-1 block break-words text-xs text-slate-500">{{ $photoLabel }}</span>
-                                            </a>
-                                        @endforeach
+                                            <span class="mt-1 block break-words text-xs text-slate-500">{{ $photoLabel }}</span>
+                                        </a>
                                     @endforeach
-                                </div>
+                                @endforeach
                             </div>
-                        @endif
+                        </div>
                     </section>
                     @endif
 

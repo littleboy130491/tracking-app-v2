@@ -86,6 +86,20 @@ class ContainerFields
     }
 
     /**
+     * Import: seal number, recorded with the billing response (IMPORT.md step 11).
+     *
+     * @return list<Field>
+     */
+    public static function importSeal(): array
+    {
+        return [
+            TextInput::make('seal_number')
+                ->label('Seal number')
+                ->maxLength(100),
+        ];
+    }
+
+    /**
      * Export: driver and vehicle identity.
      *
      * @return list<Field>

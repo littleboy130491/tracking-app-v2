@@ -145,6 +145,7 @@ erDiagram
     IMPORT_SHIPMENTS {
         int id PK
         string bl_number
+        string shipment_mode
         int company_id FK
         string company_name_snapshot
         date document_received_date
@@ -152,6 +153,7 @@ erDiagram
         string shipping_line
         string vessel_name
         bool confirmation_checklist
+        int confirmed_by FK
         string aju_number
         string voyage_number
         string billing_issuance_status
@@ -196,6 +198,7 @@ erDiagram
         int import_shipment_id FK
         string container_number "unique per shipment"
         string size
+        string seal_number
         text description_of_goods "seeded from the shipment, overridable"
         string packages "seeded from the shipment, overridable"
         string driver_name

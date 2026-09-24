@@ -113,7 +113,7 @@ class TableExportColumns
                 'shipping_line', 'vessel_name', 'confirmation_checklist',
                 'aju_number', 'voyage_number', 'billing_issuance_status',
                 'port_of_loading', 'departure_date', 'port_of_discharge',
-                'eta_at', 'actual_arrival_at', 'billing_response', 'goods_description',
+                'eta_at', 'billing_response', 'goods_description',
                 'packages', 'terminal_name', 'loading_date', 'loading_destination',
                 'status', 'current_milestone', 'completed_at',
                 'created_at', 'updated_at', 'deleted_at',
@@ -154,7 +154,7 @@ class TableExportColumns
     {
         return [
             ...self::fields([
-                'id', 'import_shipment_id', 'container_number', 'size',
+                'id', 'import_shipment_id', 'container_number', 'size', 'seal_number',
                 'description_of_goods', 'packages',
                 'driver_name', 'license_number', 'gate_out_cy_at',
                 'tracking_position', 'tracking_position_url',
