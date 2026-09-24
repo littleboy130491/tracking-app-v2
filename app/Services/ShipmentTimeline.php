@@ -191,6 +191,22 @@ class ShipmentTimeline
     }
 
     /**
+     * Whether the sailing strip has a route to draw. Vessel facts alone do
+     * not count — they live in the shipment overview — so a shipment with
+     * only a vessel or line (or nothing) renders no strip at all instead of
+     * an empty box.
+     *
+     * @param  array<string, string>  $sailing
+     */
+    public static function hasRoute(array $sailing): bool
+    {
+        return filled($sailing['Port of loading'] ?? null)
+            || filled($sailing['Departure date'] ?? null)
+            || filled($sailing['Port of discharge'] ?? null)
+            || filled($sailing['Arrival time / ETA'] ?? null);
+    }
+
+    /**
      * When each milestone was reached, from the milestone-change log trail.
      * A revisited step keeps its most recent pass.
      *

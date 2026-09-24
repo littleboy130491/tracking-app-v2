@@ -1210,3 +1210,8 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 15:10 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Expose recovery, logo and hyphen tests |
 | 2026-09-24 15:15 | Muse Spark | UPDATE | resources/views/livewire/customer/dashboard.blade.php | B/L list scrolls horizontally on mobile |
 | 2026-09-24 15:15 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | Ports side by side on mobile, smaller type |
+| 2026-09-24 15:20 | Muse Spark | UPDATE | app/Services/ShipmentTimeline.php | hasRoute gate for the sailing strip |
+| 2026-09-24 15:20 | Muse Spark | UPDATE | resources/views/livewire/customer/partials/sailing-information.blade.php | No strip without a route |
+| 2026-09-24 15:20 | Muse Spark | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Card hides with empty strip |
+| 2026-09-24 15:20 | Muse Spark | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Card hides with empty strip |
+| 2026-09-24 15:20 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Vessel-only sailing regression test |

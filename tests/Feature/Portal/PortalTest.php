@@ -1017,6 +1017,22 @@ class PortalTest extends TestCase
             ->assertDontSee('Actual arrival');
     }
 
+    public function test_a_vessel_only_sailing_renders_no_empty_strip_or_card(): void
+    {
+        // BL-IMP-0014 is cancelled with only vessel facts and no containers:
+        // the strip draws nothing and the shared card stays hidden with it.
+        $agus = User::query()->where('email', 'agus@borneo.test')->firstOrFail();
+        $shipment = ImportShipment::query()->where('bl_number', 'BL-IMP-0014')->firstOrFail();
+
+        $this->actingAs($agus);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('MV SITC Haiphong')
+            ->assertDontSee('Port of loading')
+            ->assertDontSee('Port of discharge');
+    }
+
     public function test_the_sailing_card_is_absent_until_a_sailing_value_is_reached(): void
     {
         $user = $this->portalUser();

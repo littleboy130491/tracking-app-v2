@@ -90,9 +90,10 @@
 
     @include('components.shipment-timeline', ['entries' => $timeline])
 
-    @if ($sailing !== [] || $containers->isNotEmpty())
+    @if (\App\Services\ShipmentTimeline::hasRoute($sailing) || $containers->isNotEmpty())
         {{-- The sailing strip and the containers table share one card; the
-             divider only appears between them when both are present. --}}
+             divider only appears between them when both are present. A
+             vessel-only sailing draws no strip, so the card hides with it. --}}
         <div class="mt-6 divide-y divide-slate-200 overflow-hidden rounded-xl bg-white shadow-sm">
             @include('livewire.customer.partials.sailing-information', ['sailing' => $sailing])
 

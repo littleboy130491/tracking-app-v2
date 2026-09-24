@@ -3,7 +3,8 @@
      What it does: renders the shipment's route (ports and their dates) as a
        line view; the vessel facts live in the shipment overview. Fed by
        ShipmentTimeline::sailingInformation(), so only values whose milestone
-       has been reached appear — the strip itself hides when there is nothing.
+       has been reached appear — the strip hides unless there is at least an
+       origin or a destination (see ShipmentTimeline::hasRoute()).
      How to use: included at the top of the shared sailing/containers card on
        the customer B/L detail pages.
      How to extend: add labels to ShipmentTimeline::sailingInformation(). --}}
@@ -15,9 +16,8 @@
     $hasOrigin = filled($pol) || filled($departure);
     $hasDestination = filled($pod) || filled($eta);
 @endphp
-@if ($sailing !== [])
+@if (\App\Services\ShipmentTimeline::hasRoute($sailing))
 <div class="px-4 py-4 sm:px-6">
-    @if ($hasOrigin || $hasDestination)
         {{-- Route strip: a dashed line whose ends mark the ports, each port's
              facts sitting underneath its end. The ports stay side by side on
              mobile (two columns) so the dots keep lining up with their text. --}}
@@ -52,6 +52,5 @@
                 @endif
             </div>
         </div>
-    @endif
 </div>
 @endif
