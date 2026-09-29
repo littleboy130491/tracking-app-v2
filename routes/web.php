@@ -11,13 +11,10 @@
  * - Serves the passwordless login flow (email form, OTP send, signed verify).
  * - Serves the authenticated portal: dashboard plus one detail page per
  *   process for shipments (Livewire full-page components).
- * - Serves attachments through one authorized route shared by the portal and
- *   the admin panel; the files themselves sit on a private disk.
  * How to use: `php artisan route:list`.
  * How to extend: add portal pages as Livewire components and register here.
  */
 
-use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\Customer\LoginController;
 use App\Http\Controllers\Customer\LogoutController;
 use App\Livewire\Customer\Dashboard;
@@ -62,9 +59,4 @@ Route::middleware('auth')->group(function (): void {
         ->name('customer.export-shipments.show');
     Route::get('/portal/import-shipments/{importShipment}', ImportShipmentDetail::class)
         ->name('customer.import-shipments.show');
-
-    // Attachments live on a private disk; this authorized route is the only
-    // way to fetch them, for portal customers and admin staff alike.
-    Route::get('/attachments/{attachment}', AttachmentController::class)
-        ->name('attachments.show');
 });

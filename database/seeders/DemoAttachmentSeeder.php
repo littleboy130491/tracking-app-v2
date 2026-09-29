@@ -4,10 +4,9 @@
  * File: database/seeders/DemoAttachmentSeeder.php
  * Responsibility: Seeds demo photos so the container pickers are not empty.
  * What it does:
- * - Generates small placeholder JPEGs on the configured Curator disk (private
- *   by default; GD, no bundled files) and registers them as media rows, then
- *   links one photo per picker slot to a couple of demo containers, both
- *   customer-visible and internal.
+ * - Generates small placeholder JPEGs on the public disk (GD, no bundled files)
+ *   and registers them as media rows, then links one photo per picker slot to
+ *   a couple of demo containers, both customer-visible and internal.
  * - Looks its containers up by number, so it depends on the shipment and
  *   container seeders running first.
  * - Idempotent: media are matched by `name`, and each container's photos are
@@ -109,21 +108,19 @@ class DemoAttachmentSeeder extends Seeder
         }
 
         $path = 'demo/'.$name;
-        $disk = (string) config('curator.default_disk');
-        $visibility = (string) config('curator.default_visibility', 'private');
 
-        if (! Storage::disk($disk)->exists($path)) {
-            Storage::disk($disk)->put($path, $this->placeholderJpeg(), $visibility);
+        if (! Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->put($path, $this->placeholderJpeg());
         }
 
         $media->fill([
-            'disk' => $disk,
+            'disk' => 'public',
             'directory' => 'demo',
-            'visibility' => $visibility,
+            'visibility' => 'public',
             'path' => $path,
             'width' => 64,
             'height' => 64,
-            'size' => Storage::disk($disk)->size($path),
+            'size' => Storage::disk('public')->size($path),
             'type' => 'image/jpeg',
             'ext' => 'jpg',
             'alt' => Str::headline(str_replace('_', ' ', $category)),

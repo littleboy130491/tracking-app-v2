@@ -10,9 +10,8 @@
  *   flag and who uploaded it.
  * - Registered as Curator's model in config/curator.php, so Curator's own
  *   resource and picker read and write this table.
- * - Files live on a private disk; every URL this model hands out points at
- *   the authorized /attachments route, and canBeViewedBy() decides who may
- *   fetch the file behind it.
+ * - Files live on the public disk and are reachable by their plain URL; there
+ *   is no per-user access check on them.
  * How to use: `$shipment->attachments`, `$container->attachments`.
  * How to extend: add linkage columns in the curator-table migration.
  */
@@ -20,12 +19,10 @@
 namespace App\Models;
 
 use App\Enums\AttachmentCategory;
-use App\Enums\ShipmentStatus;
 use Awcodes\Curator\Models\Media;
 use Awcodes\Curator\Observers\MediaObserver;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // Attributes are not inherited, so Curator's observer is re-declared here: it
@@ -53,39 +50,6 @@ class Attachment extends Media
             'category' => AttachmentCategory::class,
             'is_customer_visible' => 'boolean',
         ];
-    }
-
-    /**
-     * Every URL this model hands out — portal photos, Filament picker
-     * thumbnails — points at the authorized serving route. The files live on
-     * a private disk, so there is no public URL to fall back to; the resized
-     * variants carry their size so grids never load the original.
-     */
-    public function url(): Attribute
-    {
-        return $this->servedUrl();
-    }
-
-    public function thumbnailUrl(): Attribute
-    {
-        return $this->servedUrl('thumb');
-    }
-
-    public function mediumUrl(): Attribute
-    {
-        return $this->servedUrl('medium');
-    }
-
-    public function largeUrl(): Attribute
-    {
-        return $this->servedUrl('large');
-    }
-
-    private function servedUrl(?string $size = null): Attribute
-    {
-        return Attribute::make(get: fn (): string => route('attachments.show', $size === null
-            ? $this
-            : ['attachment' => $this, 'size' => $size]));
     }
 
     /**
@@ -142,32 +106,5 @@ class Attachment extends Media
     public function linkedContainer(): ExportContainer|ImportContainer|null
     {
         return $this->export_container_id ? $this->exportContainer : $this->importContainer;
-    }
-
-    /**
-     * Whether the given user may fetch this file through the serving route:
-     * privileged staff see everything, other staff and customers stay inside
-     * their companies, and customers only get files flagged for the portal on
-     * shipments that already left the draft state.
-     */
-    public function canBeViewedBy(User $user): bool
-    {
-        $shipment = $this->linkedShipment();
-
-        // Media with no shipment link (library orphans) stays staff-only.
-        if ($shipment === null) {
-            return $user->canViewAllShipments();
-        }
-
-        if (! $user->canViewAllShipments()
-            && ! in_array((int) $shipment->company_id, $user->companyIds(), true)) {
-            return false;
-        }
-
-        if ($user->isInternal()) {
-            return true;
-        }
-
-        return $this->is_customer_visible && $shipment->status !== ShipmentStatus::Draft;
     }
 }

@@ -13,11 +13,9 @@ use Awcodes\Curator\Resources\Media\Tables\MediaTable;
 
 return [
     'curation_formats' => PreviewableExtensions::toArray(),
-    // Attachments are served through the authorized /attachments route, so
-    // they live on a private disk and are never publicly fetchable.
-    'default_disk' => env('CURATOR_DEFAULT_DISK', 'local'),
+    'default_disk' => env('CURATOR_DEFAULT_DISK', env('FILESYSTEM_DISK', 'public')),
     'default_directory' => null,
-    'default_visibility' => 'private',
+    'default_visibility' => 'public',
     'features' => [
         'curations' => true,
         'file_swap' => true,

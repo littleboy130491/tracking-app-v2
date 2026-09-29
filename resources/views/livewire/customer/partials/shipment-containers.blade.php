@@ -112,7 +112,7 @@
                                             class="group/photo block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                                         >
                                             <img
-                                                src="{{ $photo->thumbnail_url }}"
+                                                src="{{ $photo->url }}"
                                                 alt="{{ $photo->alt ?: $photoLabel }}"
                                                 loading="lazy"
                                                 class="h-28 w-full rounded-md border border-slate-200 object-cover transition group-hover/photo:border-brand-400"
