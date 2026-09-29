@@ -18,6 +18,9 @@
         </include>
     </source>
     <php>
+        <!-- The seeded feature suite (demo data + Livewire renders) outgrew the
+             CLI default of 128M, so the limit is raised for test runs. -->
+        <ini name="memory_limit" value="512M"/>
         <!-- force="true" so the test environment always wins over any ambient
              environment variables (e.g. sessions must not hit the database). -->
         <env name="APP_ENV" value="testing" force="true"/>

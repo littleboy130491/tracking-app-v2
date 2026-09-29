@@ -148,6 +148,27 @@ class TableDateFiltersTest extends TestCase
             ->assertCanNotSeeTableRecords([$otherYear]);
     }
 
+    public function test_operator_year_options_stay_inside_the_assigned_companies(): void
+    {
+        $this->actingAs(User::query()->where('email', 'operator@example.com')->firstOrFail());
+
+        // The seeded operator is linked to NUS and SNI only.
+        $inScope = Company::query()->where('code', 'NUS')->firstOrFail();
+        $outOfScope = Company::query()->whereNotIn('code', ['NUS', 'SNI'])->firstOrFail();
+
+        $this->backdate($this->exportShipment($inScope, 1), '2024-05-10 08:00:00');
+        $this->backdate($this->exportShipment($outOfScope, 2), '2019-05-10 08:00:00');
+
+        $options = Livewire::test(ListExportShipments::class)
+            ->instance()
+            ->getTable()
+            ->getFilter('created_year')
+            ->getOptions();
+
+        $this->assertArrayHasKey('2024', $options);
+        $this->assertArrayNotHasKey('2019', $options);
+    }
+
     private function admin(): User
     {
         $admin = User::factory()->create();

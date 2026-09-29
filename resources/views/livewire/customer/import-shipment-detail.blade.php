@@ -1,6 +1,7 @@
 {{-- File: resources/views/livewire/customer/import-shipment-detail.blade.php
      Responsibility: Customer view of one import shipment, its journey, containers and draft PIB.
-     What it does: shows shipment facts, the draft-PIB confirmation actions, the
+     What it does: shows shipment facts, the draft-PIB confirmation actions
+       (only once the office waits at the WaitingConfirmation milestone), the
        customer's own notes, the journey timeline and the sailing + containers card.
      How to use: rendered by App\Livewire\Customer\ImportShipmentDetail.
      How to extend: add customer-visible fields as they are published. --}}
@@ -23,6 +24,9 @@
 
     @include('livewire.customer.partials.shipment-summary', ['shipment' => $shipment, 'typeLabel' => 'Import', 'sailing' => $sailing])
 
+    {{-- The card only exists while the draft PIB is with the customer: before
+         the WaitingConfirmation milestone there is nothing to confirm yet. --}}
+    @if ($draftPibConfirmed || $waitingForConfirmation)
     <div class="mt-6 overflow-hidden rounded-xl bg-white shadow-sm">
         <div class="border-b border-slate-200 px-4 py-3 sm:px-6">
             <h2 class="flex items-center gap-2 font-semibold text-slate-900">Draft PIB confirmation</h2>
@@ -41,6 +45,7 @@
                 <button
                     type="button"
                     wire:click="confirm"
+                    wire:confirm="Confirming the draft PIB is final from the portal. Continue?"
                     class="rounded-md bg-accent-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-100"
                 >
                     Confirm draft PIB
@@ -87,6 +92,7 @@
         @endif
         </div>
     </div>
+    @endif
 
     @include('components.shipment-timeline', ['entries' => $timeline])
 

@@ -10,9 +10,11 @@
  *   from ShipmentTimeline::forContainers()).
  * - The customer can confirm the draft PIB (sets the confirmation checklist)
  *   or request a revision, which stores a customer-authored note on the
- *   shipment and writes the activity log. Once the draft is confirmed those
- *   actions are neither offered nor accepted: the guard is here, not only
- *   in the view.
+ *   shipment and writes the activity log. Both actions exist only while the
+ *   office waits at the WaitingConfirmation milestone — the milestone is the
+ *   gate, so a draft PIB cannot be confirmed before it was sent. Once the
+ *   draft is confirmed those actions are neither offered nor accepted: the
+ *   guard is here, not only in the view.
  * - Lists the customer's own notes on the shipment; notes written by anyone
  *   else (e.g. the office) stay internal and are never shown here.
  * How to use: route customer.import-shipments.show.
@@ -21,6 +23,7 @@
 
 namespace App\Livewire\Customer;
 
+use App\Enums\ImportMilestone;
 use App\Models\ImportShipment;
 use App\Services\ActivityLogger;
 use App\Services\ShipmentTimeline;
@@ -57,6 +60,14 @@ class ImportShipmentDetail extends Component
             return;
         }
 
+        // Nothing to confirm until the office sends the draft; the milestone
+        // is the gate, so a hidden button cannot be forced from the console.
+        if (! $this->isWaitingForConfirmation($shipment)) {
+            throw ValidationException::withMessages([
+                'confirmation' => 'This shipment is not waiting for your confirmation yet.',
+            ]);
+        }
+
         $shipment->update(['confirmation_checklist' => true]);
 
         app(ActivityLogger::class)->record(
@@ -79,6 +90,14 @@ class ImportShipmentDetail extends Component
         if ($this->isDraftPibConfirmed($shipment)) {
             throw ValidationException::withMessages([
                 'revisionNotes' => 'This draft PIB is already confirmed. Please contact us if it has to change.',
+            ]);
+        }
+
+        // Same milestone gate as confirm(): before the draft was sent there is
+        // nothing to revise.
+        if (! $this->isWaitingForConfirmation($shipment)) {
+            throw ValidationException::withMessages([
+                'revisionNotes' => 'This draft PIB is not open for revision requests yet.',
             ]);
         }
 
@@ -124,6 +143,7 @@ class ImportShipmentDetail extends Component
             'containers' => $containers,
             'containerProgress' => $timeline->forContainers($shipment, $containers),
             'draftPibConfirmed' => $this->isDraftPibConfirmed($shipment),
+            'waitingForConfirmation' => $this->isWaitingForConfirmation($shipment),
             // Only the customer's own notes: office notes on the shipment
             // are internal and must not leak into the portal.
             'ownNotes' => $shipment->notes()->where('author_id', auth()->id())->latest()->get(),
@@ -135,6 +155,15 @@ class ImportShipmentDetail extends Component
     private function isDraftPibConfirmed(ImportShipment $shipment): bool
     {
         return (bool) $shipment->confirmation_checklist;
+    }
+
+    /**
+     * The office is at the milestone that hands the draft PIB to the
+     * customer; only then do the portal's confirm / revision actions apply.
+     */
+    private function isWaitingForConfirmation(ImportShipment $shipment): bool
+    {
+        return $shipment->current_milestone === ImportMilestone::WaitingConfirmation;
     }
 
     private function shipment(): ImportShipment

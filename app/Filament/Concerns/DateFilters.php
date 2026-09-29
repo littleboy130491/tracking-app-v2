@@ -7,8 +7,9 @@
  * - Returns three Filament filters — `created_year`, `created_month` and
  *   `created_between` (From/Until date pickers) — that narrow a list by the
  *   record's date column, defaulting to `created_at`.
- * - Year options list the years actually stored in the model's table (SQLite
- *   strftime, the same approach as the customer portal dashboard).
+ * - Year options list the years actually stored in the table, read through
+ *   YearOptions (portable across databases) and scoped by the table's own
+ *   query, so operators only see the years of their companies.
  * - Used by the B/L, container and company relation-manager tables so every
  *   admin list filters dates the same way.
  * How to use: `...DateFilters::make(ImportShipment::class),` inside `->filters([...])`.
@@ -19,9 +20,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Concerns;
 
+use App\Services\YearOptions;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -75,12 +78,10 @@ class DateFilters
     {
         return SelectFilter::make('created_year')
             ->label('Year')
-            ->options(fn (): array => $modelClass::query()
-                ->selectRaw("distinct strftime('%Y', {$column}) as year")
-                ->orderByDesc('year')
-                ->pluck('year', 'year')
-                ->filter()
-                ->all())
+            ->options(fn (Table $table): array => YearOptions::forQuery(
+                $table->getQuery() ?? $modelClass::query(),
+                $column,
+            ))
             ->query(fn (Builder $query, array $data): Builder => $query->when(
                 $data['value'] ?? null,
                 fn (Builder $inner, mixed $year): Builder => $inner->whereYear($column, (int) $year),

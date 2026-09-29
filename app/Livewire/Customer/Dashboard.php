@@ -7,9 +7,12 @@
  * - Lists the shipments of the companies the signed-in user manages in one
  *   combined list; the **Type** filter defaults to All and can narrow to
  *   Export or Import only.
- * - Filters by type, company, B/L number, status, year and month (spec.md).
- * - Merges the export and import tables in PHP (they are separate tables) and
- *   paginates the combined result manually.
+ * - Filters by type, company, B/L number, status, year and month (spec.md);
+ *   the year options come from YearOptions, so the query works on any
+ *   database, not only SQLite.
+ * - Combines the export and import tables (separate tables) with one UNION
+ *   over id/created_at, ordered and paginated in SQL; only the current page's
+ *   models are hydrated, with the relations the list and the timeline need.
  * - Adds each shipment's latest reached milestone (Latest Event) and its
  *   reached sailing fields (POD / Vessel arrival), both from
  *   ShipmentTimeline::forShipment() so admin milestone gating applies.
@@ -26,9 +29,13 @@ use App\Models\Company;
 use App\Models\ExportShipment;
 use App\Models\ImportShipment;
 use App\Services\ShipmentTimeline;
+use App\Services\YearOptions;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -79,26 +86,7 @@ class Dashboard extends Component
             default => [ExportShipment::class, ImportShipment::class],
         };
 
-        // Export and Import live in separate tables, so the combined list is
-        // merged in PHP and paginated manually instead of via paginate().
-        $rows = collect();
-        foreach ($models as $model) {
-            $rows = $rows->merge($this->shipmentQuery($model, $viewAll, $companyIds)->get());
-        }
-
-        $rows = $rows->sortByDesc('created_at')->values();
-
-        $perPage = in_array($this->perPage, [15, 25, 50, 100], true) ? $this->perPage : 50;
-        $page = max(1, (int) $this->getPage());
-        $total = $rows->count();
-        $shipments = new LengthAwarePaginator(
-            $rows->forPage($page, $perPage),
-            $total,
-            $perPage,
-            $page,
-            ['path' => LengthAwarePaginator::resolveCurrentPath()],
-        );
-        $shipments->withPath(request()->url());
+        $shipments = $this->paginatedShipments($models, $viewAll, $companyIds);
 
         // One forShipment() call per row feeds both the Latest event column
         // and the POD / Vessel arrival column, so milestone gating matches the
@@ -129,15 +117,12 @@ class Dashboard extends Component
                 ->except(ShipmentStatus::Draft->value)
                 ->all(),
             'years' => collect($models)
-                ->flatMap(fn (string $model) => $model::query()
-                    ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
-                    ->selectRaw('distinct strftime("%Y", created_at) as year')
-                    ->pluck('year'))
-                ->filter()
-                ->unique()
-                ->sortDesc()
-                ->values()
-                ->mapWithKeys(fn (string $year) => [$year => $year])
+                ->flatMap(fn (string $model): array => YearOptions::forQuery(
+                    $model::query()->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds)),
+                ))
+                // flatMap drops the year => year keys, so rebuild them.
+                ->mapWithKeys(fn (string $year): array => [$year => $year])
+                ->sortKeysDesc()
                 ->all(),
             'months' => [
                 '1' => 'January', '2' => 'February', '3' => 'March', '4' => 'April',
@@ -145,6 +130,76 @@ class Dashboard extends Component
                 '9' => 'September', '10' => 'October', '11' => 'November', '12' => 'December',
             ],
         ]);
+    }
+
+    /**
+     * The combined, filtered list, ordered and paginated by the database: one
+     * UNION over id/created_at keeps memory to the current page.
+     *
+     * @param  list<class-string<ExportShipment|ImportShipment>>  $models
+     * @param  list<int>  $companyIds
+     * @return LengthAwarePaginator<int, ExportShipment|ImportShipment>
+     */
+    private function paginatedShipments(array $models, bool $viewAll, array $companyIds): LengthAwarePaginator
+    {
+        $union = null;
+
+        foreach ($models as $model) {
+            $member = $this->shipmentQuery($model, $viewAll, $companyIds)
+                ->select(['id', 'created_at'])
+                ->selectRaw('? as model_class', [$model]);
+
+            $union = $union === null ? $member : $union->unionAll($member);
+        }
+
+        $perPage = in_array($this->perPage, [15, 25, 50, 100], true) ? $this->perPage : 50;
+        $page = max(1, (int) $this->getPage());
+
+        $paginator = DB::query()
+            ->fromSub($union, 'shipments')
+            ->orderByDesc('created_at')
+            // Stable tie-breaker so equally dated rows never swap pages.
+            ->orderBy('model_class')
+            ->orderByDesc('id')
+            ->paginate($perPage, page: $page);
+
+        $paginator->withPath(request()->url());
+        $paginator->setCollection($this->hydratePage($paginator->getCollection()));
+
+        return $paginator;
+    }
+
+    /**
+     * Load the page's rows as models with the relations the list and the
+     * timeline read, so no column costs a query per row.
+     *
+     * @param  Collection<int, object{model_class: string, id: int}>  $rows
+     * @return Collection<int, ExportShipment|ImportShipment>
+     */
+    private function hydratePage(Collection $rows): Collection
+    {
+        $models = collect();
+
+        foreach ($rows->groupBy('model_class') as $modelClass => $modelRows) {
+            $query = $modelClass::query()->with([
+                'company',
+                'activityLogs' => fn ($query) => $query->where('event', 'milestone_changed'),
+            ]);
+
+            if ($modelClass === ImportShipment::class) {
+                $query->with('hsCodes');
+            }
+
+            $models = $models->merge(
+                $query->whereIn('id', $modelRows->pluck('id'))->get()
+                    ->keyBy(fn (Model $shipment): string => $shipment::class.':'.$shipment->getKey()),
+            );
+        }
+
+        return $rows
+            ->map(fn (object $row): ?Model => $models->get($row->model_class.':'.$row->id))
+            ->filter()
+            ->values();
     }
 
     /**
@@ -159,12 +214,10 @@ class Dashboard extends Component
         return $model::query()
             ->visibleInPortal()
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
-            ->with(['company', 'containers'])
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))
             ->when($this->number !== '', fn (Builder $query) => $query->where('bl_number', 'like', '%'.$this->number.'%'))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
-            ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('created_at', (int) $this->month))
-            ->orderByDesc('created_at');
+            ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('created_at', (int) $this->month));
     }
 }

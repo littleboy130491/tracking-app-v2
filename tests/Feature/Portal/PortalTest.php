@@ -39,7 +39,9 @@ use App\Services\ShipmentTimelineEntry;
 use BenBjurstrom\Otpz\Actions\CreateOtp;
 use BenBjurstrom\Otpz\Actions\SendOtp;
 use BenBjurstrom\Otpz\Models\Otp;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Tests\TestCase;
@@ -1107,10 +1109,102 @@ class PortalTest extends TestCase
             ->assertDontSee('Latest place');
     }
 
+    public function test_the_dashboard_year_filter_lists_the_years_of_the_customers_shipments(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+        $own = $this->exportShipmentFor($company, 'BL-EXP-YEAR-OPTIONS');
+        $own->forceFill(['created_at' => '2023-04-01 08:00:00'])->save();
+
+        // Another company's shipment must not leak its year into the dropdown.
+        $other = $this->portalUser('other@example.com', 'Other Company');
+        $foreign = $this->exportShipmentFor($other->companies()->firstOrFail(), 'BL-EXP-FOREIGN-YEAR');
+        $foreign->forceFill(['created_at' => '2019-04-01 08:00:00'])->save();
+
+        $this->actingAs($user);
+
+        Livewire::test(Dashboard::class)
+            ->assertSee('<option value="2023">2023</option>', false)
+            ->assertDontSee('<option value="2019">2019</option>', false);
+    }
+
+    public function test_the_dashboard_orders_the_combined_list_across_tables(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        $this->backdate($this->exportShipmentFor($company, 'BL-EXP-ORDER-1'), '2026-01-05 08:00:00');
+        $this->backdate($this->importShipmentFor($company, 'BL-IMP-ORDER-2'), '2026-05-10 08:00:00');
+        $this->backdate($this->exportShipmentFor($company, 'BL-EXP-ORDER-3'), '2026-09-01 08:00:00');
+
+        $this->actingAs($user);
+
+        Livewire::test(Dashboard::class)
+            ->assertOk()
+            ->assertSeeInOrder(['BL-EXP-ORDER-3', 'BL-IMP-ORDER-2', 'BL-EXP-ORDER-1']);
+    }
+
+    public function test_the_dashboard_paginates_the_combined_list_in_sql(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        // 16 rows across both tables: the oldest slips to page two.
+        foreach (range(1, 16) as $i) {
+            $reference = 'BL-PAGE-'.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+            $shipment = $i % 2 === 0
+                ? $this->importShipmentFor($company, $reference)
+                : $this->exportShipmentFor($company, $reference);
+
+            $this->backdate($shipment, '2026-01-'.str_pad((string) $i, 2, '0', STR_PAD_LEFT).' 08:00:00');
+        }
+
+        $this->actingAs($user);
+
+        $page = Livewire::test(Dashboard::class)->set('perPage', 15);
+
+        $page->assertOk()
+            ->assertSee('16 shipments found')
+            ->assertSee('BL-PAGE-16')
+            ->assertDontSee('BL-PAGE-01');
+
+        $page->call('gotoPage', 2)
+            ->assertOk()
+            ->assertSee('BL-PAGE-01')
+            ->assertDontSee('BL-PAGE-16');
+    }
+
+    public function test_the_dashboard_does_not_run_a_query_per_row(): void
+    {
+        $user = $this->portalUser();
+        $company = $user->companies()->firstOrFail();
+
+        // Twelve rows at a milestone whose step reads HS codes: the old
+        // per-row lookups (milestone log + HS codes) would show up here.
+        foreach (range(1, 12) as $i) {
+            $this->importShipmentFor($company, 'BL-N1-'.$i)
+                ->update(['current_milestone' => ImportMilestone::ResponseBilling]);
+        }
+
+        $this->actingAs($user);
+
+        $queries = 0;
+        DB::listen(function () use (&$queries): void {
+            $queries++;
+        });
+
+        Livewire::test(Dashboard::class)->assertOk();
+
+        // 11 queries are needed for these 12 rows; per-row lookups (the old
+        // milestone-log and HS-code queries) would push this past 25.
+        $this->assertLessThan(15, $queries);
+    }
+
     public function test_a_customer_can_confirm_an_import_draft_pib(): void
     {
         $user = $this->portalUser();
         $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-CONFIRM');
+        $shipment->update(['current_milestone' => ImportMilestone::WaitingConfirmation]);
 
         $this->actingAs($user);
 
@@ -1161,6 +1255,7 @@ class PortalTest extends TestCase
     {
         $user = $this->portalUser();
         $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-PENDING');
+        $shipment->update(['current_milestone' => ImportMilestone::WaitingConfirmation]);
 
         $this->actingAs($user);
 
@@ -1168,6 +1263,96 @@ class PortalTest extends TestCase
             ->assertOk()
             ->assertSee('Confirm draft PIB')
             ->assertSee('Request revision');
+    }
+
+    public function test_a_draft_pib_before_the_waiting_confirmation_milestone_offers_no_actions(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-EARLY');
+
+        $this->actingAs($user);
+
+        // The shipment is still at DocumentReceived: the office has not sent
+        // the draft PIB, so the portal shows no confirmation block at all.
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertDontSee('Draft PIB confirmation')
+            ->assertDontSee('Confirm draft PIB')
+            ->assertDontSee('Request revision');
+    }
+
+    public function test_a_draft_pib_cannot_be_confirmed_before_the_waiting_confirmation_milestone(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-EARLY-FORCE');
+
+        $this->actingAs($user);
+
+        // A forced call must not confirm a draft that was never sent.
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->call('confirm')
+            ->assertHasErrors('confirmation');
+
+        $this->assertFalse($shipment->refresh()->confirmation_checklist);
+        $this->assertNull($shipment->confirmed_by);
+        $this->assertDatabaseMissing('activity_logs', [
+            'import_shipment_id' => $shipment->getKey(),
+            'event' => 'draft_pib_confirmed',
+        ]);
+    }
+
+    public function test_a_revision_cannot_be_requested_before_the_waiting_confirmation_milestone(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-EARLY-REV');
+
+        $this->actingAs($user);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->set('revisionNotes', 'Please change the HS code.')
+            ->call('requestRevision')
+            ->assertHasErrors('revisionNotes');
+
+        $this->assertDatabaseMissing('notes', [
+            'noteable_type' => ImportShipment::class,
+            'noteable_id' => $shipment->getKey(),
+        ]);
+        $this->assertDatabaseMissing('activity_logs', [
+            'import_shipment_id' => $shipment->getKey(),
+            'event' => 'draft_pib_revision_requested',
+        ]);
+    }
+
+    public function test_a_draft_pib_past_the_waiting_confirmation_milestone_offers_no_actions(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-LATE');
+        $shipment->update(['current_milestone' => ImportMilestone::FinalSendingPib]);
+
+        $this->actingAs($user);
+
+        // The office moved on without a confirmation: the draft is no longer
+        // with the customer, so neither action is offered or accepted.
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertDontSee('Draft PIB confirmation')
+            ->call('confirm')
+            ->assertHasErrors('confirmation');
+
+        $this->assertFalse($shipment->refresh()->confirmation_checklist);
+    }
+
+    public function test_the_confirm_button_asks_for_confirmation(): void
+    {
+        $user = $this->portalUser();
+        $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-DIALOG');
+        $shipment->update(['current_milestone' => ImportMilestone::WaitingConfirmation]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ImportShipmentDetail::class, ['importShipment' => $shipment->getKey()])
+            ->assertOk()
+            ->assertSee('wire:confirm', false);
     }
 
     public function test_a_confirmed_draft_cannot_be_revised_from_the_portal(): void
@@ -1193,6 +1378,7 @@ class PortalTest extends TestCase
     {
         $user = $this->portalUser();
         $shipment = $this->importShipmentFor($user->companies()->first(), 'BL-IMP-REVNOTE');
+        $shipment->update(['current_milestone' => ImportMilestone::WaitingConfirmation]);
 
         $this->actingAs($user);
 
@@ -1341,5 +1527,21 @@ class PortalTest extends TestCase
         ]);
 
         return $shipment->refresh();
+    }
+
+    /**
+     * Move a record's created_at so list ordering and pagination are
+     * deterministic.
+     *
+     * @template TModel of Model
+     *
+     * @param  TModel  $record
+     * @return TModel
+     */
+    private function backdate(Model $record, string $createdAt): Model
+    {
+        $record->forceFill(['created_at' => $createdAt])->save();
+
+        return $record;
     }
 }

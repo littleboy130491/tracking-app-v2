@@ -13,6 +13,8 @@
  * - `latestReached()` picks the last reached step off a `forShipment()` list
  *   and `sailingInformation()` lifts the sailing fields from reached steps —
  *   both reuse the same milestone locking as the timeline.
+ * - Milestone logs and HS codes come from the eager-loaded relations when the
+ *   caller loaded them (list pages), so a row costs no extra query.
  * How to use: `app(ShipmentTimeline::class)->forShipment($shipment)` or
  *   `->forContainers($shipment, $containers)` in the portal.
  * How to extend: add shipment values to `fieldsForMilestone()` and container
@@ -214,14 +216,17 @@ class ShipmentTimeline
      */
     private function milestoneReachedAt(ExportShipment|ImportShipment $shipment): Collection
     {
-        return ActivityLog::query()
-            ->where($shipment->activityLogShipmentKey(), $shipment->getKey())
-            ->where('event', 'milestone_changed')
-            ->orderBy('occurred_at')
-            ->get()
-            ->mapWithKeys(fn (ActivityLog $log) => [
-                (string) ($log->new_values['milestone'] ?? '') => $log->occurred_at,
-            ]);
+        $logs = $shipment->relationLoaded('activityLogs')
+            ? $shipment->activityLogs->where('event', 'milestone_changed')->sortBy('occurred_at')->values()
+            : ActivityLog::query()
+                ->where($shipment->activityLogShipmentKey(), $shipment->getKey())
+                ->where('event', 'milestone_changed')
+                ->orderBy('occurred_at')
+                ->get();
+
+        return $logs->mapWithKeys(fn (ActivityLog $log) => [
+            (string) ($log->new_values['milestone'] ?? '') => $log->occurred_at,
+        ]);
     }
 
     /**
@@ -512,7 +517,7 @@ class ShipmentTimeline
                     ['label' => 'Billing response', 'value' => $shipment->billing_response],
                     ['label' => 'Description of goods', 'value' => $shipment->goods_description],
                     ['label' => 'Packages', 'value' => $shipment->packages],
-                    ['label' => 'HS codes', 'value' => $shipment->hsCodes()->orderBy('code')->pluck('code')->implode(', ')],
+                    ['label' => 'HS codes', 'value' => $this->hsCodeList($shipment)],
                 ],
                 ImportMilestone::ContainerShippingSchedule => [
                     ['label' => 'Terminal name', 'value' => $shipment->terminal_name],
@@ -524,6 +529,19 @@ class ShipmentTimeline
         }
 
         return [];
+    }
+
+    /**
+     * The shipment's HS codes as one string; the eager-loaded relation is used
+     * as it is, otherwise the list is queried.
+     */
+    private function hsCodeList(ImportShipment $shipment): string
+    {
+        $codes = $shipment->relationLoaded('hsCodes')
+            ? $shipment->hsCodes->sortBy('code')
+            : $shipment->hsCodes()->orderBy('code')->get();
+
+        return $codes->pluck('code')->implode(', ');
     }
 
     /**

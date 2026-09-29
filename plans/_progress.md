@@ -581,3 +581,56 @@ Blocked: None
 - [x] Timeline fields right-side - DONE - 19:30
 
 - [x] Container fields right-side - DONE - 19:35
+
+# Progress - Audit fixes round (2026-09-28)
+
+Goal: Fix four audit findings: public attachments, ungated PIB confirmation, SQLite-only year SQL, all-in-memory dashboard.
+
+## Plan Checklist
+
+- [x] Step 1: Year options portable + scoped (finding 5) - DONE - 17:05
+- [x] Step 2: Gate Draft PIB confirmation on WaitingConfirmation (finding 4) - DONE - 17:18
+- [x] Step 3: Private attachment storage + authorized route (finding 2) - DONE - 17:29
+- [x] Step 4: Move existing attachments to the private disk (finding 2) - DONE - 17:33
+- [x] Step 5: Dashboard SQL pagination + timeline N+1 (finding 6) - DONE - 17:39
+
+## Current Focus
+
+All five steps are DONE. Plan complete.
+Next: user acceptance testing (docs/UAT.md sections for 2026-09-28).
+Blocked: None
+
+## Notes
+
+- Finding 2 approach approved by the user: private disk + authorized /attachments/{id} route (Option A).
+- Step 1: app/Services/YearOptions.php (driver-aware expression + PHP fallback); DateFilters reads years from $table->getQuery() so operators/relation managers stay scoped; Dashboard reuses the helper.
+- Step 2: confirm()/requestRevision() require current_milestone === WaitingConfirmation; the card renders only while waiting or once confirmed; wire:confirm on Confirm. Trade-off accepted: own notes hide if the office advances past step 5 without confirming.
+- Step 3: curator default disk local + visibility private; Attachment::canBeViewedBy() (privileged all, operator/company scope, customer needs is_customer_visible + non-draft); url/thumbnail/medium/large all point at attachments.show; controller streams inline for raster images only, otherwise download.
+- Step 3 side effect: the full suite outgrew PHP's 128M CLI default; phpunit.xml now sets memory_limit=512M.
+- Step 4: attachments:privatize moved all 15 demo files (public -> local/private); verified the copy before deleting; old public URL now 403. DemoAttachmentSeeder seeds on the configured (private) disk. Glide's cache under storage/app/.cache still holds old transformed copies (not publicly reachable). The 4 orphan images in storage/app/public were deleted with the user's approval.
+- Step 5: Dashboard builds one UNION of id/created_at per shipment table, orders/paginates in SQL and hydrates only the page with company + filtered activityLogs (+ hsCodes for imports); ShipmentTimeline reuses those relations. Measured: 11 queries for a 12-row page (was ~27). Verified the union query against the seeded dev DB (65 rows, 15 per page).
+- Verification: full suite 200 passed (1058 assertions); pint clean.
+
+## Final Summary (2026-09-28 17:39)
+
+All four audit findings are fixed:
+1. Finding 5 (year SQL): app/Services/YearOptions.php + scoped options in DateFilters/Dashboard.
+2. Finding 4 (PIB gate): WaitingConfirmation milestone gate + wire:confirm.
+3. Finding 2 (public attachments): private disk, authorized /attachments route, all 15 files moved, seeder updated.
+4. Finding 6 (dashboard): SQL pagination + eager-loaded timeline data.
+
+# Progress - Attachment follow-ups (2026-09-29)
+
+Goal: clear the stale Glide cache and add resized thumbnails to the authorized route.
+
+## Plan Checklist
+
+- [x] Step 1: Clear storage/app/.cache (Glide-only, 38 files) - DONE - 10:45
+- [x] Step 2: `?size=thumb|medium|large` WebP rendering + portal strip thumbs - DONE - 10:51
+
+## Notes
+
+- Sizes: thumb 200x200 cover, medium 640x640 cover, large 1024x1024 contain; cover/scale-down never upscale; bytes cached a day per attachment+size+file mtime.
+- Fallbacks: documents, unknown sizes and resize failures serve the original file; authorization runs first and applies to every size.
+- Verified on a real demo photo (64x64 -> 200x200 WebP, 1.7KB) and via HTTP (guest thumbnail request -> 302 to /login).
+- Verification: full suite 206 passed (1074 assertions); pint clean.

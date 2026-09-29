@@ -1215,3 +1215,44 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-24 15:20 | Muse Spark | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | Card hides with empty strip |
 | 2026-09-24 15:20 | Muse Spark | UPDATE | resources/views/livewire/customer/export-shipment-detail.blade.php | Card hides with empty strip |
 | 2026-09-24 15:20 | Muse Spark | UPDATE | tests/Feature/Portal/PortalTest.php | Vessel-only sailing regression test |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Services/YearOptions.php | Portable distinct-year query for dropdowns |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Concerns/DateFilters.php | Year options scoped by the table query |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Year options use the YearOptions helper |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Unit/YearOptionsTest.php | Per-driver year expression coverage |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/TableDateFiltersTest.php | Operator year-option scope test |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Dashboard year options regression test |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Year filter checklist |
+| 2026-09-28 17:05 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Audit fixes plan checklist |
+| 2026-09-28 17:18 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/ImportShipmentDetail.php | Confirm/revision gated on WaitingConfirmation milestone |
+| 2026-09-28 17:18 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/import-shipment-detail.blade.php | PIB card only while waiting; wire:confirm dialog |
+| 2026-09-28 17:18 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Early/late confirmation regression tests |
+| 2026-09-28 17:18 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Draft PIB gate checklist |
+| 2026-09-28 17:18 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 2 marked done |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | .env, .env.example | Curator disk switched to the private local disk |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | config/curator.php | Private disk + private visibility defaults |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Attachment.php | Authorized URLs + canBeViewedBy() access check |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Http/Controllers/AttachmentController.php | Streams attachments after authorization |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | routes/web.php | attachments.show route inside the auth group |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/Portal/AttachmentAccessTest.php | Attachment route access-control coverage |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | phpunit.xml | Test memory limit raised to 512M |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Attachment serving checklist |
+| 2026-09-28 17:29 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 3 marked done |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | CREATE | app/Console/Commands/PrivatizeAttachments.php | Moves attachments to the private disk, verified |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | database/seeders/DemoAttachmentSeeder.php | Demo photos now seed on the private disk |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | CREATE | tests/Feature/PrivatizeAttachmentsCommandTest.php | Move command coverage (dry run, skips, failures) |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | storage/app/private/demo (15 files) | Demo attachments moved off the public disk |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Private attachment storage checklist |
+| 2026-09-28 17:33 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 4 marked done |
+| 2026-09-28 17:36 | Devin (DeepSeek V4.1 Flash Max) | DELETE | storage/app/public (4 orphan images) | Unreferenced files removed from the public disk |
+| 2026-09-28 17:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | SQL UNION pagination, page-only hydration |
+| 2026-09-28 17:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Reuses eager-loaded milestone logs and HS codes |
+| 2026-09-28 17:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | Ordering, pagination and query-count tests |
+| 2026-09-28 17:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Dashboard list checklist |
+| 2026-09-28 17:39 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 5 marked done; plan complete |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | DELETE | storage/app/.cache (38 files) | Stale Glide thumbnail cache removed |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Http/Controllers/AttachmentController.php | Thumbnail sizes served as cached WebP |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Models/Attachment.php | Size-aware thumbnail/medium/large URLs |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Portal photo strip loads thumbnails |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/AttachmentAccessTest.php | Thumbnail size and fallback coverage |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Thumbnail checklist |
+| 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Follow-ups round logged |

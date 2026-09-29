@@ -11,6 +11,48 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Thumbnails on the photo strip and pickers (2026-09-29)
+
+- [ ] Portal → open an import B/L → expand a container with photos. Expected: the strip loads noticeably faster (the `<img>` now requests `?size=thumb`), and the images still look right.
+- [ ] Click a photo. Expected: the full-size original opens in a new tab (the link still uses the plain `/attachments/{id}` URL).
+- [ ] Admin → Bill of Ladings → open a B/L → **Containers**. Expected: picker thumbnails still render; a PDF/document slot shows the document icon, not a broken image.
+- [ ] Open a photo URL with `?size=medium` and one with `?size=huge`. Expected: `medium` returns a WebP; `huge` returns the original file.
+
+## 0. Dashboard list ordering and paging (2026-09-28)
+
+- [ ] Portal → dashboard with many shipments. Expected: the list still opens with the newest B/Ls first, "… shipments found" matches the total, and the **Show** selector (15/25/50/100) still works.
+- [ ] Go to page 2. Expected: older B/Ls than page 1 — Export and Import rows interleaved by date, no duplicates or missing rows between pages.
+- [ ] Check a row's **Latest event** and **POD / Vessel arrival** against its detail page. Expected: identical values.
+
+## 0. Existing attachments moved off the public disk (2026-09-28)
+
+- [ ] Open an old public link, e.g. `http://tracking-app-v2.test/storage/demo/demo-CMAU7654321-door_photo.jpg`. Expected: not served (403/404) — the file now lives on the private disk.
+- [ ] Portal → open the matching B/L → expand the container. Expected: the same photos still render, now through `/attachments/...`.
+- [ ] Admin → Bill of Ladings → open a B/L → **Containers**. Expected: the demo photo thumbnails still show in the pickers.
+- [ ] Run `php artisan migrate:fresh --seed` on a scratch database. Expected: demo photos land in `storage/app/private/demo`, nothing in `storage/app/public/demo`.
+
+## 0. Attachments served through the authorized route (2026-09-28)
+
+- [ ] Portal → open an import B/L with photos → expand a container. Expected: the photos still render (their URL now starts with `/attachments/`).
+- [ ] Right-click a photo → **Open image in new tab**. Expected: the image opens; a signed-out browser pasting the same URL lands on the portal login instead of the image.
+- [ ] Admin → Bill of Ladings → open a B/L → **Containers** tab. Expected: existing photo thumbnails still render in the pickers.
+- [ ] Admin → pick and save a new photo. Expected: it uploads (now to the private disk) and shows in the picker and, when flagged customer-visible, in the portal.
+
+## 0. Draft PIB confirmation gate (2026-09-28)
+
+- [ ] Portal → open an import B/L whose milestone is **before** "Waiting confirmation from customer". Expected: no **Draft PIB confirmation** card at all — no Confirm / Request revision buttons.
+- [ ] Admin → open that B/L → click the stepper step **5. Waiting confirmation from customer**. Expected: the portal card now appears with **Confirm draft PIB** and **Request revision**.
+- [ ] Portal → **Confirm draft PIB**. Expected: a browser confirm dialog appears first; after accepting, the status reads **Confirmed** and both actions disappear.
+- [ ] Portal → **Request revision** with a message. Expected: "Your revision request has been sent." and the message shows under **Your messages**; the office sees it in the shipment's Notes tab.
+- [ ] Admin → advance the stepper past step 5 **without** the customer confirming. Expected: the portal shows no Draft PIB confirmation card (the draft is no longer with the customer).
+
+## 0. Year filter options (2026-09-28)
+
+- [ ] Portal → dashboard → **Year** dropdown. Expected: only years that exist in your companies' shipments; picking one narrows the list.
+- [ ] Admin → Bill of Ladings → Export as the operator (`operator@example.com`). Expected: the **Year** dropdown only lists years from the operator's companies (NUS, SNI) — a year that exists only in another company's B/L is absent.
+- [ ] Same list as the admin. Expected: years from every company appear.
+- [ ] Admin → Companies → open a company → **Bill of Ladings** tab → **Year**. Expected: only years of that company's shipments.
+
 ## 0. Import loading fields above the repeater (2026-09-24)
 
 - [ ] Bill of Ladings → Import → open a B/L → **Containers** tab. Expected: **Terminal name**, **Date of loading** and **Loading destination** sit above the container list, right after Description of goods / Packages / HS codes — not below it.
