@@ -11,6 +11,13 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Shipment mode options: Break Bulk, FTL, OT (2026-10-05)
+
+- [ ] Admin → Bill of Ladings → Import → open a B/L whose step 2 (Checking document) is reached → **Shipment mode**. Expected: six options — FCL, LCL, Air Shipment, Break Bulk, FTL, OT.
+- [ ] Same on Export (step 2, Checking Booking Order). Expected: the same six options.
+- [ ] Pick **Break Bulk** (try FTL / OT too) and save. Expected: the form saves and reopens with the selection kept.
+- [ ] Portal → open that B/L → **Shipment mode**. Expected: shows the chosen label (e.g. "Break Bulk").
+
 ## 0. Thumbnails on the photo strip and pickers (2026-09-29)
 
 - [ ] Portal → open an import B/L → expand a container with photos. Expected: the strip loads noticeably faster (the `<img>` now requests `?size=thumb`), and the images still look right.

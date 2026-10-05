@@ -117,7 +117,7 @@ erDiagram
     EXPORT_SHIPMENTS {
         int id PK
         string bl_number
-        string shipment_mode "FCL | LCL | Air"
+        string shipment_mode "FCL | LCL | Air | Break Bulk | FTL | OT"
         int company_id FK
         string company_name_snapshot
         date document_received_date

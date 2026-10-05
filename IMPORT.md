@@ -9,7 +9,7 @@ Document received by (admin / operators name, for internal data)
 Step 2: Checking document
 B/L fields:
 B/L number
-Shipment mode (option: FCL | LCL | Air Shipment)
+Shipment mode (option: FCL | LCL | Air Shipment | Break Bulk | FTL | OT)
 
 Step 3: Draft PIB
 B/L fields:

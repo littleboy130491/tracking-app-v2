@@ -634,3 +634,39 @@ Goal: clear the stale Glide cache and add resized thumbnails to the authorized r
 - Fallbacks: documents, unknown sizes and resize failures serve the original file; authorization runs first and applies to every size.
 - Verified on a real demo photo (64x64 -> 200x200 WebP, 1.7KB) and via HTTP (guest thumbnail request -> 302 to /login).
 - Verification: full suite 206 passed (1074 assertions); pint clean.
+
+---
+
+# Progress - Shipment modes: Break Bulk, FTL, OT
+
+Goal: Add three new options to the shipment mode dropdown (admin forms + portal).
+
+## Plan Checklist
+
+- [x] Step 1: Add cases to app/Enums/ShipmentMode.php - DONE - 2026-10-05 16:20
+- [x] Step 2: Update IMPORT.md / EXPORT.md / docs/ERD.md option lists - DONE - 2026-10-05 16:21
+- [x] Step 3: UAT checklist + verification + activity log - DONE - 2026-10-05 16:24
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Verification
+
+- `php artisan test --compact` -> 186 passed (1022 assertions).
+- `vendor/bin/pint --dirty --format agent` -> clean.
+- `ShipmentMode::options()` in tinker lists all six modes.
+
+## Final Summary (2026-10-05 16:24)
+
+- Shipment mode gained **Break Bulk**, **FTL** and **OT** (`break_bulk` / `ftl` / `ot`) in app/Enums/ShipmentMode.php; the admin Import/Export dropdowns and the portal pick them up automatically.
+- IMPORT.md, EXPORT.md and docs/ERD.md option lists updated; UAT checklist added at the top of docs/UAT.md.
+- Full test suite green; no schema change (column is a plain string(20)).
+
+## Notes
+
+- New cases: BreakBulk='break_bulk', Ftl='ftl', Ot='ot'; labels Break Bulk / FTL / OT.
+- Forms (Import + Export) and the portal pick the options up automatically via ShipmentMode::options()/label(); no other code reads mode values.
+- Verified: tinker options() output includes the three; pint clean.

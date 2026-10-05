@@ -1256,3 +1256,11 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/AttachmentAccessTest.php | Thumbnail size and fallback coverage |
 | 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Thumbnail checklist |
 | 2026-09-29 10:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Follow-ups round logged |
+| 2026-10-05 16:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Enums/ShipmentMode.php | Added Break Bulk, FTL and OT shipment modes |
+| 2026-10-05 16:20 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | New plan started; Step 1 marked done |
+| 2026-10-05 16:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | IMPORT.md | Shipment mode options list updated |
+| 2026-10-05 16:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | EXPORT.md | Shipment mode options list updated |
+| 2026-10-05 16:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/ERD.md | shipment_mode value note updated |
+| 2026-10-05 16:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 2 marked done |
+| 2026-10-05 16:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Shipment mode options checklist added |
+| 2026-10-05 16:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Plan complete; final summary added |

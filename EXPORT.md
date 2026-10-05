@@ -17,7 +17,7 @@ Port of loading
 Port of discharge
 Closing time at depot (date time)
 Closing time at CY (date time)
-Shipment mode (option: FCL | LCL | Air Shipment)
+Shipment mode (option: FCL | LCL | Air Shipment | Break Bulk | FTL | OT)
 
 Step 3: Pick up empty container at depot
 B/L fields:
