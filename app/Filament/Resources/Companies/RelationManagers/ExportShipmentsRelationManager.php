@@ -43,6 +43,11 @@ class ExportShipmentsRelationManager extends RelationManager
                     ->searchable()
                     ->placeholder('—')
                     ->sortable(),
+                TextColumn::make('aju_number')
+                    ->label('AJU number')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (ShipmentStatus $state): string => $state->label())

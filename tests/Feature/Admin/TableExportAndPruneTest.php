@@ -27,6 +27,7 @@ use App\Filament\Resources\ImportShipments\Pages\ListImportShipments;
 use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\Company;
 use App\Models\ExportShipment;
+use App\Models\ImportShipment;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\Prune\OldDataPruner;
@@ -300,5 +301,58 @@ class TableExportAndPruneTest extends TestCase
             $this->assertContains('port_of_loading', $names);
             $this->assertContains('port_of_discharge', $names);
         }
+    }
+
+    public function test_shipment_lists_show_a_searchable_aju_number_column(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        foreach ([ListExportShipments::class, ListImportShipments::class] as $page) {
+            $this->assertHasSearchableColumn(
+                Livewire::test($page)->instance()->getTable()->getColumns(),
+                'aju_number',
+                "{$page} should show a searchable AJU number",
+            );
+        }
+
+        $company = Company::query()->firstOrFail();
+
+        foreach ([ExportShipmentsRelationManager::class, ImportShipmentsRelationManager::class] as $relationManager) {
+            $this->assertHasSearchableColumn(
+                Livewire::test($relationManager, [
+                    'ownerRecord' => $company,
+                    'pageClass' => EditCompany::class,
+                ])->instance()->getTable()->getColumns(),
+                'aju_number',
+                "{$relationManager} should show a searchable AJU number",
+            );
+        }
+    }
+
+    public function test_searching_a_shipment_list_matches_the_aju_number(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        $export = ExportShipment::query()->whereNotNull('aju_number')->firstOrFail();
+        $import = ImportShipment::query()->whereNotNull('aju_number')->firstOrFail();
+
+        Livewire::test(ListExportShipments::class)
+            ->searchTable($export->aju_number)
+            ->assertCanSeeTableRecords([$export]);
+
+        Livewire::test(ListImportShipments::class)
+            ->searchTable($import->aju_number)
+            ->assertCanSeeTableRecords([$import]);
+    }
+
+    /**
+     * @param  array<int, TableColumn>  $columns
+     */
+    private function assertHasSearchableColumn(array $columns, string $name, string $message): void
+    {
+        $column = collect($columns)->first(fn (TableColumn $column): bool => $column->getName() === $name);
+
+        $this->assertNotNull($column, $message);
+        $this->assertTrue($column->isSearchable(), $message);
     }
 }
