@@ -1264,3 +1264,21 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-10-05 16:21 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 2 marked done |
 | 2026-10-05 16:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Shipment mode options checklist added |
 | 2026-10-05 16:24 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Plan complete; final summary added |
+| 2026-10-05 16:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | AJU number column added (searchable) |
+| 2026-10-05 16:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | AJU number column added (searchable) |
+| 2026-10-05 16:32 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | AJU column plan started; Step 1 marked done |
+| 2026-10-05 16:35 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | AJU number column added (searchable) |
+| 2026-10-05 16:35 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | AJU number column added (searchable) |
+| 2026-10-05 16:35 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 2 marked done |
+| 2026-10-05 16:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | AJU column + search regression tests |
+| 2026-10-05 16:43 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 3 marked done |
+| 2026-10-05 16:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | AJU number column checklist added |
+| 2026-10-05 16:45 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Plan complete; final summary added |
+| 2026-10-05 16:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Portal search also matches AJU number |
+| 2026-10-05 16:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | AJU portal search plan started; Step 1 marked done |
+| 2026-10-05 16:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Search label/placeholder now B/L or AJU |
+| 2026-10-05 16:47 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 2 marked done |
+| 2026-10-05 16:48 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | tests/Feature/Portal/PortalTest.php | B/L + AJU search coverage (export and import) |
+| 2026-10-05 16:48 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 3 marked done |
+| 2026-10-05 16:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Portal B/L + AJU search checklist added |
+| 2026-10-05 16:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Plan complete; final summary added |

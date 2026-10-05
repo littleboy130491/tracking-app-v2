@@ -11,6 +11,20 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Portal search by B/L or AJU number (2026-10-05)
+
+- [ ] Portal → dashboard search box. Expected: label reads **Search B/L or AJU number**.
+- [ ] Search a B/L number (e.g. `BL-EXP-0003` as the customer who owns it). Expected: only that shipment is listed.
+- [ ] Search its AJU number instead (e.g. `AJU-EXP-0003`). Expected: the same shipment is found.
+- [ ] Search an import AJU (e.g. `AJU-0001`). Expected: the matching import B/L appears; a container number still finds nothing.
+
+## 0. AJU number column in admin lists (2026-10-05)
+
+- [ ] Admin → Bill of Ladings → Export. Expected: **AJU number** column sits right after B/L number; empty ones show `—`.
+- [ ] Same on Import. Expected: same column and position.
+- [ ] Type an AJU number (e.g. `AJU-0001`) into the list search box. Expected: the list narrows to the matching B/L.
+- [ ] Companies → open a company → **Bill of Ladings** tabs (Export + Import). Expected: the AJU number column appears there too.
+
 ## 0. Shipment mode options: Break Bulk, FTL, OT (2026-10-05)
 
 - [ ] Admin → Bill of Ladings → Import → open a B/L whose step 2 (Checking document) is reached → **Shipment mode**. Expected: six options — FCL, LCL, Air Shipment, Break Bulk, FTL, OT.

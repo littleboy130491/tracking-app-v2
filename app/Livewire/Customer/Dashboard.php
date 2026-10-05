@@ -7,9 +7,9 @@
  * - Lists the shipments of the companies the signed-in user manages in one
  *   combined list; the **Type** filter defaults to All and can narrow to
  *   Export or Import only.
- * - Filters by type, company, B/L number, status, year and month (spec.md);
- *   the year options come from YearOptions, so the query works on any
- *   database, not only SQLite.
+ * - Filters by type, company, B/L or AJU number, status, year and month
+ *   (spec.md); the year options come from YearOptions, so the query works on
+ *   any database, not only SQLite.
  * - Combines the export and import tables (separate tables) with one UNION
  *   over id/created_at, ordered and paginated in SQL; only the current page's
  *   models are hydrated, with the relations the list and the timeline need.
@@ -215,7 +215,11 @@ class Dashboard extends Component
             ->visibleInPortal()
             ->when(! $viewAll, fn (Builder $query) => $query->whereIn('company_id', $companyIds))
             ->when($this->company !== '', fn (Builder $query) => $query->where('company_id', (int) $this->company))
-            ->when($this->number !== '', fn (Builder $query) => $query->where('bl_number', 'like', '%'.$this->number.'%'))
+            ->when($this->number !== '', fn (Builder $query) => $query->where(
+                fn (Builder $query) => $query
+                    ->where('bl_number', 'like', '%'.$this->number.'%')
+                    ->orWhere('aju_number', 'like', '%'.$this->number.'%'),
+            ))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
             ->when($this->month !== '', fn (Builder $query) => $query->whereMonth('created_at', (int) $this->month));

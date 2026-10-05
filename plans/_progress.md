@@ -670,3 +670,81 @@ Blocked: None
 - New cases: BreakBulk='break_bulk', Ftl='ftl', Ot='ot'; labels Break Bulk / FTL / OT.
 - Forms (Import + Export) and the portal pick the options up automatically via ShipmentMode::options()/label(); no other code reads mode values.
 - Verified: tinker options() output includes the three; pint clean.
+
+---
+
+# Progress - AJU number column in admin tables
+
+Goal: Show a searchable AJU number column in the Filament admin Export/Import lists and company tabs.
+Started: 2026-10-05 16:32
+
+## Plan Checklist
+
+- [x] Step 1: Add searchable AJU column to ExportShipmentsTable + ImportShipmentsTable - DONE - 16:32
+- [x] Step 2: Mirror the column in the two company relation managers - DONE - 16:35
+- [x] Step 3: Regression test (column + search behavior) - DONE - 16:43
+- [x] Step 4: UAT + logs + verification - DONE - 16:45
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Verification
+
+- New tests: `php artisan test --filter='aju_number'` -> 2 passed.
+- Class run: TableExportAndPruneTest -> 31 passed (138 assertions).
+- Full suite: 188 passed (1032 assertions).
+- `vendor/bin/pint --dirty --format agent` -> clean.
+
+## Final Summary (2026-10-05 16:45)
+
+- Searchable **AJU number** column (after B/L number, sortable, `—` placeholder) added to the Export and Import admin lists and their company Bill of Ladings tabs.
+- Regression tests cover column presence + searchability on all four lists and prove the global search finds a B/L by AJU number.
+- Display-only change: no schema/model/CSV changes (CSV export already included aju_number).
+
+## Notes
+
+- Column: label 'AJU number', searchable, sortable, placeholder '—', placed after B/L number.
+- Scope approved: main tables + company tabs.
+- No schema/model change; CSV export already includes aju_number.
+
+---
+
+# Progress - Portal search by AJU number
+
+Goal: The customer portal search box finds shipments by B/L or AJU number.
+Started: 2026-10-05 16:47
+
+## Plan Checklist
+
+- [x] Step 1: Dashboard number filter matches bl_number OR aju_number - DONE - 16:47
+- [x] Step 2: Update view label/placeholder to "Search B/L or AJU number" - DONE - 16:47
+- [x] Step 3: PortalTest updates (B/L + AJU search coverage) - DONE - 16:48
+- [x] Step 4: UAT + logs + verification - DONE - 16:51
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Verification
+
+- Targeted tests: `php artisan test --filter='number_search_matches'` -> 2 passed (12 assertions).
+- Class run: PortalTest -> 68 passed (389 assertions).
+- Full suite: 189 passed (1036 assertions).
+- `vendor/bin/pint --dirty --format agent` -> clean.
+- Dev-data check: AJU-EXP-0003 -> BL-EXP-0003, AJU-0001 -> BL-IMP-0001.
+
+## Final Summary (2026-10-05 16:51)
+
+- Portal dashboard search (`number` filter) now matches `bl_number` OR `aju_number` in one grouped where; the label/placeholder reads "Search B/L or AJU number".
+- PortalTest covers export + import AJU search and keeps the container-number no-match guard.
+- Display + query only: no schema, no route, no scoping changes (drafts stay hidden, company scoping unchanged).
+
+## Notes
+
+- Same `%…%` like search on both columns inside one grouped where (codebase style: ActivityLogResource orWhere grouping).
+- Verified on dev data: AJU-EXP-0003 -> BL-EXP-0003, AJU-0001 -> BL-IMP-0001; existing B/L search test still passes; pint clean.

@@ -394,7 +394,7 @@ class PortalTest extends TestCase
             ->assertDontSee('BL-IMP-0002');
     }
 
-    public function test_the_number_search_matches_bl_numbers_only(): void
+    public function test_the_number_search_matches_bl_and_aju_numbers(): void
     {
         // Agus manages SNI, which owns the completed export BL-EXP-0003.
         $agus = User::query()->where('email', 'agus@borneo.test')->firstOrFail();
@@ -410,11 +410,30 @@ class PortalTest extends TestCase
             ->assertDontSee('Latest place')
             ->assertSee('Final checking shipment details');
 
-        // A container number no longer matches anything: search is B/L only.
+        // The same search box also matches the AJU number.
+        Livewire::test(Dashboard::class)
+            ->set('number', 'AJU-EXP-0003')
+            ->assertSee('BL-EXP-0003')
+            ->assertDontSee('BL-EXP-0001');
+
+        // A container number no longer matches anything: search is B/L and AJU only.
         Livewire::test(Dashboard::class)
             ->set('number', 'EGHU6677881')
             ->assertDontSee('BL-EXP-0003')
             ->assertSee('No shipments match your filters');
+    }
+
+    public function test_the_number_search_matches_import_aju_numbers(): void
+    {
+        // Dewi manages SIN, which owns BL-IMP-0001 (AJU-0001) and BL-IMP-0003 (AJU-0003).
+        $dewi = User::query()->where('email', 'customer@example.com')->firstOrFail();
+
+        $this->actingAs($dewi);
+
+        Livewire::test(Dashboard::class)
+            ->set('number', 'AJU-0001')
+            ->assertSee('BL-IMP-0001')
+            ->assertDontSee('BL-IMP-0003');
     }
 
     public function test_the_company_filter_cannot_reveal_another_companys_shipments(): void

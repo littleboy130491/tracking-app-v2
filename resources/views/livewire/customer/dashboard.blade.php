@@ -16,7 +16,7 @@
              compact row below it so the bar stays tidy on every breakpoint. --}}
         <div class="relative">
                 <label for="number" class="mb-1 block text-xs font-medium text-slate-500">
-                    Search B/L number
+                    Search B/L or AJU number
                 </label>
             <div class="relative">
                 <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -26,7 +26,7 @@
                     id="number"
                     type="text"
                     wire:model.live.debounce.400ms="number"
-                    placeholder="Search by B/L number…"
+                    placeholder="Search by B/L or AJU number…"
                     class="w-full rounded-md border border-slate-300 py-2 pl-9 pr-3 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 >
             </div>
