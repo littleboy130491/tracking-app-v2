@@ -56,6 +56,7 @@ class ExportShipmentsRelationManager extends RelationManager
                 TextColumn::make('containers.container_number')
                     ->label('Containers')
                     ->badge()
+                    ->wrap()
                     ->placeholder('—')
                     ->url(function (mixed $state, ExportShipment $record): ?string {
                         if (! filled($state)) {

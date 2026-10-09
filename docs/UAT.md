@@ -11,6 +11,13 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Containers wrap in shipment lists (2026-10-09)
+
+- [ ] Admin → Bill of Ladings → Export, then Admin → Bill of Ladings → Import → find a B/L with several containers. Expected: the **Containers** badges wrap onto new lines inside the column and none run off to the right (rows fit as many badges as the width allows, not exactly 10).
+- [ ] Admin → Companies → open a company → **Export Shipments** and **Import Shipments** tabs. Expected: the same wrapping in the Containers column.
+- [ ] Same list at a narrow browser width. Expected: the Containers column stays inside the table, with no long single line of badges.
+- [ ] Click a container badge (any of the lists above). Expected: opens that container's edit page, as before.
+
 ## 0. Portal search by B/L or AJU number (2026-10-05)
 
 - [ ] Portal → dashboard search box. Expected: label reads **Search B/L or AJU number**.

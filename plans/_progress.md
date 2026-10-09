@@ -748,3 +748,42 @@ Blocked: None
 
 - Same `%…%` like search on both columns inside one grouped where (codebase style: ActivityLogResource orWhere grouping).
 - Verified on dev data: AJU-EXP-0003 -> BL-EXP-0003, AJU-0001 -> BL-IMP-0001; existing B/L search test still passes; pint clean.
+
+---
+
+# Progress - Containers badges wrap in shipment tables
+
+Goal: Stop the Containers badge list running off the right edge of the shipment tables; wrap it onto new lines (Option A: Filament `->wrap()`).
+Started: 2026-10-09 14:00
+Scope approved: Export + Import admin tables and the Company export/import relation managers.
+
+## Plan Checklist
+
+- [x] Step 1: Export Shipments admin table `->wrap()` + header line - DONE - 14:00
+- [x] Step 2: Import Shipments admin table `->wrap()` + header line - DONE - 14:03
+- [x] Step 3: Companies export + import relation managers `->wrap()` - DONE - 14:03
+- [x] Step 4: Logs + UAT checklist for the remaining files - DONE - 14:03
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Verification
+
+- `vendor/bin/pint --dirty --format agent` -> passed.
+- `php -d memory_limit=512M vendor/bin/phpunit tests/Feature/Admin` -> 115 passed (636 assertions).
+- Visual check at the screenshot width is left to the user (docs/UAT.md section 0).
+
+## Final Summary (2026-10-09 14:03)
+
+- Containers column wraps (`->wrap()`) in all four shipment lists: Export and Import admin tables, plus the Export and Import relation managers on the Company page.
+- Layout-only change, no data, route, or schema changes; admin tests green.
+- Manual check: docs/UAT.md section 0 ("Containers wrap in shipment lists").
+
+## Notes
+
+- `->wrap()` is Filament's built-in CanWrap trait; the compiled admin CSS already has the wrap rules, so no `npm run build` is needed.
+- Wrap fills each row up to the column width, so rows hold as many badges as fit, not a fixed 10. A fixed 10-per-row grid (Option B) was not chosen.
+- Pure layout change: no new test required (CLAUDE.md test rules).

@@ -1282,3 +1282,11 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-10-05 16:48 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Step 3 marked done |
 | 2026-10-05 16:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | docs/UAT.md | Portal B/L + AJU search checklist added |
 | 2026-10-05 16:51 | Devin (DeepSeek V4.1 Flash Max) | UPDATE | plans/_progress.md | Plan complete; final summary added |
+| 2026-10-09 14:00 | Devin (Claude Haiku 5.5) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Containers badges wrap inside the column |
+| 2026-10-09 14:00 | Devin (Claude Haiku 5.5) | UPDATE | docs/UAT.md | Containers wrap checklist added |
+| 2026-10-09 14:00 | Devin (Claude Haiku 5.5) | UPDATE | plans/_progress.md | Containers wrap plan started; Step 1 marked done |
+| 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | app/Filament/Resources/ImportShipments/Tables/ImportShipmentsTable.php | Containers badges wrap inside the column |
+| 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Containers badges wrap inside the column |
+| 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Containers badges wrap inside the column |
+| 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | docs/UAT.md | Containers wrap checklist covers all four lists |
+| 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | plans/_progress.md | Containers wrap plan complete; final summary added |

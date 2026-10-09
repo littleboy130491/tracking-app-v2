@@ -6,7 +6,7 @@
  * What it does:
  * - Shows the identifying and status columns, with filters for status,
  *   company and created date, plus a soft-delete filter.
- * - Lists each container number as a badge linking to that container's edit page.
+ * - Lists each container number as a wrapping badge linking to that container's edit page.
  * - Offers a CSV header action, restricted to admin/super_admin via
  *   User::canExportTables().
  * - Offers a "Prune old data" header action for the same roles, deleting
@@ -66,6 +66,7 @@ class ExportShipmentsTable
                 TextColumn::make('containers.container_number')
                     ->label('Containers')
                     ->badge()
+                    ->wrap()
                     ->placeholder('—')
                     ->searchable()
                     ->url(function (mixed $state, ExportShipment $record): ?string {

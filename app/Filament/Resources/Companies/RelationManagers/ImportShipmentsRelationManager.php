@@ -62,6 +62,7 @@ class ImportShipmentsRelationManager extends RelationManager
                 TextColumn::make('containers.container_number')
                     ->label('Containers')
                     ->badge()
+                    ->wrap()
                     ->placeholder('—')
                     ->url(function (mixed $state, ImportShipment $record): ?string {
                         if (! filled($state)) {
