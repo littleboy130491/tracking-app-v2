@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Concerns;
 
+use App\Enums\ContainerSize;
 use Illuminate\Database\Eloquent\Model;
 use pxlrbt\FilamentExcel\Columns\Column;
 
@@ -97,7 +98,7 @@ class TableExportColumns
             Column::make('company.name')->heading('Company'),
             Column::make('documentReceivedBy.name')->heading('Document received by'),
             self::relationColumn('containers.container_number', 'Container numbers', fn ($record): string => $record->containers->pluck('container_number')->filter()->implode(', ')),
-            self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->implode(', ')),
+            self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->map(fn (ContainerSize $size): string => $size->value)->implode(', ')),
         ];
     }
 
@@ -121,7 +122,7 @@ class TableExportColumns
             Column::make('company.name')->heading('Company'),
             Column::make('documentReceivedBy.name')->heading('Document received by'),
             self::relationColumn('containers.container_number', 'Container numbers', fn ($record): string => $record->containers->pluck('container_number')->filter()->implode(', ')),
-            self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->implode(', ')),
+            self::relationColumn('containers.size', 'Container sizes', fn ($record): string => $record->containers->pluck('size')->filter()->map(fn (ContainerSize $size): string => $size->value)->implode(', ')),
             self::relationColumn('hsCodes.code', 'HS codes', fn ($record): string => $record->hsCodes->pluck('code')->implode(', ')),
         ];
     }

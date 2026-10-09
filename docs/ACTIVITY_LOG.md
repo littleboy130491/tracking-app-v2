@@ -1304,3 +1304,19 @@ High-level history of files created, updated, and deleted in this project.
 | 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ImportShipmentsRelationManager.php | Containers badges wrap inside the column |
 | 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | docs/UAT.md | Containers wrap checklist covers all four lists |
 | 2026-10-09 14:03 | Devin (Claude Haiku 5.5) | UPDATE | plans/_progress.md | Containers wrap plan complete; final summary added |
+| 2026-10-09 17:03 | Devin (GLM-5.3 Flash Max) | CREATE | app/Enums/ContainerSize.php | Container size enum with 14 options (existing 3 + 11 new) |
+| 2026-10-09 17:06 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/ExportContainer.php | Cast size to ContainerSize enum |
+| 2026-10-09 17:06 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Models/ImportContainer.php | Cast size to ContainerSize enum |
+| 2026-10-09 17:06 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Both size selects use ContainerSize::options() |
+| 2026-10-09 17:06 | Devin (GLM-5.3 Flash Max) | UPDATE | plans/_progress.md | Container size plan started; Steps 1-2 marked done |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | resources/views/livewire/customer/partials/shipment-containers.blade.php | Size label from enum instead of match map |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Services/ShipmentTimeline.php | Container size tile from enum label |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/TableExportColumns.php | CSV size cells map enum to stored value |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ExportContainers/Tables/ExportContainersTable.php | Size badge shows enum label |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Resources/ImportContainers/Tables/ImportContainersTable.php | Size badge shows enum label |
+| 2026-10-09 17:12 | Devin (GLM-5.3 Flash Max) | UPDATE | plans/_progress.md | Step 3 marked done |
+| 2026-10-09 17:20 | Devin (GLM-5.3 Flash Max) | UPDATE | EXPORT.md | Container Size option list grown to 14 options |
+| 2026-10-09 17:20 | Devin (GLM-5.3 Flash Max) | UPDATE | IMPORT.md | Container Size option list grown to 14 options |
+| 2026-10-09 17:20 | Devin (GLM-5.3 Flash Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | Loading in factory status no longer required; placeholder not selectable |
+| 2026-10-09 17:20 | Devin (GLM-5.3 Flash Max) | UPDATE | docs/UAT.md | Container size options + optional factory loading checklist added |
+| 2026-10-09 17:20 | Devin (GLM-5.3 Flash Max) | UPDATE | plans/_progress.md | Steps 4-6 marked done; plan complete |

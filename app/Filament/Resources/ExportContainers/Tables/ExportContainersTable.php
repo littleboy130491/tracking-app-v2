@@ -17,6 +17,7 @@
 
 namespace App\Filament\Resources\ExportContainers\Tables;
 
+use App\Enums\ContainerSize;
 use App\Enums\StuffingStatus;
 use App\Filament\Concerns\DateFilters;
 use App\Filament\Concerns\PrunableTableHeaderAction;
@@ -65,7 +66,8 @@ class ExportContainersTable
                     ->toggleable(),
                 TextColumn::make('size')
                     ->placeholder('—')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (ContainerSize $state): string => $state->label()),
                 TextColumn::make('seal_number')
                     ->label('Seal')
                     ->placeholder('—')

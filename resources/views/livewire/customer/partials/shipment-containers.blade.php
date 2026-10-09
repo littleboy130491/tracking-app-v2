@@ -30,12 +30,7 @@
                     $latest === null => 'Not started',
                     default => $latest->title,
                 };
-                $sizeLabel = match ((string) $container->size) {
-                    '20' => '20 ft',
-                    '40' => '40 ft',
-                    '45' => '45 ft',
-                    default => $container->size,
-                };
+                $sizeLabel = $container->size?->label();
                 $photoSlots = [
                     \App\Enums\AttachmentCategory::DoorPhoto->value => 'Photo Door',
                     \App\Enums\AttachmentCategory::FloorPhoto->value => 'Photo Floor',

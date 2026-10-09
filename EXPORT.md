@@ -26,7 +26,7 @@ Stuffing date (date time)
 Stuffing destination
 Container fields:
 Container Number
-Container Size (option: 20 ft | 40 ft | 45 ft)
+Container Size (option: 20 ft | 40 ft | 45 ft | LCL | 20 OT | 40 OT | 20 FLAT | 40 FLAT | 20 FL | 40 HO | 20 DV | 40 HC | BREAK BULK | TL)
 Seal number
 Driver name
 Vehicle / Truck Number

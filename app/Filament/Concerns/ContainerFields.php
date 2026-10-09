@@ -13,6 +13,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Enums\ContainerSize;
 use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
 use App\Enums\StuffingStatus;
@@ -63,7 +64,7 @@ class ContainerFields
                 ->validationMessages(['unique' => 'This container number is already used on this shipment.']),
             Select::make('size')
                 ->label('Container Size')
-                ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
+                ->options(ContainerSize::options()),
             TextInput::make('seal_number')
                 ->maxLength(100),
         ];
@@ -110,7 +111,7 @@ class ContainerFields
         return [
             Select::make('size')
                 ->label('Container Size')
-                ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
+                ->options(ContainerSize::options()),
         ];
     }
 
@@ -406,7 +407,9 @@ class ContainerFields
                 ->label('Loading in factory status')
                 ->options(FactoryLoadingStatus::options())
                 ->default(FactoryLoadingStatus::OnProcess->value)
-                ->required(),
+                // NOT NULL column: a non-selectable placeholder keeps the
+                // select always filled, so required() is unnecessary.
+                ->selectablePlaceholder(false),
         ];
     }
 

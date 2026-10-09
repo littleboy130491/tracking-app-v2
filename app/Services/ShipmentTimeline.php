@@ -402,12 +402,7 @@ class ShipmentTimeline
      */
     private function containerSummaryFields(ExportContainer|ImportContainer $container, array $sequence, int $position): array
     {
-        $size = match ((string) $container->size) {
-            '20' => '20 ft',
-            '40' => '40 ft',
-            '45' => '45 ft',
-            default => $container->size,
-        };
+        $size = $container->size?->label();
 
         if ($container instanceof ExportContainer) {
             if (! $this->milestoneReached($sequence, $position, ExportMilestone::PickupEmptyContainer)) {

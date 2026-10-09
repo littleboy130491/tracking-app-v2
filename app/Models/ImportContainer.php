@@ -17,6 +17,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContainerSize;
 use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
 use App\Models\Concerns\ActsAsContainer;
@@ -104,6 +105,7 @@ class ImportContainer extends Model
     protected function casts(): array
     {
         return [
+            'size' => ContainerSize::class,
             'factory_loading_status' => FactoryLoadingStatus::class,
             'status' => ContainerStatus::class,
             'gate_out_cy_at' => 'datetime',

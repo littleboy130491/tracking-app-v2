@@ -13,6 +13,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContainerSize;
 use App\Enums\StuffingStatus;
 use App\Models\Concerns\ActsAsContainer;
 use App\Models\Concerns\HasNotes;
@@ -63,6 +64,7 @@ class ExportContainer extends Model
     protected function casts(): array
     {
         return [
+            'size' => ContainerSize::class,
             'stuffing_status' => StuffingStatus::class,
             'vgm_value' => 'decimal:3',
             'gate_in_cy_at' => 'datetime',

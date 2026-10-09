@@ -844,3 +844,44 @@ Started: 2026-10-09 10:10
 ## Notes
 
 - DO clause is wrapped in ->when($model === ExportShipment::class) because import_shipments has no do_number column.
+
+---
+
+# Progress - Container size options (enum)
+
+Goal: Grow the Container Size dropdown from 3 to 14 options via a ContainerSize enum (project's option-list pattern).
+Started: 2026-10-09 17:03
+
+## Plan Checklist
+
+- [x] Step 1: Create app/Enums/ContainerSize.php (14 cases; values match stored '20'/'40'/'45') - DONE - 17:03
+- [x] Step 2: Cast size on both container models; selects use ContainerSize::options() - DONE - 17:06
+- [x] Step 3: Replace label maps in portal blade + ShipmentTimeline; fix TableExportColumns + 2 table columns - DONE - 17:12 (PortalTest 68/68)
+- [x] Step 4: Update option list in EXPORT.md + IMPORT.md - DONE - 17:20
+- [x] Step 5: Pint + affected tests - DONE - 17:22 (full suite 199/199, 1062 assertions)
+- [x] Step 6: ACTIVITY_LOG + UAT - DONE - 17:20
+
+## Extra change (user decision, 17:20)
+
+- "Loading in factory status" (import) no longer `->required()`; instead
+  `->selectablePlaceholder(false)` keeps the select always filled so the NOT
+  NULL column can never receive NULL (a cleared select would 500 otherwise).
+
+## Current Focus
+
+Working on: none — plan complete
+Next: none
+Blocked: None
+
+## Final Summary (2026-10-09 17:22)
+
+- Container Size is now a `ContainerSize` enum (14 options) — single source of truth for forms, tables, portal and timeline; no data migration (values match stored data).
+- Admin size badges and portal/timeline show labels; CSV exports keep raw stored values (same convention as shipment_mode).
+- Import "Loading in factory status" relaxed: pre-filled, no empty option, not required.
+- Full suite 199/199 green; UAT checklist added; committed and pushed.
+
+## Notes
+
+- User chose the enum (Option C) over loose arrays for robustness: single source of truth, no label-map drift.
+- New values stored as machine codes ('lcl', '20_ot', ...), labels exactly as requested (LCL, 20 OT, ..., BREAK BULK, TL).
+- Existing rows need no data migration: backed values '20'/'40'/'45' match current data.

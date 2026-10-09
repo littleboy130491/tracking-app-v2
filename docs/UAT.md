@@ -11,6 +11,14 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Container size options + optional factory loading status (2026-10-09)
+
+- [ ] Admin → Bill of Ladings → Export → open a B/L → **Containers** tab → a container's **Container Size**. Expected: 14 options — 20 ft, 40 ft, 45 ft, LCL, 20 OT, 40 OT, 20 FLAT, 40 FLAT, 20 FL, 40 HO, 20 DV, 40 HC, BREAK BULK, TL.
+- [ ] Pick a new option (e.g. **20 OT**) and save. Expected: saves cleanly; the list badge and the portal accordion show the label ("20 OT").
+- [ ] Same on Import: open an import B/L → Containers tab → a container's size select (unlocks at Response billing). Expected: the same 14 options.
+- [ ] Admin → Containers → Export and Import lists. Expected: the **Size** badge shows the label (e.g. "20 ft"), not the stored code.
+- [ ] Import container at step 20 (Container arrived in factory): **Loading in factory status** is pre-filled "On Process", the dropdown has no empty "Select an option" row, and saving without touching it works (no longer flagged required).
+
 ## 0. DO number column on export B/L lists (2026-10-09)
 
 - [ ] Admin → Bill of Ladings → Export. Expected: **DO number** is the first column (before B/L number); shipments without one show `—`.

@@ -17,6 +17,7 @@
 
 namespace App\Filament\Resources\ImportContainers\Tables;
 
+use App\Enums\ContainerSize;
 use App\Enums\ContainerStatus;
 use App\Filament\Concerns\DateFilters;
 use App\Filament\Concerns\PrunableTableHeaderAction;
@@ -64,7 +65,8 @@ class ImportContainersTable
                     ->toggleable(),
                 TextColumn::make('size')
                     ->placeholder('—')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (ContainerSize $state): string => $state->label()),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (ContainerStatus $state): string => $state->label())
