@@ -11,6 +11,14 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. Container numbers: re-add after delete + duplicate message (2026-10-09)
+
+- [ ] Admin → Bill of Ladings → Export → open a B/L → **Containers** tab → remove a container (the trash icon on its item) → save. Expected: saves cleanly.
+- [ ] Re-open the same B/L → add a container with the **same number** you just removed → save. Expected: saves cleanly (this used to crash with "UNIQUE constraint failed").
+- [ ] Add a container with a number that is **already on this B/L** (active). Expected: a red message "This container number is already used on this shipment." under the field — no crash.
+- [ ] Add a container with a number that is used on a **different** B/L. Expected: saves cleanly (reuse across B/Ls is allowed).
+- [ ] Same four checks on Import: Admin → Bill of Ladings → Import → open a B/L → Containers tab.
+
 ## 0. Containers wrap in shipment lists (2026-10-09)
 
 - [ ] Admin → Bill of Ladings → Export, then Admin → Bill of Ladings → Import → find a B/L with several containers. Expected: the **Containers** badges wrap onto new lines inside the column and none run off to the right (rows fit as many badges as the width allows, not exactly 10).

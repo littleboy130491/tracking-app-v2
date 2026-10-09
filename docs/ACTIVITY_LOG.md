@@ -4,6 +4,10 @@ High-level history of files created, updated, and deleted in this project.
 
 | Date | Agent | Action | File | Description |
 | :--- | :--- | :----- | :--- | :---------- |
+| 2026-10-09 09:03 | Devin (SWE-2 Max) | CREATE | database/migrations/2026_10_09_090336_make_container_unique_rules_ignore_trashed_rows.php | Partial unique index: container numbers unique per shipment among active rows only |
+| 2026-10-09 09:20 | Devin (SWE-2 Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | scopedUnique validation on container_number for export + import identity groups |
+| 2026-10-09 09:25 | Devin (SWE-2 Max) | CREATE | tests/Feature/Admin/ContainerNumberUniquenessTest.php | Regression tests: re-add after soft delete, duplicate form error, cross-B/L reuse |
+| 2026-10-09 09:30 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added container-number uniqueness UAT checklist |
 | 2026-09-15 00:00 | Devin | CREATE | plans/_progress.md | Internal agent progress tracker |
 | 2026-09-15 00:00 | Devin | CREATE | docs/ACTIVITY_LOG.md | Project activity log |
 | 2026-09-15 03:37 | Devin | UPDATE | composer.json | Added Filament, Shield and otpz dependencies |

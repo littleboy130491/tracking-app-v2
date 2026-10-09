@@ -787,3 +787,24 @@ Blocked: None
 - `->wrap()` is Filament's built-in CanWrap trait; the compiled admin CSS already has the wrap rules, so no `npm run build` is needed.
 - Wrap fills each row up to the column width, so rows hold as many badges as fit, not a fixed 10. A fixed 10-per-row grid (Option B) was not chosen.
 - Pure layout change: no new test required (CLAUDE.md test rules).
+
+---
+
+# Progress - Container numbers unique per shipment among active rows only
+
+Goal: Fix the production save crash when re-adding a container number whose earlier row was soft-deleted.
+Started: 2026-10-09 09:00
+
+## Plan Checklist
+
+- [x] Step 1: Migration — partial unique index (WHERE deleted_at IS NULL) on export_containers + import_containers - DONE - 09:10 (rollback verified)
+- [x] Step 2: scopedUnique validation on container_number in ContainerFields::identity() + importIdentity() - DONE - 09:20
+- [x] Step 3: Regression tests (tests/Feature/Admin/ContainerNumberUniquenessTest.php, 8 tests) - DONE - 09:25
+- [x] Step 4: Pint clean, full suite green (197 tests / 1053 assertions), ACTIVITY_LOG + UAT - DONE - 09:30
+
+## Notes
+
+- Root cause: UNIQUE (shipment FK, container_number) + SoftDeletes — a trashed row kept holding the slot, so re-adding the number crashed the Filament repeater save.
+- Same number on another B/L stays allowed (user requirement, test-covered).
+- Duplicate against an active row now shows "This container number is already used on this shipment." instead of a 500.
+- Deployment note: the migration fails if a table already holds ACTIVE duplicate rows — resolve those first (none exist locally; production should be checked).

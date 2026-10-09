@@ -17,6 +17,8 @@ use App\Enums\ContainerStatus;
 use App\Enums\FactoryLoadingStatus;
 use App\Enums\StuffingStatus;
 use App\Livewire\NotesPanel;
+use App\Models\ExportContainer;
+use App\Models\ImportContainer;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use Closure;
 use Filament\Forms\Components\DateTimePicker;
@@ -27,11 +29,15 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContainerFields
 {
     /**
-     * Export container identity: number, size and seal.
+     * Export container identity: number, size and seal. The number must be
+     * unique among the shipment's active containers (soft-deleted ones may be
+     * re-added); `distinct()` covers duplicates typed within one form.
      *
      * @return list<Field>
      */
@@ -43,7 +49,18 @@ class ContainerFields
                 ->distinct()
                 ->maxLength(30)
                 // Live-on-blur so the collapsed item header shows the number as soon as it is typed.
-                ->live(onBlur: true),
+                ->live(onBlur: true)
+                ->scopedUnique(
+                    model: ExportContainer::class,
+                    column: 'container_number',
+                    // In the repeater the shipment is the repeater's record;
+                    // on the standalone form it is the picked shipment field.
+                    modifyQueryUsing: fn (Builder $query, Get $get, Field $component): Builder => $query->where(
+                        'export_shipment_id',
+                        $component->getParentRepeater()?->getRecord()?->getKey() ?? $get('export_shipment_id'),
+                    ),
+                )
+                ->validationMessages(['unique' => 'This container number is already used on this shipment.']),
             Select::make('size')
                 ->label('Container Size')
                 ->options(['20' => '20 ft', '40' => '40 ft', '45' => '45 ft']),
@@ -55,7 +72,8 @@ class ContainerFields
     /**
      * Import container identity: the container number. IMPORT.md adds the
      * containers to the shipment at the response-billing step; the size is a
-     * separate group because it unlocks later (upload all document).
+     * separate group because it unlocks later (upload all document). The
+     * number must be unique among the shipment's active containers.
      *
      * @return list<Field>
      */
@@ -67,7 +85,18 @@ class ContainerFields
                 ->distinct()
                 ->maxLength(30)
                 // Live-on-blur so the collapsed item header shows the number as soon as it is typed.
-                ->live(onBlur: true),
+                ->live(onBlur: true)
+                ->scopedUnique(
+                    model: ImportContainer::class,
+                    column: 'container_number',
+                    // In the repeater the shipment is the repeater's record;
+                    // on the standalone form it is the picked shipment field.
+                    modifyQueryUsing: fn (Builder $query, Get $get, Field $component): Builder => $query->where(
+                        'import_shipment_id',
+                        $component->getParentRepeater()?->getRecord()?->getKey() ?? $get('import_shipment_id'),
+                    ),
+                )
+                ->validationMessages(['unique' => 'This container number is already used on this shipment.']),
         ];
     }
 
