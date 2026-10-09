@@ -11,6 +11,13 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 
 # User Acceptance Testing
 
+## 0. DO number column on export B/L lists (2026-10-09)
+
+- [ ] Admin → Bill of Ladings → Export. Expected: **DO number** is the first column (before B/L number); shipments without one show `—`.
+- [ ] Type a DO number (e.g. `DO-EXP-0003`) into the list search box. Expected: the list narrows to the matching B/L.
+- [ ] Admin → Companies → open a company → **Export Shipments** tab. Expected: DO number is the first column there too, also searchable.
+- [ ] Admin → Bill of Ladings → Export → open a B/L → **Shipping Details** tab. Expected: **DO number** sits left of B/L number (swapped), matching the list order.
+
 ## 0. Container numbers: re-add after delete + duplicate message (2026-10-09)
 
 - [ ] Admin → Bill of Ladings → Export → open a B/L → **Containers** tab → remove a container (the trash icon on its item) → save. Expected: saves cleanly.
@@ -26,10 +33,11 @@ How to extend: Agent adds a new section whenever a user-visible feature ships
 - [ ] Same list at a narrow browser width. Expected: the Containers column stays inside the table, with no long single line of badges.
 - [ ] Click a container badge (any of the lists above). Expected: opens that container's edit page, as before.
 
-## 0. Portal search by B/L or AJU number (2026-10-05)
+## 0. Portal search by B/L, DO or AJU number (2026-10-09)
 
-- [ ] Portal → dashboard search box. Expected: label reads **Search B/L or AJU number**.
+- [ ] Portal → dashboard search box. Expected: label reads **Search B/L, DO or AJU number**.
 - [ ] Search a B/L number (e.g. `BL-EXP-0003` as the customer who owns it). Expected: only that shipment is listed.
+- [ ] Search its DO number instead (e.g. `DO-EXP-0003`). Expected: the same shipment is found.
 - [ ] Search its AJU number instead (e.g. `AJU-EXP-0003`). Expected: the same shipment is found.
 - [ ] Search an import AJU (e.g. `AJU-0001`). Expected: the matching import B/L appears; a container number still finds nothing.
 

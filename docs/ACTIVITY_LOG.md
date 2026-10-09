@@ -4,6 +4,16 @@ High-level history of files created, updated, and deleted in this project.
 
 | Date | Agent | Action | File | Description |
 | :--- | :--- | :----- | :--- | :---------- |
+| 2026-10-09 10:20 | Devin (SWE-2 Max) | UPDATE | app/Livewire/Customer/Dashboard.php | Portal number search also matches export DO numbers |
+| 2026-10-09 10:20 | Devin (SWE-2 Max) | UPDATE | resources/views/livewire/customer/dashboard.blade.php | Search label and placeholder mention DO number |
+| 2026-10-09 10:20 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Portal/PortalTest.php | DO number search assertions in number-search test |
+| 2026-10-09 10:20 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Portal search section updated for DO number |
+| 2026-10-09 10:05 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ExportShipments/Schemas/ExportShipmentForm.php | Swapped DO number left of B/L number in Shipping Details |
+| 2026-10-09 10:05 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added form field order check to DO number section |
+| 2026-10-09 09:45 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/ExportShipments/Tables/ExportShipmentsTable.php | Added searchable first-position DO number column |
+| 2026-10-09 09:45 | Devin (SWE-2 Max) | UPDATE | app/Filament/Resources/Companies/RelationManagers/ExportShipmentsRelationManager.php | Added searchable first-position DO number column |
+| 2026-10-09 09:50 | Devin (SWE-2 Max) | UPDATE | tests/Feature/Admin/TableExportAndPruneTest.php | DO number column position + search regression tests |
+| 2026-10-09 09:50 | Devin (SWE-2 Max) | UPDATE | docs/UAT.md | Added DO number column checklist |
 | 2026-10-09 09:03 | Devin (SWE-2 Max) | CREATE | database/migrations/2026_10_09_090336_make_container_unique_rules_ignore_trashed_rows.php | Partial unique index: container numbers unique per shipment among active rows only |
 | 2026-10-09 09:20 | Devin (SWE-2 Max) | UPDATE | app/Filament/Concerns/ContainerFields.php | scopedUnique validation on container_number for export + import identity groups |
 | 2026-10-09 09:25 | Devin (SWE-2 Max) | CREATE | tests/Feature/Admin/ContainerNumberUniquenessTest.php | Regression tests: re-add after soft delete, duplicate form error, cross-B/L reuse |

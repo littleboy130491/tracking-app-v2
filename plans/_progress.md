@@ -808,3 +808,39 @@ Started: 2026-10-09 09:00
 - Same number on another B/L stays allowed (user requirement, test-covered).
 - Duplicate against an active row now shows "This container number is already used on this shipment." instead of a 500.
 - Deployment note: the migration fails if a table already holds ACTIVE duplicate rows — resolve those first (none exist locally; production should be checked).
+
+---
+
+# Progress - DO number column on export B/L lists
+
+Goal: Show a searchable DO number as the first column on the admin export B/L lists.
+Started: 2026-10-09 09:40
+
+## Plan Checklist
+
+- [x] Step 1: DO number column first in ExportShipmentsTable + ExportShipmentsRelationManager - DONE - 09:45
+- [x] Step 2: Regression tests (column position/searchable + search matches) - DONE - 09:50
+- [x] Step 3: Pint clean, TableExportAndPruneTest 33/33, UAT + activity log - DONE - 09:55
+
+## Notes
+
+- Export only (import has no do_number column — dropped with the IMPORT.md rebuild).
+- Column style mirrors AJU number: searchable, sortable, em-dash placeholder.
+
+---
+
+# Progress - Portal search matches DO numbers
+
+Goal: The portal number search box also finds export shipments by DO number.
+Started: 2026-10-09 10:10
+
+## Plan Checklist
+
+- [x] Step 1: do_number clause in Dashboard::shipmentQuery (export-only, import has no column) - DONE - 10:15
+- [x] Step 2: Label + placeholder now read "Search B/L, DO or AJU number" - DONE - 10:15
+- [x] Step 3: PortalTest DO search assertions (renamed test to bl_do_and_aju) - DONE - 10:18
+- [x] Step 4: Pint clean, PortalTest 68/68, UAT + activity log - DONE - 10:22
+
+## Notes
+
+- DO clause is wrapped in ->when($model === ExportShipment::class) because import_shipments has no do_number column.

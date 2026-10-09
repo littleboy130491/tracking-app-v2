@@ -7,7 +7,7 @@
  * - Lists the shipments of the companies the signed-in user manages in one
  *   combined list; the **Type** filter defaults to All and can narrow to
  *   Export or Import only.
- * - Filters by type, company, B/L or AJU number, status, year and month
+ * - Filters by type, company, B/L, DO or AJU number, status, year and month
  *   (spec.md); the year options come from YearOptions, so the query works on
  *   any database, not only SQLite.
  * - Combines the export and import tables (separate tables) with one UNION
@@ -218,7 +218,9 @@ class Dashboard extends Component
             ->when($this->number !== '', fn (Builder $query) => $query->where(
                 fn (Builder $query) => $query
                     ->where('bl_number', 'like', '%'.$this->number.'%')
-                    ->orWhere('aju_number', 'like', '%'.$this->number.'%'),
+                    ->orWhere('aju_number', 'like', '%'.$this->number.'%')
+                    // DO number exists on export shipments only.
+                    ->when($model === ExportShipment::class, fn (Builder $query) => $query->orWhere('do_number', 'like', '%'.$this->number.'%')),
             ))
             ->when($this->status !== '', fn (Builder $query) => $query->where('status', $this->status))
             ->when($this->year !== '', fn (Builder $query) => $query->whereYear('created_at', (int) $this->year))
