@@ -8,6 +8,8 @@
  *   and that prune (permanent delete) is visible to super_admin only.
  * - Proves the prune service only deletes rows older than the 3-year window and
  *   takes their child rows (containers, logs) with them.
+ * - Guards B/L list column regressions: searchable AJU number everywhere and a
+ *   first-position searchable DO number on the export lists.
  * How to use: `php artisan test --filter=TableExportAndPruneTest`.
  * How to extend: add a table to the data providers when it gains the actions.
  */
@@ -343,6 +345,35 @@ class TableExportAndPruneTest extends TestCase
         Livewire::test(ListImportShipments::class)
             ->searchTable($import->aju_number)
             ->assertCanSeeTableRecords([$import]);
+    }
+
+    public function test_the_export_shipment_lists_show_a_searchable_do_number_column_first(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        $listColumns = Livewire::test(ListExportShipments::class)->instance()->getTable()->getColumns();
+
+        $this->assertHasSearchableColumn($listColumns, 'do_number', 'The export B/L list should show a searchable DO number');
+        $this->assertSame('do_number', collect($listColumns)->first()?->getName(), 'DO number should be the first column');
+
+        $relationManagerColumns = Livewire::test(ExportShipmentsRelationManager::class, [
+            'ownerRecord' => Company::query()->firstOrFail(),
+            'pageClass' => EditCompany::class,
+        ])->instance()->getTable()->getColumns();
+
+        $this->assertHasSearchableColumn($relationManagerColumns, 'do_number', 'The company export tab should show a searchable DO number');
+        $this->assertSame('do_number', collect($relationManagerColumns)->first()?->getName(), 'DO number should be the first column');
+    }
+
+    public function test_searching_the_export_shipment_list_matches_the_do_number(): void
+    {
+        $this->actingAs($this->user(Role::ADMIN));
+
+        $export = ExportShipment::query()->whereNotNull('do_number')->firstOrFail();
+
+        Livewire::test(ListExportShipments::class)
+            ->searchTable($export->do_number)
+            ->assertCanSeeTableRecords([$export]);
     }
 
     /**

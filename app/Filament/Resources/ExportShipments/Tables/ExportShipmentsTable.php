@@ -44,6 +44,11 @@ class ExportShipmentsTable
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['containers', 'company', 'documentReceivedBy']))
             ->columns([
+                TextColumn::make('do_number')
+                    ->label('DO number')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('bl_number')
                     ->label('B/L number')
                     ->searchable()

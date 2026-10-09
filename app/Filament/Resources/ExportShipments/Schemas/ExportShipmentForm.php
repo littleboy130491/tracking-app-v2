@@ -54,12 +54,13 @@ class ExportShipmentForm
                                 Grid::make(2)
                                     ->schema([
                                         // Step 2 — Checking booking order. These unlock together.
+                                        // DO number sits left of B/L number, matching the list column order.
                                         ...ShipmentFields::gated([
-                                            TextInput::make('bl_number')
-                                                ->label('B/L number')
-                                                ->maxLength(100),
                                             TextInput::make('do_number')
                                                 ->label('DO number')
+                                                ->maxLength(100),
+                                            TextInput::make('bl_number')
+                                                ->label('B/L number')
                                                 ->maxLength(100),
                                             TextInput::make('shipping_line'),
                                             TextInput::make('vessel_name'),

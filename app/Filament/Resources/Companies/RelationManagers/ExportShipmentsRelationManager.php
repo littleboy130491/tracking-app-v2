@@ -38,6 +38,11 @@ class ExportShipmentsRelationManager extends RelationManager
             ->recordTitleAttribute('bl_number')
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with('containers'))
             ->columns([
+                TextColumn::make('do_number')
+                    ->label('DO number')
+                    ->searchable()
+                    ->placeholder('—')
+                    ->sortable(),
                 TextColumn::make('bl_number')
                     ->label('B/L number')
                     ->searchable()
